@@ -1,0 +1,283 @@
+from operator import itemgetter
+import numpy as np
+import time
+from time import strftime
+import networkx as nx
+import os
+import random
+import math
+import sys
+import datetime
+from itertools import izip
+import fcntl
+
+from graph import *
+from analyzer import *
+from agentgroup import *
+from clientwaiter import *    
+from humanagent import *
+from simagent import *
+from db_logger import *
+from simulation import *
+from configuration import *
+
+dblog = db_logger('simlog.db')
+configuration._dblog = dblog
+
+LOG_DB = True
+DEBUG = 0
+ERROR = 5
+def log(text, level=DEBUG):
+  print text
+  # write text to file
+  if LOG_DB:
+    dblog.log_gen(text)
+
+
+  
+if __name__ == '__main__':
+  alt_options = ['single', 'auto']
+  
+  if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
+    allconfs = multiconfig()
+    if len(sys.argv) > 1:
+      outfile = sys.argv[1]
+    else:
+      outfile = None
+    
+    cw = clientwaiter()
+    conns = cw.getclients()
+
+    ## Log this session's configuration
+    u_rounds = 0 if not configuration._do_ultimatum else configuration.ultimatum_niter
+    dblog.log_config(u_rounds, configuration._do_intro_sim, configuration._do_publicgoods, configuration._hide_publicgoods, configuration.pubgoods_mult, configuration._do_ratings, configuration._time_limit-configuration._margin_time, len(conns), configuration._show_other_team_members)
+    
+    # Start the timer
+    starttime = time.time()
+    
+    ## BEGIN INTRO SIMULATION
+    ## Start with a well-defined simulation (like WS4 with no rewire) to make sure that humans play each other, and play a reasonable number of AIs
+    
+    # Standard starter configuration
+    std = standardconfig = configuration()
+    std.groups_can_merge = False
+    std.expel_agents = False
+    std.fully_connect_groups = False
+    #std.n = 16   # Get this from configuration class
+    std.connections= 6
+    std.prob_rewire = 0
+    std.graph_type = 'connected_watts_strogatz_graph'
+    std.strategy = 'random'
+    std.ndumb = 0
+    std.simnumber = 0
+    
+    std.nhumans = len(conns)
+    std.conns = conns
+
+    gm = graphmanager(std)
+    gm.setup()
+    sim = simulation()
+    sim.setup(gm.G, std)
+    
+    # Init video only once!
+    for a in sim.humans:
+      a.initvideo()
+    
+    atypes = sorted([(a.id,'human' if a.type == 'human' else a.disposition) for a in sim.agents])
+    dblog.log_agentconfig(atypes)
+    
+    ## GIVE INTRO SURVEY HERE
+    mythreads = []
+    for a in sim.humans:
+      t = threading.Thread(target=a.introsurvey)
+      mythreads.append(t)
+      t.start()
+    for t in mythreads:
+      t.join()
+  
+    if configuration._do_video:
+      for a in sim.humans:
+        a.startcapture()
+  
+    if configuration._do_ratings:
+      for a in sim.humans:
+        a.initratings(range(configuration.n))
+        a.showratings()
+  
+    ## RUN ULTIMATUM HERE
+    if std._do_ultimatum:
+      sim.run_ultimatum()
+      raw_input("ULTIMATUM DONE. PRESS ENTER TO CONTINUE.")
+    
+    ## RUN INTRO SIM HERE
+    print "Beginning intro simulation"
+    if std._do_intro_sim:
+      sim.run()
+      Gdone = sim.export()
+      
+      ann = analyzer()
+      ann.load(Gdone, std)
+      ann.groupsummary()
+      ann.summary()
+      ann.dumpsummarydb(dblog)
+      if outfile: 
+        ann.dumpsummary(outfile)
+      if std._draw_graph:
+        ann.drawgraph()
+        print "Close plot to end program"
+        plt.show()
+    
+    agent.agentid=0
+    ## END INTRO SIMULATION
+    
+    
+    ## RUN MULTIPLE CONFIGURATIONS HERE
+    # Get all configurations we want to run
+    confs = [conf for conf in allconfs.itersims()]
+    #print [c.printself() for c in confs[0:10]]
+    random.shuffle(confs)
+    
+    for i, conf in enumerate(confs):
+      conf.simnumber = i+1
+    
+    #for conf in allconfs.itersims():
+    for i,cfg in enumerate(confs):
+      
+      cfg.nhumans = len(conns)
+      cfg.conns = conns
+      
+      gm = graphmanager(cfg)
+      try:
+        gm.setup()
+      except Exception as e:      ### TEMPORARY general catch
+        print "Bad configuration; moving on"
+        continue
+      sim = simulation()
+      sim.setup(gm.G, cfg)
+      cfg.printself()
+      
+      sim.run(endtime = starttime+cfg._time_limit*60)
+      Gdone = sim.export()
+      
+      ann = analyzer()
+      ann.load(Gdone, cfg)
+      ann.groupsummary()
+      ann.summary()
+      ann.dumpsummarydb(dblog)
+      if outfile: 
+        ann.dumpsummary(outfile)
+      if cfg._draw_graph:
+        ann.drawgraph()
+        print "Close plot to end program"
+        plt.show()
+      
+      agent.agentid=0
+      
+      tnow = time.time()
+      elapsed = (tnow - starttime)/60
+      print "Elapsed time:", round(elapsed,2)
+      
+      # if near time limit - quit
+      if time.time() > starttime + (cfg._time_limit-cfg._margin_time)*60:
+        print "OUT OF TIME!"
+        break
+      
+    if configuration._do_video:
+      for a in sim.humans:
+        a.endcapture()  
+    
+    if configuration._do_ratings:
+      for a in sim.humans:
+        a.disableratings()
+    
+    ## GIVE EXIT SURVEY HERE
+    mythreads = []
+    for a in sim.humans:
+      t = threading.Thread(target=a.exitsurvey)
+      mythreads.append(t)
+      t.start()
+    for t in mythreads:
+      t.join()
+    
+    # Collect final pay from the human agents
+    paydata = []
+    for a in sim.humans:
+      paydata.append( (a.id, a.finalpay) )
+    dblog.log_finalpay(paydata)
+    
+    #if configuration._do_ratings:
+    #  for a in sim.humans:
+    #    a.hideratings()
+    
+    dblog.log_sessionend()
+    k=raw_input('END OF EXPERIMENT. Press Enter to terminate server.')
+  
+      
+  elif sys.argv[1] == 'single':    # Run a single ... exit survey?
+    cfg = configuration()
+    
+    cw = clientwaiter()
+    conns = cw.getclients()
+    cfg.nhumans = len(conns)
+    cfg.conns = conns
+    
+    gm = graphmanager(cfg)
+    gm.setup()
+    sim = simulation()
+    sim.setup(gm.G, cfg)
+    
+    
+    #sim.run_ultimatum()
+    
+    ## TEST INTRO/EXIT SURVEYS HERE
+    #mythreads = []
+    #for a in sim.humans:
+      #t = threading.Thread(target=a.introsurvey)
+      #t.start()
+      #mythreads.append(t)
+    #for t in mythreads:
+      #t.join()
+      
+    mythreads = []
+    for a in sim.humans:
+      t = threading.Thread(target=a.exitsurvey)
+      mythreads.append(t)
+      t.start()
+    for t in mythreads:
+      t.join()
+    ## END TEST
+    
+    sim.run()
+    Gdone = sim.export()
+    
+    ann = analyzer()
+    ann.load(Gdone, cfg)
+    ann.groupsummary()
+    ann.summary()
+    ann.drawgraph()
+    print "Close plot to end program"
+    plt.show()
+  
+  elif sys.argv[1] == 'auto':     ## Automated option: run sims without humans and log to a file
+    allconfs = multiconfig()
+    outfile = sys.argv[2]
+    
+    confs = [conf for conf in allconfs.itersims()]
+    random.shuffle(confs)
+    
+    #for conf in allconfs.itersims():
+    for conf in confs:
+      conf.printself()
+      gm = graphmanager(conf)
+      gm.setup()
+      sim = simulation()
+      if sim.setup(gm.G, conf):
+        sim.run()
+      Gdone = sim.export()
+      ann = analyzer()
+      ann.load(Gdone, conf)
+      ann.summary()
+      ann.dumpsummary(outfile)
+      if conf._pause_after_sim:
+        k=raw_input()
+      agent.agentid = 0 

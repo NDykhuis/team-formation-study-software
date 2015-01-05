@@ -1,0 +1,8 @@
+Run "python simserver.py"
+  - with a filename if you want to log to a file 
+  - with 'single' for a single sim
+  - with 'auto' and a filename for running through all the sims automatically
+  - waits for human players to start
+Run "python frontend.py [server ip]"
+  - for as many clients as you want
+  - can use 'localhost' for server ip
