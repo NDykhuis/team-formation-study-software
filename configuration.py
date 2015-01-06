@@ -25,7 +25,7 @@ class configuration(object):
   nhumans = 0      # Number of humans (set by simserver based on how many frontends connect)
   ndumb = 0        # Number of random agents (rather than rational)
   
-  exchange_rate = 0.2   # Multiply sim-dollars by this to get real dollars
+  exchange_rate = 5.0   # Divide sim-dollars by this to get real dollars
   
   _do_video = False
   _capture_screenshots = False

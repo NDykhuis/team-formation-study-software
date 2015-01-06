@@ -916,7 +916,10 @@ class TFGui(object):
     c1 = tk.Label(cframe, text='The experiment is done!', font=self.fontmed)
     c2 = tk.Label(cframe, text='You earned '+CURR+str(round(self.totalpay,2))+'.', font=self.fontsm)
     exrate = configuration.exchange_rate
-    c3 = tk.Label(cframe, text='At the exchange rate of $'+'{:.2f}'.format(exrate)+'/'+CURR+'1, this converts to $'+str(round(self.totalpay*configuration.exchange_rate,2))+'.', font=self.fontsm)
+    c3 = tk.Label(cframe, text='At the exchange rate of {}{:.2f}/$1, this converts to ${:.2f}.'.format(exrate, CURR, self.totalpay/exrate), font=self.fontsm)
+    
+    
+    
     #self.infobutton = tk.Button(cframe, text='OK', font=self.fontmed, command=self.submit_information)
     c1.grid(row=0, column=0)
     c2.grid(row=1, column=0)
