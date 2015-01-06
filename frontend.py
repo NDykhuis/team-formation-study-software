@@ -12,7 +12,7 @@ import datetime
 import operator
 import copy
 
-from subprocess import call
+import subprocess
 
 from vidcapture import *
 
@@ -233,8 +233,8 @@ class TFGui(object):
     self.root.bind('<<startcapture>>', self.m_startcapture)
     self.root.bind('<<stopcapture>>', self.m_stopcapture)
     self.root.bind('<<endcapture>>', self.m_endcapture)
-    self.root.bind('<<startpreview>>', self.m_initvideo)
-    self.root.bind('<<endpreview>>', self.m_initvideo)
+    self.root.bind('<<startpreview>>', self.m_startpreview)
+    self.root.bind('<<endpreview>>', self.m_endpreview)
 
     self.root.bind('<<instructions>>', self.m_instructions)
     self.root.bind('<<updatepay>>', self.m_updatepay)
@@ -1597,8 +1597,10 @@ class TFGui(object):
 
     self.do_video, self.sessionid, self.userid = vdata
 
+    today = datetime.date.today()
+    
+    
     if self.do_video:
-      today = datetime.date.today()
       self.vidfile = '../data/ses_{sessionid:02d}_{date}/user_{userid:02d}/cap_{sessionid:02d}-{userid:02d}'.format(
         sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
       self.vidrec = vidcapture(self.vidfile)
@@ -1609,6 +1611,9 @@ class TFGui(object):
     if configuration._capture_screenshots:
       self.scrprefix = '../data/ses_{sessionid:02d}_{date}/user_{userid:02d}/scr_{sessionid:02d}-{userid:02d}'.format(
         sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
+      if not os.path.exists(os.path.dirname(self.scrprefix)):
+        os.makedirs(os.path.dirname(self.scrprefix))
+    
 
     print "Done starting video"
     self.backend.sendqueue.put('done')
@@ -1629,7 +1634,7 @@ class TFGui(object):
     if configuration._capture_screenshots:
       filename = self.scrprefix+"_{}_{}_scrcap.png".format(stime, sframe)
       try:
-        call(["import", "-window root "+filename])
+        subprocess.call("import -window root "+filename, shell=True)   # Note that shell=True is dangerous, but should be ok because we're creating the filename right here
       except OSError as e:
         # ImageMagick must not be installed
         print "ERROR calling ImageMagick function; is ImageMagick installed?"
