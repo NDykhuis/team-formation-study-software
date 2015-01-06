@@ -146,7 +146,7 @@ class db_logger(object):
   def log_sessionend(self):
     endtime = time.time()
     conn = sqlite3.connect(self.dbfile)
-    conn.execute('UPDATE session_config SET endtime=? WHERE sessionid=?', (endtime, self.sessionid))
+    conn.execute('UPDATE sessions SET endtime=? WHERE sessionid=?', (endtime, self.sessionid))
     conn.commit()
     conn.close()
     
