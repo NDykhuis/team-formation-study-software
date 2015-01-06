@@ -12,6 +12,8 @@ import datetime
 import operator
 import copy
 
+from subprocess import call
+
 from vidcapture import *
 
 from configuration import *
@@ -1602,8 +1604,22 @@ class TFGui(object):
       self.vidrec = None
       self.sframe = self.stime = self.eframe = self.etime = -1
 
+    if configuration._capture_screenshots:
+      self.scrprefix = '../data/ses_{sessionid:02d}_{date}/user_{userid:02d}/scr_{sessionid:02d}-{userid:02d}'.format(
+        sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
+
     print "Done starting video"
     self.backend.sendqueue.put('done')
+  
+  def save_screen(self, stime, sframe):
+    if configuration._capture_screenshots:
+      filename = self.scrprefix+"_{}_{}_scrcap.png".format(stime, sframe)
+      try:
+        call(["import", "-window root "+filename])
+      except OSError as e:
+        # ImageMagick must not be installed
+        print "ERROR calling ImageMagick function; is ImageMagick installed?"
+        print e
   
   def markstart(self):
     if self.vidrec:
@@ -1611,11 +1627,15 @@ class TFGui(object):
     else:
       self.stime = time.time()
       
+    self.save_screen(self.stime, self.sframe)
+      
   def markend(self):
     if self.vidrec:
       self.eframe, self.etime = self.vidrec.queryframetime()
     else:
       self.etime = time.time()
+
+    self.save_screen(self.etime, self.eframe)
       
   def m_getframetimes(self, event):
     self.getdata(event)
