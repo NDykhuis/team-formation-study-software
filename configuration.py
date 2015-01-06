@@ -28,6 +28,7 @@ class configuration(object):
   exchange_rate = 0.2   # Multiply sim-dollars by this to get real dollars
   
   _do_video = False
+  _capture_screenshots = True
 
   _do_intro_sim = True
     

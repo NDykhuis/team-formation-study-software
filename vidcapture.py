@@ -2,6 +2,7 @@ import numpy as np
 import threading
 import time
 import os
+from subprocess import call
 
 try:
   import cv2
@@ -99,6 +100,10 @@ class vidcapture(object):
     # event_description is a dictionary of column:value pairs
     timestamp = self.vidcap.nowtime
     frame = self.vidcap.frame
+    
+    #if configuration._capture_screenshots:
+    filename = "{}_{}_scrcap.png".format(timestamp, frame)
+    call(["import", "-window root "+filename])
     # write to file:
     # timestamp,frame,all_other_columns_in_event_description
   
