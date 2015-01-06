@@ -10,7 +10,6 @@ DEBUG_COMM = False
 def send_message(connection, message):
   if DEBUG_COMM:
     print "Sending", message
-  #s = pickle.dumps(message)
   s = json.dumps(message)
   if len(s) >= BUFFER_SIZE:
     return False
@@ -31,9 +30,7 @@ def recvall(sock, count):
 def receive_message(connection):
   s1 = recvall(connection, 4)
   msg_len = struct.unpack('!I', s1)[0]
-  #s = connection.recv()
   s2 = recvall(connection, msg_len)
-  #data = pickle.loads(s)
   try:
     data = json.loads(s2)
   except ValueError:

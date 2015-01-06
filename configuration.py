@@ -28,7 +28,7 @@ class configuration(object):
   exchange_rate = 0.2   # Multiply sim-dollars by this to get real dollars
   
   _do_video = False
-  _capture_screenshots = True
+  _capture_screenshots = False
 
   _do_intro_sim = True
     
@@ -99,11 +99,7 @@ class configuration(object):
   connections = 5
   max_connections = 8
   prob_rewire = 0.25
-  #graph_type = "small world"
-  #graph_type = 'barabasi_albert_graph'
   graph_type = 'connected_watts_strogatz_graph'
-  #graph_type = 'complete_graph'
-  #graph_type = 'grid_graph'
   # see: http://networkx.github.com/documentation/latest/reference/generators.html
   
   graph_class = 'graph'
@@ -135,31 +131,6 @@ class configuration(object):
   nskills = 4
   maxskills = 1
   
-  ## OBSOLETE
-  # Tasks require larger groups
-  # 1 is worth 10, 2 is worth 20, etc.
-  _tasks = [ ([0,0,0,0], 0),
-            ([1,1,1,1], 100),
-            ([2,2,2,2], 200), 
-            ([3,3,3,3], 300),
-            ([4,4,4,4], 400),
-            ([4,0,0,0], 40),
-            ([0,4,0,0], 80),
-            ([0,0,4,0], 120),
-            ([0,0,0,4], 160)
-            ]
-  
-  tasks = [ ([0,0,0,0], 0),
-            ([2,2,2,2], 200),
-            ([4,4,4,4], 400), 
-            ([6,6,6,6], 600),
-            ([8,8,8,8], 700),
-            ([8,0,0,0], 80),
-            ([0,8,0,0], 160),
-            ([0,0,8,0], 240),
-            ([0,0,0,8], 320)
-            ]
-  
   
   simnumber = 0
   _header = []      # Holds the sorted headings
@@ -170,16 +141,10 @@ class configuration(object):
   
   
   def __init__(self):
-    #self.task, self.taskinit = self._task_map[self.taskname]
-    #if self.taskinit is not None:
-    #  self.taskinit(self)
     self.task = self.bdtask
     self.setupbdtask()
   
   def reset(self):
-    #self.task, self.taskinit = self._task_map[self.taskname]
-    #if self.taskinit is not None:
-    #  self.taskinit(self)
     self.task = self.bdtask
     self.setupbdtask()
   
@@ -187,7 +152,6 @@ class configuration(object):
   # How much pay for a given set of skills?
   def multitask(self, skills):
     # This task will payoff only if the team has all of the required skills
-    
     tskills=tuple(skills)
     try:
       return self._taskdict[tskills]
@@ -203,14 +167,6 @@ class configuration(object):
     pay = (sum((n >= m for (n,m) in zip(skills, reqskills))) == self.nskills)*pay
     return pay
 
-  # Set up the pay structure for the bd task
-  def setupbdtask(self):
-    nagents = range(1,self.nskills+1)
-    base = 0
-    synergy = 5
-    paypera = range(base, base+self.nskills*synergy, synergy)
-    self.pays = [n*p for n,p in zip(nagents, paypera)]
-  
   # This task rewards breadth and depth
   def bdtask(self, skills):
     tskills = tuple(skills)
@@ -222,13 +178,14 @@ class configuration(object):
       pay = self.pays[depth] + self.pays[breadth]
       self._taskdict[tskills] = float(pay)
       return pay
-
-  def setupbdtask2(self):
-    self.setupbdtask()
-    self.values = [(n+1) for n in range(self.nskills)]
-    #self.values.reverse()   # Skill 0 has the highest pay
-    random.shuffle(self.values) # The high-pay task changes each round
-    self._taskdict = {}
+  
+  # Set up the pay structure for the bd task
+  def setupbdtask(self):
+    nagents = range(1,self.nskills+1)
+    base = 0
+    synergy = 5
+    paypera = range(base, base+self.nskills*synergy, synergy)
+    self.pays = [n*p for n,p in zip(nagents, paypera)]
   
   # This task rewards breadth and depth with different values for each skill
   def bdtask2(self, skills):
@@ -242,6 +199,15 @@ class configuration(object):
       self._taskdict[tskills] = float(pay)
       return pay
 
+  # Set up pay structure for the bdtask2
+  def setupbdtask2(self):
+    self.setupbdtask()
+    self.values = [(n+1) for n in range(self.nskills)]
+    #self.values.reverse()   # Skill 0 has the highest pay
+    random.shuffle(self.values) # The high-pay task changes each round
+    self._taskdict = {}
+  
+  
   #taskname = "equality_doublesize"
   #task = multitask
   taskname = "breadth_depth"
@@ -255,6 +221,8 @@ class configuration(object):
       'breadth_depth2':(bdtask2, setupbdtask2)}#,
       #'breadth_depth_local':(bdtask_local, setupbdtask_local)}
 
+  # Modify pay for a given task based on the agents in the group
+  # (for experimental manipulation, to de-value preferred agents or vice-versa)
   def atask(self, agents):
     # Add together all agent skills
     allskills = sum([a.skills for a in agents])
@@ -269,7 +237,10 @@ class configuration(object):
     return taskpay + adjustments
 
   # Utility functions will always be in descending order of importance, with a random tiebreaker and the group at the end
-  # Random tiebreaker should be <= 0 if agents should not switch between equally-good groups
+  # Random tiebreaker should be <= 0 if agents should not switch to an equally-good option
+  
+  # utility_agent:  consider (switching groups)
+  # utility_group:  acceptvote
   
   ## RANDOM UTILITY FUNCTIONS
   

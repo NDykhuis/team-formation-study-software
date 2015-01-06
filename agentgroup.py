@@ -297,6 +297,7 @@ class group(actor):
     
     # This speeds things up immensely in the complete graph!
     #self.applications = random.sample(self.applications, len(self.applications))
+    # no longer necessary because of random value in the tiebreaking code
     
     self.update()
     
@@ -304,9 +305,6 @@ class group(actor):
     nowpay = self.nowpay
     
     bestagent = None
-    
-    # Have each member vote on who to accept (-1 means accept no one)
-    #votes = [a.acceptvote(self.applications) for a in self.agents]    ## PARALLELIZE?
     
     # Have each member vote on who to accept (-1 means accept no one)
     votes = []
@@ -354,11 +352,11 @@ class group(actor):
       if self.cfg._verbose > 5:
         print "Group", self.id, "accepts", pick.id
       for a in self.agents:
-        # Notify the group about the agent that joined
+        # Notify the group about the agent that is accepted
         a.notifygaccept(pick.id)
     else:
       for a in self.agents:
-        # Notify the group about the agent that joined
+        # Notify the group that no one was accepted
         a.notifygaccept(-1)
       
     self.applications = []
@@ -412,9 +410,6 @@ class group(actor):
     nowpay = self.nowpay
     
     badagent = None
-    
-    # Have each member vote on who to accept (-1 means accept no one)
-    #votes = [a.expelvote() for a in self.agents]    ## PARALLELIZE?
     
     # Have each member vote on who to accept (-1 means accept no one)
     votes = []

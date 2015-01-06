@@ -254,8 +254,6 @@ class TFGui(object):
     self.root.bind('<<publicgoods>>', self.m_publicgoods)
     self.root.bind('<<publicgoods_conclusion>>', self.m_publicgoods_conclusion)
     
-    #self.root.bind('<<teamratings>>', self.m_teamratings)
-    #self.root.bind('<<teamratings>>', self.m_teamratings)
     self.root.bind('<<initratings>>', self.m_initratings)
     self.root.bind('<<getratings>>', self.m_getratings)
     self.root.bind('<<showratings>>', self.m_showratings)
@@ -1092,24 +1090,11 @@ class TFGui(object):
       aframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
       
       ### Create the label(s), checkbox/radio button
-      #tk.Label(gframe, text='Team '+self.gname(gid)+' ('+str(gsize)+' members)', font=self.fontsm).grid(row=0)
-      
-      #alab = tk.Label(aframe, text='Agent '+str(aid), font=self.fontsm)
-      #avlab = tk.Label(aframe, image=self.avatars_sm[aid])
-      #abtn = tk.Radiobutton(aframe, text='Pay: '+CURR+str(round(pay,2)), font=self.fontsm, variable=self.choice, value=aid)
-      #alab.grid(row=0, column=0, sticky='ew')
-      #avlab.grid(row=0, column=1)
-      #abtn.grid(row=1,column=0,columnspan=2,sticky='ew')
-      
       alab = tk.Label(aframe, image=self.avatars_sm[aid])
       abtn = tk.Radiobutton(aframe, text=self.aname(aid)+'\nEarn: '+CURR+str(round(pay,2)), font=self.fontsm, variable=self.choice, value=aid, indicatoron=0)
       alab.grid(row=0, column=0, sticky='nsew')
       #avlab.grid(row=0, column=1)
       abtn.grid(row=0,column=1, sticky='nsew')
-      
-      #agenttext = self.aname(aid)+'\nPay: '+CURR+str(round(pay,2))
-      #tk.Radiobutton(sb, text=agenttext, font=self.fontsm, variable=self.choice, value=aid, indicatoron=0).grid(row=r, column=c, sticky='ew') # Stand alone
-      #tk.Radiobutton(gframe, text='Pay: $'+str(pay), font=self.fontsm, variable=self.choice, value=gid).grid(row=1)  #indicatoron=0
       
       aframe.grid(row=r, column=c, sticky='ew')
       r += 1
@@ -1224,66 +1209,6 @@ class TFGui(object):
     
     self.nteam = len(neighbors)
     
-  ## STARS VERSION
-  #def make_teamview_publicgoods2(self, neighbors, contribs):
-    #if self.teamview is not None:
-      #self.teamwords.destroy()
-      #self.teamview.destroy()   ## ??
-    
-    #do_ratings = configuration._do_ratings
-    
-    #self.teamwords = tk.Frame(self.mainscreen, borderwidth=2, relief=tk.GROOVE)
-    ##self.teamview = tk.Frame(self.mainscreen, borderwidth=2, relief=tk.SUNKEN)
-    
-    #if self.sb:
-      #self.sb.destroy()
-    
-    #self.sb = content = tk.Frame(self.mwidgets['sidebar'], width=self.sidebarwid)
-    
-    #self.teamratings = {}
-    
-    #if max(neighbors) > len(self.avatars):
-      #raise IndexError('Not enough avatars!')
-    
-    #tk.Label(self.teamwords, text='Your team', font=self.fontmid).grid(row=0,column=0)
-    #tk.Label(self.teamwords, text='(Team '+self.gname(self.myteam)+')', font=self.fontsm).grid(row=1,column=0)
-    
-    ##neighbors.remove(self.myid)
-    ##neighbors.insert(0,self.myid)  # THIS BREAKS SYNCHRONIZATION WITH CONTRIBS
-    
-    ## pack with one entry for each team member, with their avatar and contribution
-    #for i, (aid, contrib) in enumerate(zip(neighbors, contribs)):
-      #frame = tk.Frame(content, borderwidth=2, relief=tk.GROOVE)
-      #img = tk.Label(frame, image=self.avatars[aid], height=64)
-      ##lab = tk.Label(frame, text=CURR+str(contrib), font=self.fontmed)
-      #lab = tk.Label(frame, text=(' You' if aid == self.myid else ' Agent '+str(aid))+' gave '+CURR+str(contrib), font=(self.fontsm if do_ratings else self.fontmid), justify=tk.LEFT)
-      ##lab2 = tk.Label(frame, text=' '+CURR+str(contrib), font=self.fontsm, justify=tk.LEFT)
-      #img.grid(row=0, rowspan=(2 if do_ratings else 1), column=0)
-      #lab.grid(row=0, column=1, sticky='ew')
-      
-      #if do_ratings and i != self.myid:
-        #tr = self.teamratings[aid] = []
-        #bframe = tk.Frame(frame)
-        #for j in range(5):
-          ##button = tk.Button(bframe, image=self.staroff, relief=tk.FLAT)#, command=self.star_click)
-          ##button.config(command=lambda: self.star_click(None, aid, button))
-          #button = tk.Label(bframe, image=self.staroff)
-          ##button = tk.Button(bframe, text=str(j), relief=tk.FLAT, font=self.fontsm)
-          ##button = tk.Checkbutton(bframe, selectimage=self.staron)
-          ## Or could use radiobutton, or scale
-          #button.bind("<Enter>", lambda e, aid=aid: self.star_enter(e,aid))
-          #button.bind("<Leave>", lambda e, aid=aid: self.star_leave(e,aid))
-          #button.bind("<ButtonRelease-1>", lambda e, aid=aid: self.star_click(e,aid,button))
-          #tr.append(button)
-          #button.grid(row=0, column=j)
-        ##lab2.grid(row=1, column=1, sticky='ew')
-        #bframe.grid(row=1, column=1, sticky='nsew')
-      
-      #frame.grid(row=i, column=0, sticky='nsew')
-    
-    #self.teamwords.grid(row=0, column=2, sticky='nsew')
-    #content.grid(row=0, column=0, sticky='nsew')
-  
   def no_close(self):
     pass
   
@@ -1397,21 +1322,6 @@ class TFGui(object):
     
     
     
-    
-    #if event:
-      #w = event.widget
-    #elif button:
-      #w = button
-    #if w['relief'] == tk.SUNKEN:
-      #active = True
-    #else:
-      #active = False
-    #for b in self.teamratings[aid]:
-      #b.config(relief=tk.FLAT)
-    #if not active:
-      #w.config(relief=tk.SUNKEN)
-    
-    
   def m_getratings(self, event):
     self.getdata(event)
     ratings = copy.copy(self.ratinglog)
@@ -1446,42 +1356,6 @@ class TFGui(object):
     self.setState(self.ratingbox, tk.NORMAL)
     self.backend.sendqueue.put('done')
   
-  ### These should be radiobuttons with indicatoron set to false
-  #def star_enter(self, event, aid):
-    #w = event.widget
-    #imgs = [self.staroff, self.staron]
-    #active = True
-    ## Activate stars up to the currently moused-over button
-    #for b in self.teamratings[aid]:
-      #b.config(image=imgs[active])
-      #if b == w:
-        #active = False
-  
-  #def star_leave(self, event, aid):
-    #w = event.widget
-    #imgs = [self.staroff, self.staron]
-    #active = False
-    ## Activate stars up to the currently active button
-    #for b in reversed(self.teamratings[aid]):
-      ##if b['state'] == tk.ACTIVE:
-      #if b['relief'] == tk.SUNKEN:
-        #active = True
-      #b.config(image=imgs[active])
-    
-  #def star_click(self, event=None, aid=None, button=None):
-    #if event:
-      #w = event.widget
-    #elif button:
-      #w = button
-    #if w['relief'] == tk.SUNKEN:
-      #active = True
-    #else:
-      #active = False
-    #for b in self.teamratings[aid]:
-      #b.config(relief=tk.FLAT)
-    #if not active:
-      #w.config(relief=tk.SUNKEN)
-    
   def update_neighbors(self, gdata):
     if not len(gdata):    return
     # gdata is (nbrid, gid) pairs
@@ -1797,13 +1671,6 @@ class TFGui(object):
     self.infobutton.grid(row=0, column=2)
     self.markstart()
     
-  #def make_publicgoods_sidebar(self):
-    #if self.sb is not None:
-      #self.sb.destroy()
-    
-    #sb = tk.Frame(self.mwidgets['sidebar'],width=self.sidebarwid)
-    #sb.grid(row=0, column=0, sticky='ew')
-    
     
   def m_publicgoods(self, event):
     nowpay = self.getdata(event)
@@ -1955,20 +1822,7 @@ class TFGui(object):
     self.markend()
     self.infobutton.grid_remove()
     self.backend.sendqueue.put('send_done')
-    #if configuration._do_ratings:
-      #aidratings = {}
-      #for aid, buttonlist in self.teamratings.iteritems():
-        #print "AB: ", aid, buttonlist
-        #for i,b in enumerate(buttonlist):
-          ##if b['state'] == tk.ACTIVE:       ##TODO: FIX THIS!
-          #if b['relief'] == tk.SUNKEN:       
-            #aidratings[aid] = i
-      #aids = aidratings.keys()
-      #ratings = aidratings.values()
-      ##self.backend.sendqueue.put('done')    ## TEMPORARY - should actually send ratings
-      #self.backend.sendqueue.put( (aids, ratings) )
-    #else:
-      #self.backend.sendqueue.put('done')
+    
     if self.sb:
       self.sb.destroy()
     

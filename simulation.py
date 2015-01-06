@@ -535,16 +535,6 @@ class simulation:
     
     agentdict = dict([(a.id, a) for a in agents])
     
-    #skills = [0]*cfg.nskills
-    #for a in agents:
-      #for i in range(len(skills)):
-          #skills[i] += a.skills[i]
-    #print "Total skills:", skills
-      
-    #for a in agents:
-    #  # Calculate agent value based on the default task structure
-    #  a.worth = sum( [(i+1)*10*a.skills[i] for i in range(cfg.nskills)] )
-    
     cfg._agentdict = agentdict
     
     for a in agents:

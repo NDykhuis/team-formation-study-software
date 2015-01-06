@@ -74,10 +74,6 @@ class analyzer:
     agentgroups = {}.fromkeys( dat['group'] for dat in agentdats )
     maxpay = max(max(dat['nowpay'] for dat in agentdats ), 1.0)
     
-    #HSV_tuples = [(x*1.0/len(agentgroups), 1, 0.6) for x in range(len(agentgroups))]
-    #newcolors = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
-    #random.shuffle(newcolors)
-  
     hueval = [x*1.0/len(agentgroups) for x in range(len(agentgroups))]
   
     # Hue is based on group, value is based on % of max pay
@@ -100,8 +96,6 @@ class analyzer:
     
     ## SOME DEBUG OUTPUT
     print G.size(), nx.number_connected_components(G.to_undirected())
-    #print cfg.task([4,0,0,0])/4.0
-    #print cfg.task([1,1,1,1])/4.0
     
     plt.figure(1)
     plt.clf()

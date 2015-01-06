@@ -154,7 +154,6 @@ class humanagent(agent):
     print "Agent", self.id, "ratings:", ratings
 
   def propose(self):
-    #print "Agent", self.id, "proposing!"
     task=self.cfg.task
     self.update()   ## Maybe needs to come after the propose message!
     
@@ -171,12 +170,10 @@ class humanagent(agent):
     self.logratings()
 
     # Send all data to GUI and blocking receive
-    #print "Sending propose"
     send_message(self.client, ('propose', gdata) )
 
     # Wait for user to reply with list of applications
     applications = receive_message(self.client)
-    #print "Received applications:", applications
     
     self.logratings(step='propose')
     
@@ -189,7 +186,6 @@ class humanagent(agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_apply(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, newpays, applications, sframe, eframe, stime, etime)
     
-    #print "ITERNUM:", self.cfg.iternum
     print "Agent", self.id, "proposes", applications
   
     for gid in applications:
@@ -344,20 +340,12 @@ class humanagent(agent):
   def postprocess(self, globalpay=None):
     self.update()
     self.messages.append('You earned '+CURR+str(round(self.nowpay,2)))
-    #if self.cfg._do_ratings and self.group.gsize > 1:
-    #  self.messages.append('You may now rate the behavior of your teammates if you wish.')
         
     self.logratings()
     send_message(self.client, ('addpay', round(self.nowpay, 2)) )
     send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
     done = receive_message(self.client)
     self.logratings(step='postprocess')
-    
-    #if self.cfg._do_ratings and self.group.gsize > 1:
-      #print "Receiving ratings from", self.id
-      #aids, ratings = receive_message(self.client)
-      #sframe, eframe, stime, etime = self.getframetimes()
-      #self.cfg._dblog.log_ratings(self.cfg.simnumber, self.id, self.group.id, teamids, ratings, sframe, eframe, stime, etime)
     
     
     self.messages = []
@@ -425,8 +413,6 @@ class humanagent(agent):
     teammates.remove(self)
     teamids = [n.id for n in teammates]
     teamdata = [(n.id, n.group.id, teampays[n.id]) for n in teammates]
-    #teamdata = sorted(teamdata, key=operator.itemgetter(2), reverse=True)
-    #print teamdata
     send_message(self.client, ('updatenbrs', teamdata) )
     
     send_message(self.client, ('publicgoods_conclusion', (newpay, (teammateids, contribs))))
@@ -442,15 +428,8 @@ class humanagent(agent):
     
     self.logratings()
     send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
-    #print "sent postprocess"
     done = receive_message(self.client)
-    #print "received done"
     self.logratings(step='pg_postprocess')
-    
-    #if self.cfg._do_ratings:
-      #aids, ratings = receive_message(self.client)
-      #sframe, eframe, stime, etime = self.getframetimes()
-      #self.cfg._dblog.log_ratings(self.cfg.simnumber, self.id, self.group.id, teamids, ratings, sframe, eframe, stime, etime)
     
     self.messages = []
     
@@ -481,7 +460,6 @@ class humanagent(agent):
     send_message(self.client, ('u_waitoffer', other_player))
   
   def decide_offer(self, other_player, amount):
-    print "sending decide offer"
     send_message(self.client, ('u_decideoffer', (other_player, amount)))
     result = receive_message(self.client)
     

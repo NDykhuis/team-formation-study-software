@@ -157,10 +157,6 @@ class simagent(agent, ultagent):
 
     bestagent = self.cfg.utility_tiebreaker(utility)
   
-    #if bestagent is not None:   ##TEMP
-    #  print "Agent",self.id,"Group",self.group.id,"votes:",bestagent,bestagent.id
-    #  print utility
-    
     if bestagent is not None and self.cfg._verbose > 5:
         print "Agent", self.id, "voting for agent", bestagent.id
 
@@ -186,8 +182,6 @@ class simagent(agent, ultagent):
     utility = self.cfg.utility_agent(self)
     # Accept if we find a positive dimension before we find a negative dimension
     # (each dimension strictly dominates the one beneath)
-    
-    #print "Agent", self.id, "Utility:", utility
     
     bestgroup = self.cfg.utility_tiebreaker(utility)
   
@@ -216,9 +210,6 @@ class simagent(agent, ultagent):
       else:
         paysans = task(myg.withoutskills(agent))/(myg.gsize-1)
       if paysans > nowpay:
-        #if self.cfg._verbose > 4:
-        #  print "Group", self.id, "expels", agent.id
-        #self.update()
         return agent
     return None
   
@@ -235,8 +226,6 @@ class simagent(agent, ultagent):
     #if not len(teammates):
     #  return
     nbrs = set(a.id for a in self.nbrs)
-    #lamenbrs = nbrs - teammates
-    #newnbrs = teammates - nbrs
     
     self.leftovers = self.maxweight - sum(dat['weight'] for dat in G[self.id].itervalues())
     

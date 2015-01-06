@@ -10,8 +10,6 @@ def r2(pay):
 class db_logger(object):
   def __init__(self, dbfile):
     self.dbfile = dbfile
-    #self.conn = sqlite3.connect(self.dbfile)
-    #self.c = self.conn.cursor()
     self.setup()
     
     self.NO_LOGGING = False     # TEMP: Set to true to disable database output
@@ -134,10 +132,8 @@ class db_logger(object):
     self.sessionid = cursor.lastrowid   # Could also use the SQLite function last_insert_rowid()
     conn.commit()
     
-    
     conn.close()
-    #self.conn = sqlite3.connect(self.dbfile)
-    #self.c = self.conn.cursor()
+    
     
   def log_config(self, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam):
     if self.NO_LOGGING: return
@@ -261,7 +257,6 @@ class db_logger(object):
     for aidvote, newpay in zip(naids, newpays):
       inserts.append( (None, timestamp, self.sessionid, 'acceptvote', simnum, iternum, aid, aidvote, r2(currpay), r2(newpay), maxpay, aidvote == accepts) )
     self.tflog_insert(inserts)
-    #print (timestamp, self.sessionid, aid, simnum, iternum, 'acceptvote', sframe, eframe, stime, etime) 
     self.tfevent_insert( (None, timestamp, self.sessionid, aid, simnum, iternum, 'acceptvote', sframe, eframe, stime, etime) )
     
   def log_join(self, simnum, iternum, aid, gids, currpay, newpays, acceptance, sframe=-1, eframe=-1, stime=-1, etime=-1):
