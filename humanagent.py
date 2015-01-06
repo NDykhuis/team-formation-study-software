@@ -52,6 +52,7 @@ class humanagent(agent):
     # send additional video info here
     vdata = (cfg._do_video, cfg._dblog.sessionid, self.id)
     send_message(self.client, ('initvideo', vdata))
+    send_message(self.client, ('startpreview', 0))
     
   def instructions(self):
     if self.cfg._do_ratings: self.hideratings()
@@ -73,6 +74,7 @@ class humanagent(agent):
     send_message(self.client, ('disableratings', 0))
 
   def introsurvey(self):
+    send_message(self.client, ('endpreview', 0))
     send_message(self.client, ('introsurvey', 0))
     gender, college, status = receive_message(self.client)
     self.cfg._dblog.log_introsurvey(self.id, (gender, college, status))

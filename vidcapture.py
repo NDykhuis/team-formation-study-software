@@ -36,6 +36,8 @@ class vidcapthread(threading.Thread):
     self.outfile.write('frame\ttime\n')
     self.capture = False  ## Switch this on and off from outside the thread
     self.alive = True
+    self.preview = False
+    self.windowsup = False
 
   def run(self):
     print "Starting video capture thread"
@@ -51,7 +53,12 @@ class vidcapthread(threading.Thread):
           self.nowtime, self.frame = time.time(), self.frame + 1
           # write timestamp to file
           self.outfile.write('{frame:08d}\t{time}\n'.format(frame=self.frame, time=self.nowtime))
-          #cv2.imshow('frame',frame)
+          
+          if self.preview:
+            cv2.imshow('frame',frame)
+            self.windowsup = True
+          elif self.windowsup:
+            cv2.destroyAllWindows()
           
           if not self.frame % 120:
             tnow = time.time()
@@ -71,7 +78,7 @@ class vidcapthread(threading.Thread):
     # Release everything if job is finished
     self.cap.release()
     #self.out.release()
-    #cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
 
 

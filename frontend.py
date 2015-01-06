@@ -233,6 +233,8 @@ class TFGui(object):
     self.root.bind('<<startcapture>>', self.m_startcapture)
     self.root.bind('<<stopcapture>>', self.m_stopcapture)
     self.root.bind('<<endcapture>>', self.m_endcapture)
+    self.root.bind('<<startpreview>>', self.m_initvideo)
+    self.root.bind('<<endpreview>>', self.m_initvideo)
 
     self.root.bind('<<instructions>>', self.m_instructions)
     self.root.bind('<<updatepay>>', self.m_updatepay)
@@ -1609,6 +1611,18 @@ class TFGui(object):
         sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
 
     print "Done starting video"
+    self.backend.sendqueue.put('done')
+  
+  def m_startpreview(self, event):
+    self.getdata(event)
+    if self.do_video:
+      self.vidrec.preview = True
+    self.backend.sendqueue.put('done')
+  
+  def m_endpreview(self, event):
+    self.getdata(event)
+    if self.do_video:
+      self.vidrec.preview = False
     self.backend.sendqueue.put('done')
   
   def save_screen(self, stime, sframe):
