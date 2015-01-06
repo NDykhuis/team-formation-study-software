@@ -61,7 +61,7 @@ class configuration(object):
   nsteps = 10      # Max number of iterations
   deaditers = 1     # How many iterations with no change before we stop
 
-  _time_limit = 30    # time limit in minutes
+  _time_limit = 30    # hard time limit in minutes; sim will be cut off after the current iteration when this time expires
   _margin_time = 3    # start the last sim no later than this many minutes before end
 
 
