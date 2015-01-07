@@ -310,8 +310,11 @@ class db_logger(object):
     iternum = -1
     inserts = []
     for otherid, othercontrib in zip(otherids, othercontribs):
-      inserts.append( (None, timestamp, self.sessionid, 'pubgood', simnum, iternum, userid, otherid, usercontrib, othercontrib, -1, -1) )   # A little hacky to shove this into tflog, but we'll leave it for now.
+      inserts.append( (None, timestamp, self.sessionid, 'pubgood', simnum, iternum, userid, otherid, usercontrib, othercontrib, usercontrib+keep, -1) )   # A little hacky to shove this into tflog, but we'll leave it for now.
     self.tflog_insert(inserts)
+    # currentpay = usercontrib
+    # newpay = othercontrib
+    # maxpay = amount group earned
     
     conn=sqlite3.connect(self.dbfile)
     conn.execute('INSERT INTO pglog VALUES (?,?,?,?,?,?,?,?,?)',
