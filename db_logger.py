@@ -81,7 +81,7 @@ class db_logger(object):
          eventtype text, simnum integer, iternum integer,
          userid integer, otherid integer,
          currentpay real, newpay real, maxpay real,
-         chosen integer)''')
+         nsame integer, chosen integer)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS tfevent
          (rowid integer primary key asc,
          timestamp real, sessionid integer,
@@ -209,8 +209,19 @@ class db_logger(object):
 
   def tflog_insert(self, inserts):
     if self.NO_LOGGING: return
+  
+    # Create a column that counts how many other options had the same value
+    # newpay is column 9 
+    # nsame is column 11
+    
+    nsames = {} # (value, count) dictionary
+    for ins in inserts:
+      nsames[ins[9]] = nsames.get(ins[9],0)+1
+    
+    newinserts = [ins[0:11]+(nsames[ins[9]],)+ins[11] for ins in inserts]   # splice in the nsame column (not elegant)
+  
     conn = sqlite3.connect(self.dbfile)
-    conn.executemany('INSERT INTO tflog VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', inserts)
+    conn.executemany('INSERT INTO tflog VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', newinserts)
     conn.commit()
     conn.close()
   
