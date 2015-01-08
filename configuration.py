@@ -156,8 +156,8 @@ class configuration(object):
   def nmemtask(self, skills):
     nmem = sum(skills)
     increward = 5
-    npay = min(nmem, self.nskills)-1
-    pay = npay * increward * npay   # (npay*increward) for each of the first (npay) members
+    npay = min(nmem, self.nskills)
+    pay = npay * increward * (npay-1)   # (npay*increward) for each of the first (npay) members
     return float(pay)
   
   # Optimized function to answer the question:

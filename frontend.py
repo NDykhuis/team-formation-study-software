@@ -916,7 +916,7 @@ class TFGui(object):
     c1 = tk.Label(cframe, text='The experiment is done!', font=self.fontmed)
     c2 = tk.Label(cframe, text='You earned '+CURR+str(round(self.totalpay,2))+'.', font=self.fontsm)
     exrate = configuration.exchange_rate
-    c3 = tk.Label(cframe, text='At the exchange rate of {}{:.2f}/$1, this converts to ${:.2f}.'.format(exrate, CURR, self.totalpay/exrate), font=self.fontsm)
+    c3 = tk.Label(cframe, text=u'At the exchange rate of {}{:.2f}/$1, this converts to ${:.2f}.'.format(CURR, exrate, self.totalpay/exrate), font=self.fontsm)
     
     
     
@@ -1875,6 +1875,8 @@ class messageTester(threading.Thread):
     self.guisend('publicgoods_conclusion', (10, ( (0,4,7,12), (2,3,4,5) ) ) )
     
     self.guisend('postprocess', 'here is some text')
+    
+    self.guisend('exitsurvey', 0)
     
     # General event generator
     while cmd != 'quit':

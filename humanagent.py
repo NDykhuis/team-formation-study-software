@@ -156,9 +156,9 @@ class humanagent(agent):
       print "ratings data is:", ratings
     print "Agent", self.id, "ratings:", ratings
 
-  def logratingstatus(self, eventtype, otherids, gemembers=None):
+  def logratingstatus(self, eventtype, otherids, gmembers=None):
     if gmembers is not None:
-      rtgs = [[self.current_ratings.get(a.id,-1) for a in g] for g in gmembers if len(g)]
+      rtgs = [[self.current_ratings.get(aid,-1) for aid in g] for g in gmembers if len(g)]
       currtgs = [-1 for grats in rtgs]
       avgrtgs = [sum(grats)/len(grats) for grats in rtgs]
       minrtgs = [min(grats) for grats in rtgs]
@@ -181,8 +181,10 @@ class humanagent(agent):
     idgroups = {g.id:g for g in nbrgroups}
 
     gdata = sorted([ (g.id, g.gsize, task(g.withskills(self))/(g.gsize+1), [a.id for a in g.agents]) for g in nbrgroups])
+    gids, gsizes, newpays, gmembers = zip(*gdata)
 
     self.logratings()
+    self.logratingstatus('apply', gids, gmembers)
 
     # Send all data to GUI and blocking receive
     send_message(self.client, ('propose', gdata) )
@@ -197,12 +199,9 @@ class humanagent(agent):
     else:
       self.messages.append('You did not apply to any groups')
 
-    gids, gsizes, newpays, gmembers = zip(*gdata)
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_apply(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, newpays, applications, sframe, eframe, stime, etime)
     
-    self.logratingstatus('apply', gids, gmembers)
-  
     print "Agent", self.id, "proposes", applications
   
     for gid in applications:
@@ -222,8 +221,10 @@ class humanagent(agent):
     
     idagents = {a.id:a for a in applicants}
     gdata = sorted([ (a.id, task(self.group.withskills(a))/(self.group.gsize+a.gsize)) for a in applicants])
+    naids, newpays = zip(*gdata)
     
     self.logratings()
+    self.logratingstatus('acceptvote', naids)
     
     # Send all data to GUI and blocking receive
     send_message(self.client, ('acceptvote', gdata) )
@@ -233,13 +234,11 @@ class humanagent(agent):
     
     self.logratings(step='accept')
 
-    naids, newpays = zip(*gdata)
     naids = list(naids); newpays = list(newpays)
     naids.append(-1); newpays.append(self.nowpay)   # Add the "accept no one" option
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_accept(self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, newpays, accept_id, sframe, eframe, stime, etime)
 
-    self.logratingstatus('acceptvote', naids)
 
     if accept_id != -1:
       print "Agent", self.id, "votes to accept", accept_id
@@ -260,8 +259,10 @@ class humanagent(agent):
     idagents = {a.id:a for a in myg.agents}
     del idagents[self.id]
     gdata = sorted([ (a.id, task(myg.withoutskills(a))/(myg.gsize-1)) for aid, a in sorted(idagents.items())])
+    naids, newpays = zip(*gdata)
     
     self.logratings()
+    self.logratingstatus('expelvote', naids)
     
     # Send all data to GUI and blocking receive
     send_message(self.client, ('expelvote', gdata) )
@@ -269,13 +270,10 @@ class humanagent(agent):
     # Wait for user to reply with list of applications
     expel_id = receive_message(self.client)
     
-    self.logratings(step='expel')
+    self.logratings(step='expelvote')
 
-    naids, newpays = zip(*gdata)
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_expel(self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, newpays, expel_id, sframe, eframe, stime, etime)
-
-    self.logratingstatus('expelvote', naids)
 
     print "Agent", self.id, "votes to expel", expel_id
 
@@ -298,8 +296,10 @@ class humanagent(agent):
     idgroups = {g.id:g for g in self.acceptances}
 
     gdata = sorted([ (g.id, g.gsize, task(g.withskills(self))/(g.gsize+1), [a.id for a in g.agents]) for g in self.acceptances])
+    gids, gsizes, gpays, gmembers = zip(*gdata)
     
     self.logratings()
+    self.logratingstatus('join', gids, gmembers)
     
     # Send all data to GUI and blocking receive
     send_message(self.client, ('consider', gdata) )
@@ -316,13 +316,10 @@ class humanagent(agent):
       # Player does not want to switch groups.
       pass 
     
-    gids, gsizes, gpays, gmembers = zip(*gdata)
     gids = list(gids); gsizes = list(gsizes); gpays = list(gpays)
     gids.append(-1); gsizes.append(self.group.gsize); gpays.append(self.nowpay)  # Add your current group (no change)
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_join(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, gpays, choice_id, sframe, eframe, stime, etime)
-    
-    self.logratingstatus('join', gids, gmembers)
     
     if choice_id != -1:
       print "Agent", self.id, "joins", choice_id
