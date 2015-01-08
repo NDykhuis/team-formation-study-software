@@ -156,7 +156,7 @@ class humanagent(agent):
       print "ratings data is:", ratings
     print "Agent", self.id, "ratings:", ratings
 
-  def logratings(self, eventtype, otherids, gemembers=None):
+  def logratingstatus(self, eventtype, otherids, gemembers=None):
     if gmembers is not None:
       rtgs = [[self.current_ratings.get(a.id,-1) for a in g] for g in gmembers if len(g)]
       currtgs = [-1 for grats in rtgs]
@@ -201,7 +201,7 @@ class humanagent(agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_apply(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, newpays, applications, sframe, eframe, stime, etime)
     
-    self.logratings('apply', gids, gmembers)
+    self.logratingstatus('apply', gids, gmembers)
   
     print "Agent", self.id, "proposes", applications
   
@@ -239,6 +239,8 @@ class humanagent(agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_accept(self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, newpays, accept_id, sframe, eframe, stime, etime)
 
+    self.logratingstatus('acceptvote', naids)
+
     if accept_id != -1:
       print "Agent", self.id, "votes to accept", accept_id
 
@@ -272,6 +274,8 @@ class humanagent(agent):
     naids, newpays = zip(*gdata)
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_expel(self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, newpays, expel_id, sframe, eframe, stime, etime)
+
+    self.logratingstatus('expelvote', naids)
 
     print "Agent", self.id, "votes to expel", expel_id
 
@@ -317,6 +321,8 @@ class humanagent(agent):
     gids.append(-1); gsizes.append(self.group.gsize); gpays.append(self.nowpay)  # Add your current group (no change)
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_join(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, gpays, choice_id, sframe, eframe, stime, etime)
+    
+    self.logratingstatus('join', gids, gmembers)
     
     if choice_id != -1:
       print "Agent", self.id, "joins", choice_id

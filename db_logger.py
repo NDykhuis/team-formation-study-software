@@ -226,7 +226,7 @@ class db_logger(object):
     for ins in inserts:
       nsames[ins[9]] = nsames.get(ins[9],0)+1
     
-    newinserts = [ins[0:11]+(nsames[ins[9]],)+ins[11] for ins in inserts]   # splice in the nsame column (not elegant)
+    newinserts = [ins[0:11]+(nsames[ins[9]],ins[11]) for ins in inserts]   # splice in the nsame column (not elegant)
   
     conn = sqlite3.connect(self.dbfile)
     conn.executemany('INSERT INTO tflog VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', newinserts)
