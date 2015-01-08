@@ -39,6 +39,8 @@ class humanagent(agent):
       # Icky hardcoding
       self.anames = ['Cat', 'Dog', 'Bear', 'Bird', 'Cow', 'Elephant', 'Fish', 'Frog', 'Gorilla', 'Lion', 'Monkey', 'Bee', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Sheep', 'Donkey']
     
+    self.current_ratings = {}
+    
     send_message(self.client, ('setmyid', self.id))
 
   def gname(self, gid):
@@ -147,11 +149,24 @@ class humanagent(agent):
     try:
       for r in ratings:
         r.extend( [simnum, iternum, step] )
+        self.current_ratings[r[1]] = r[2]
       self.cfg._dblog.log_ratings(ratings)
     except AttributeError:
       print "PROBLEM!"
       print "ratings data is:", ratings
     print "Agent", self.id, "ratings:", ratings
+
+  def logratings(self, eventtype, otherids, gemembers=None):
+    if gmembers is not None:
+      rtgs = [[self.current_ratings.get(a.id,-1) for a in g] for g in gmembers if len(g)]
+      currtgs = [-1 for grats in rtgs]
+      avgrtgs = [sum(grats)/len(grats) for grats in rtgs]
+      minrtgs = [min(grats) for grats in rtgs]
+      maxrtgs = [max(grats) for grats in rtgs]
+    else:
+      currtgs = [self.current_ratings.get(aid, -1) for aid in otherids]
+      avgrtgs = minrtgs = maxrtgs = [-1 for aid in otherids]
+    self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, currtgs, avgrtgs, minrtgs, maxrtgs)
 
   def propose(self):
     task=self.cfg.task
@@ -186,6 +201,8 @@ class humanagent(agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_apply(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, newpays, applications, sframe, eframe, stime, etime)
     
+    self.logratings('apply', gids, gmembers)
+  
     print "Agent", self.id, "proposes", applications
   
     for gid in applications:
