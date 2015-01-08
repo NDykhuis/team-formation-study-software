@@ -148,6 +148,16 @@ class configuration(object):
     self.task = self.bdtask
     self.setupbdtask()
   
+  # This task rewards groups based only on how many members are on a team
+  # Calculates number of members assuming that maxskills == 1
+  # Team max size is given by nskills
+  def nmemtask(self, skills):
+    nmem = sum(skills)
+    increward = 5
+    npay = min(nmem, self.nskills)
+    pay = npay * increward * npay   # (npay*increward) for each of the first (npay) members
+    return pay
+  
   # Optimized function to answer the question:
   # How much pay for a given set of skills?
   def multitask(self, skills):
