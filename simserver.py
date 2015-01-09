@@ -67,9 +67,9 @@ if __name__ == '__main__':
       std.expel_agents = False
       std.fully_connect_groups = True
       #std.n = 16   # Get this from configuration class
-      std.connections= 2
+      #std.connections= 2
       std.prob_rewire = 0
-      std.graph_type = 'connected_watts_strogatz_graph'
+      std.graph_type = 'cycle_graph'
       std.strategy = 'random'
       std.ndumb = 0
     else:
@@ -135,7 +135,7 @@ if __name__ == '__main__':
       ann.dumpsummarydb(dblog)
       if outfile: 
         ann.dumpsummary(outfile)
-      if std._draw_graph:
+      if std._draw_graph_after_sim or cfg._draw_graph:
         ann.drawgraph()
         print "Close plot to end program"
         plt.show()
@@ -167,7 +167,7 @@ if __name__ == '__main__':
         ann.dumpsummarydb(dblog)
         if outfile: 
           ann.dumpsummary(outfile)
-        if cfg._draw_graph:
+        if cfg._draw_graph_after_sim or cfg._draw_graph:
           ann.drawgraph()
           print "Close plot to end program"
           plt.show()
@@ -234,7 +234,7 @@ if __name__ == '__main__':
         ann.dumpsummarydb(dblog)
         if outfile: 
           ann.dumpsummary(outfile)
-        if cfg._draw_graph:
+        if cfg._draw_graph_after_sim or cfg._draw_graph:
           ann.drawgraph()
           print "Close plot to end program"
           plt.show()

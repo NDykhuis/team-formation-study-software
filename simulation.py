@@ -316,7 +316,8 @@ class simulation:
 
       if cfg._draw_graph:
         G = cfg._Gptr
-        plt.ion()
+        if not cfg._pause_graph:
+          plt.ion()
         plt.clf()
         ncolors = [G.graph['teamcolors'][a.group.id] for a in agents]
         
@@ -333,6 +334,8 @@ class simulation:
         
         nx.draw(G,pos = G.graph['layout'], node_color=ncolors, font_color='w', width=widths, edge_color=ecolors)
         plt.draw()
+        if cfg._pause_graph:
+          plt.show()        
 
       if cfg._pause_every_step:
         k = raw_input()

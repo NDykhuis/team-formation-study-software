@@ -70,7 +70,9 @@ class configuration(object):
   _display_every_step = False
   _pause_every_step = False
   _pause_after_sim = False
-  _draw_graph = True             # Controls graphical output
+  _draw_graph = True            # Controls graphical output
+  _pause_graph = True
+  _draw_graph_after_sim = True
   _verbose = 4                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  
