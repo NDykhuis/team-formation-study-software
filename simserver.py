@@ -38,6 +38,8 @@ def log(text, level=DEBUG):
 if __name__ == '__main__':
   alt_options = ['single', 'auto']
   
+  DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
+  
   if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
     allconfs = multiconfig()
     if len(sys.argv) > 1:
@@ -60,17 +62,28 @@ if __name__ == '__main__':
     
     # Standard starter configuration
     std = standardconfig = configuration()
-    std.groups_can_merge = False
-    std.expel_agents = False
-    std.fully_connect_groups = False
-    #std.n = 16   # Get this from configuration class
-    std.connections= 6
-    std.prob_rewire = 0
-    std.graph_type = 'connected_watts_strogatz_graph'
-    std.strategy = 'random'
-    std.ndumb = 0
-    std.simnumber = 0
+    if DYNAMIC:
+      std.groups_can_merge = False
+      std.expel_agents = False
+      std.fully_connect_groups = True
+      #std.n = 16   # Get this from configuration class
+      std.connections= 2
+      std.prob_rewire = 0
+      std.graph_type = 'connected_watts_strogatz_graph'
+      std.strategy = 'random'
+      std.ndumb = 0
+    else:
+      std.groups_can_merge = False
+      std.expel_agents = False
+      std.fully_connect_groups = False
+      #std.n = 16   # Get this from configuration class
+      std.connections= 6
+      std.prob_rewire = 0
+      std.graph_type = 'connected_watts_strogatz_graph'
+      std.strategy = 'random'
+      std.ndumb = 0
     
+    std.simnumber = 0
     std.nhumans = len(conns)
     std.conns = conns
 
@@ -131,64 +144,123 @@ if __name__ == '__main__':
     ## END INTRO SIMULATION
     
     
-    ## RUN MULTIPLE CONFIGURATIONS HERE
-    # Get all configurations we want to run
-    confs = [conf for conf in allconfs.itersims()]
-    #print [c.printself() for c in confs[0:10]]
-    random.shuffle(confs)
+    if DYNAMIC:
+      cfg = std     # Grab the standard config 
+      #G = Gdone     # Grab the graph (assumes we did the intro sim)
+      #sim = simulation()   # Keep the intro simulation
+      sim.reset()   # Reset after the intro sim
+      
+      i = 1
+      while True:   # Run sims ~forever~
+        #sim.setup(G, cfg)   # This resets the graph, but we want to just reset the teams
+        #sim.setup(Gdone, cfg) #?
+        #or is there some other way to reset teams without resetting the graph?
+        cfg.printself()
+        
+        sim.run(endtime = starttime+cfg._time_limit*60)
+        Gdone = sim.export()
+        
+        ann = analyzer()
+        ann.load(Gdone, cfg)
+        ann.groupsummary()
+        ann.summary()
+        ann.dumpsummarydb(dblog)
+        if outfile: 
+          ann.dumpsummary(outfile)
+        if cfg._draw_graph:
+          ann.drawgraph()
+          print "Close plot to end program"
+          plt.show()
+        
+        agent.agentid=0
+        
+        tnow = time.time()
+        elapsed = (tnow - starttime)/60
+        print "Elapsed time:", round(elapsed,2)
+        
+        # if near time limit - quit
+        if time.time() > starttime + (cfg._time_limit-cfg._margin_time)*60:
+          print "OUT OF TIME!"
+          break
+        
+        sim.reset()
+        cfg.simnumber += 1
+      
+        
+      if configuration._do_video:
+        for a in sim.humans:
+          a.endcapture()  
+      
+      if configuration._do_ratings:
+        for a in sim.humans:
+          a.disableratings()
+        
+        
+      ## END IF DYNAMIC
     
-    for i, conf in enumerate(confs):
-      conf.simnumber = i+1
-    
-    #for conf in allconfs.itersims():
-    for i,cfg in enumerate(confs):
+    else:
+      ## RUN MULTIPLE CONFIGURATIONS HERE
+      # Get all configurations we want to run
+      confs = [conf for conf in allconfs.itersims()]
+      #print [c.printself() for c in confs[0:10]]
+      random.shuffle(confs)
       
-      cfg.nhumans = len(conns)
-      cfg.conns = conns
+      for i, conf in enumerate(confs):
+        conf.simnumber = i+1
       
-      gm = graphmanager(cfg)
-      try:
-        gm.setup()
-      except Exception as e:      ### TEMPORARY general catch
-        print "Bad configuration; moving on"
-        continue
-      sim = simulation()
-      sim.setup(gm.G, cfg)
-      cfg.printself()
+      #for conf in allconfs.itersims():
+      for i,cfg in enumerate(confs):
+        
+        cfg.nhumans = len(conns)
+        cfg.conns = conns
+        
+        gm = graphmanager(cfg)
+        try:
+          gm.setup()
+        except Exception as e:      ### TEMPORARY general catch
+          print "Bad configuration; moving on"
+          continue
+        sim = simulation()
+        sim.setup(gm.G, cfg)
+        cfg.printself()
+        
+        sim.run(endtime = starttime+cfg._time_limit*60)
+        Gdone = sim.export()
+        
+        ann = analyzer()
+        ann.load(Gdone, cfg)
+        ann.groupsummary()
+        ann.summary()
+        ann.dumpsummarydb(dblog)
+        if outfile: 
+          ann.dumpsummary(outfile)
+        if cfg._draw_graph:
+          ann.drawgraph()
+          print "Close plot to end program"
+          plt.show()
+        
+        agent.agentid=0
+        
+        tnow = time.time()
+        elapsed = (tnow - starttime)/60
+        print "Elapsed time:", round(elapsed,2)
+        
+        # if near time limit - quit
+        if time.time() > starttime + (cfg._time_limit-cfg._margin_time)*60:
+          print "OUT OF TIME!"
+          break
+        
+      if configuration._do_video:
+        for a in sim.humans:
+          a.endcapture()  
       
-      sim.run(endtime = starttime+cfg._time_limit*60)
-      Gdone = sim.export()
+      if configuration._do_ratings:
+        for a in sim.humans:
+          a.disableratings()
+          
+      ## END MULTICONFIG ELSE
       
-      ann = analyzer()
-      ann.load(Gdone, cfg)
-      ann.groupsummary()
-      ann.summary()
-      ann.dumpsummarydb(dblog)
-      if outfile: 
-        ann.dumpsummary(outfile)
-      if cfg._draw_graph:
-        ann.drawgraph()
-        print "Close plot to end program"
-        plt.show()
-      
-      agent.agentid=0
-      
-      tnow = time.time()
-      elapsed = (tnow - starttime)/60
-      print "Elapsed time:", round(elapsed,2)
-      
-      # if near time limit - quit
-      if time.time() > starttime + (cfg._time_limit-cfg._margin_time)*60:
-        print "OUT OF TIME!"
-        break
-      
-    if configuration._do_video:
-      for a in sim.humans:
-        a.endcapture()  
-    
-    if configuration._do_ratings:
-      for a in sim.humans:
-        a.disableratings()
+    ## END BIG IF STATEMENT
     
     ## GIVE EXIT SURVEY HERE
     mythreads = []

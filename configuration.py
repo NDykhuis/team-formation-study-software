@@ -70,7 +70,7 @@ class configuration(object):
   _display_every_step = False
   _pause_every_step = False
   _pause_after_sim = False
-  _draw_graph = False             # Controls graphical output
+  _draw_graph = True             # Controls graphical output
   _verbose = 4                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  
@@ -614,7 +614,7 @@ elif PROTOCOL == 99:
   configuration._do_publicgoods = True
   configuration._hide_publicgoods = False
   configuration._do_ratings = True
-  configuration._time_limit = 5
+  configuration._time_limit = 10
   configuration._margin_time = 3
   configuration.delay_sim_agents = False
 

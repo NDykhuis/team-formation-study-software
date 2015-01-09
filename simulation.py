@@ -576,7 +576,7 @@ class simulation:
       adat['switches'] = a.switches
       adat['group'] = a.group.id
       adat['nowpay'] = a.nowpay
-      adat['type'] = ('human' if a.slow else ('dumb' if a.dumb else 'greedy'))
+      adat['type'] = ('human' if a.type=='human' else ('dumb' if a.dumb else 'greedy'))
     
     return G
   

@@ -250,7 +250,7 @@ class group(actor):
     if self.cfg.fully_connect_groups:
       for a in self.agents:
         if a != agent:
-          self.cfg._Gptr.add_edge(a.id, agent.id)
+          self.cfg._Gptr.add_edge(a.id, agent.id, weight=1.0, bias=0.0)
           a.addnbr(agent)
           agent.addnbr(a)
     
