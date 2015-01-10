@@ -202,7 +202,8 @@ class agent(actor):
     pass
     
   def reset(self):
-    self.group = 0
+    if not self.cfg.keep_teams:
+      self.group = 0
     self.acceptances = []
     self.switches = 0
     self.gsize = 1      # for compatibility with group merging

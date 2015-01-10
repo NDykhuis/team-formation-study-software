@@ -47,6 +47,8 @@ class configuration(object):
   
   show_skills = False    # show skills to the player
   
+  keep_teams = True     # After a simulation, keep the current teams   *NOT YET IMPLEMENTED*
+  
   agent_memory = True   ## TESTING - agents stop applying to groups that have rejected them
   agent_mem_threshold = 1
   agent_mem_decay = 0.5
@@ -71,8 +73,8 @@ class configuration(object):
   _pause_every_step = False
   _pause_after_sim = False
   _draw_graph = True            # Controls graphical output
-  _pause_graph = True
-  _draw_graph_after_sim = True
+  _pause_graph = False
+  _draw_graph_after_sim = False
   _verbose = 4                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  

@@ -497,7 +497,8 @@ class simulation:
     self.cfg._Gptr = self.G
     for a in self.agents:
       a.reset()
-    self.initgroups()
+    if not self.cfg.keep_teams:
+      self.initgroups()
     self.cfg.reset()
     
   def initgraph(self):
