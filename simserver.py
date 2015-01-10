@@ -83,6 +83,9 @@ if __name__ == '__main__':
       std.strategy = 'random'
       std.ndumb = 0
     
+    if std.social_sim_agents:   ## TESTING
+      std.expel_agents = True
+    
     std.simnumber = 0
     std.nhumans = len(conns)
     std.conns = conns

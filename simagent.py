@@ -54,6 +54,8 @@ class simagent(agent, ultagent):
     if self.cfg.agent_memory:
       self.initmem()
       
+    self.pgmem = {}         # Memory of what other agents have contributed
+      
     if self.cfg.delay_sim_agents:
       self.slow = True
     else:
@@ -146,7 +148,13 @@ class simagent(agent, ultagent):
     nowpay = self.nowpay
     
     bestagent = None
-    utility = self.cfg.utility_group(self.group)
+    if self.cfg.social_sim_agents:
+      #pay, memory, random, agent
+      nowgsize = self.group.gsize
+      clow, chigh = self.cfg.pg_contribrange[self.disposition]
+      utility = [(task(mygroup.withskills(a))/(nowgsize + a.gsize) - nowpay, self.pgmem.get(a.id, 1.0)-clow, random.random(), a) for a in self.group.applications]
+    else:
+      utility = self.cfg.utility_group(self.group)
 
     if self.cfg.agent_memory:
       # Remove all agents who I've voted for more than x times
@@ -201,17 +209,39 @@ class simagent(agent, ultagent):
     
     nowpay = self.nowpay
     myg = self.group
-    for agent in random.sample(myg.agents, myg.gsize):
-      if agent == self:
-        continue
-      if self.cfg.bias:
-        newpay = task(myg.withoutskills(agent))
-        paysans = float(sum([a.nowpaycalc(newpay, delagent=agent) for a in myg.agents]))/len(myg.agents)
-      else:
-        paysans = task(myg.withoutskills(agent))/(myg.gsize-1)
-      if paysans > nowpay:
-        return agent
-    return None
+    
+    #for agent in random.sample(myg.agents, myg.gsize):
+    #  if agent == self:
+    #    continue
+    if self.cfg.social_sim_agents:
+      clow, chigh = self.cfg.pg_contribrange[self.disposition]
+      
+      # Expel agents that contrib less than me in PG (first pass at AI)
+      utilities = [
+        (max(0, (task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay)), # Always expel agents that lower pay, but keep the option open to expel ones that raise pay
+        clow - self.pgmem.get(agent.id,chigh) - random.random(), # Probability to expel agents that contrib less than me
+        agent)
+        for agent in myg.agents if agent != self]
+      worstagent = self.cfg.utility_tiebreaker(utilities)
+      return worstagent
+    else:
+      utilities = [(task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay, random.random(), agent) for agent in myg.agents if agent != self]
+      worstagent = self.cfg.utility_tiebreaker(utilities)
+      return worstagent
+    
+    # Old code; use new utility system instead
+    #for agent in random.sample(myg.agents, myg.gsize):
+      #if agent == self:
+        #continue
+      #if self.cfg.bias:
+        #newpay = task(myg.withoutskills(agent))
+        #paysans = float(sum([a.nowpaycalc(newpay, delagent=agent) for a in myg.agents]))/len(myg.agents)
+      #else:
+        #paysans = task(myg.withoutskills(agent))/(myg.gsize-1)
+      #if paysans > nowpay:
+        #return agent
+      #else:
+        #return None
   
   
   def postprocess(self, globalpay=None):
@@ -315,16 +345,20 @@ class simagent(agent, ultagent):
     
     self.tf_delay('publicgoods')
     
-    if self.disposition == 'nice':
-      contrib = random.randint(int(0.7*nowpayint), nowpayint)
-    elif self.disposition == 'mean':
-      contrib = random.randint(0, int(0.25*nowpayint))
-    elif self.disposition == 'fair':
-      contrib = random.randint(int(0.5*nowpayint), int(0.8*nowpayint))
-    elif self.disposition == 'random':
-      contrib = random.randint(0, nowpayint)
+    clow, chigh = self.cfg.pg_contribrange[self.disposition]
+    contrib = random.randint(int(clow*nowpayint), int(chigh*nowpayint))
     #return contrib
     pgdict[self] = (contrib, nowpayint-contrib)
   
   def publicgoods_postprocess(self, newpay, teampays):
     self.pgpay = newpay
+    
+    prepay = self.nowpay
+    if prepay == 0:
+      return
+    
+    # Keep a running mean of percent contribution for each neighbor
+    alpha = self.cfg.social_learning_rate
+    for aid,contrib in teampays.iteritems():
+      pctcontrib = float(contrib) / prepay
+      self.pgmem[aid] = (alpha*pctcontrib + (1.0-alpha)*self.pgmem.get(aid, 0.5))

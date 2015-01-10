@@ -40,6 +40,12 @@ class configuration(object):
   #pubgoods_mult = 1.2
   pubgoods_mult = 20     # Percent the pot is increased
   _hide_publicgoods = True
+  pg_contribrange = {   # Percent to contribute in pubgoods, low to high
+    'nice':(0.7, 1.0),
+    'mean':(0.0, 0.25),
+    'fair':(0.5, 0.8),
+    'random':(0.0, 1.0)
+  }
   
   _show_other_team_members = True
   
@@ -61,6 +67,7 @@ class configuration(object):
   _agent_delay_dev = {'propose':2.0, 'acceptvote':2.5, 'join':1.5, 'expelvote':1.5, 'conclude':1.0, 'publicgoods':5.0}  # Approx as half the IQR
   
   social_sim_agents = True
+  social_learning_rate = 0.66
   
   nsteps = 10      # Max number of iterations
   deaditers = 1     # How many iterations with no change before we stop
@@ -74,9 +81,9 @@ class configuration(object):
   _display_every_step = False
   _pause_every_step = False
   _pause_after_sim = False
-  _draw_graph = True            # Controls graphical output
+  _draw_graph = False            # Controls graphical output
   _pause_graph = False
-  _draw_graph_after_sim = False
+  _draw_graph_after_sim = True
   _verbose = 4                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  
@@ -515,6 +522,7 @@ class configuration(object):
         best = bestu[-1]; break
       if u < 0:
         best = None; break
+      # if u == 0: continue
     return best
 
   def utility_tiebreaker_normalized(self, utility):
