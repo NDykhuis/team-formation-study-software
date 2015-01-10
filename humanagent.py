@@ -196,7 +196,7 @@ class humanagent(agent):
     
     if len(applications):
       gnames = [self.gname(gid) for gid in applications]
-      self.messages.append('You applied to group'+('s' if len(gnames) > 1 else '')+', '.join(gnames))
+      self.messages.append('You applied to group'+('s ' if len(gnames) > 1 else ' ')+', '.join(gnames))
     else:
       self.messages.append('You did not apply to any groups')
 
