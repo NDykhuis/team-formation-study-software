@@ -52,7 +52,7 @@ class vidcapthread(threading.Thread):
           # set current time and frame in a thread-safe(?) way
           self.nowtime, self.frame = time.time(), self.frame + 1
           # write timestamp to file
-          self.outfile.write('{frame:08d}\t{time}\n'.format(frame=self.frame, time=self.nowtime))
+          self.outfile.write('{frame:08d}\t{time:.16f}\n'.format(frame=self.frame, time=self.nowtime))
           
           if self.preview:
             cv2.imshow('frame',frame)
