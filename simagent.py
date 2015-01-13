@@ -219,7 +219,7 @@ class simagent(agent, ultagent):
       # Expel agents that contrib less than me in PG (first pass at AI)
       utilities = [
         (max(0, (task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay)), # Always expel agents that lower pay, but keep the option open to expel ones that raise pay
-        clow - self.pgmem.get(agent.id,chigh) - random.random(), # Probability to expel agents that contrib less than me
+        (clow+chigh)*0.5 - self.pgmem.get(agent.id,chigh) - random.random(), # Probability to expel agents that contrib less than my average
         agent)
         for agent in myg.agents if agent != self]
       worstagent = self.cfg.utility_tiebreaker(utilities)
