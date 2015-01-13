@@ -152,7 +152,7 @@ class simagent(agent, ultagent):
       #pay, memory, random, agent
       nowgsize = self.group.gsize
       clow, chigh = self.cfg.pg_contribrange[self.disposition]
-      utility = [(task(mygroup.withskills(a))/(nowgsize + a.gsize) - nowpay, self.pgmem.get(a.id, 1.0)-clow, random.random(), a) for a in self.group.applications]
+      utility = [(task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay, self.pgmem.get(a.id, 1.0)-clow, random.random(), a) for a in self.group.applications]
     else:
       utility = self.cfg.utility_group(self.group)
 
