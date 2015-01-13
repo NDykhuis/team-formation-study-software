@@ -455,9 +455,9 @@ class group(actor):
     if pick != None:
       if self.cfg._verbose > 5:
         print "Group", self.id, "expels", pick.id
-      #for a in self.agents:
+      for a in self.agents:
         # Notify the group about the agent that joined
-        #a.notifyjoin(pick.id, add=False)    ## TEMPORARY: should probably be "notifygexpel"
+        a.notifyjoin(pick.id, add=False)    ## TEMPORARY: should probably be "notifygexpel"
       return pick
     else:
       for a in self.agents:

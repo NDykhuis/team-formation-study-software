@@ -337,7 +337,13 @@ class humanagent(agent):
   def notifyjoin(self, aid, add=True):
     changewords = ['left', 'joined']
     if aid != -1:
-      self.messages.append(self.aname(aid)+' '+changewords[add]+' your team')
+      if add:
+        self.messages.append(self.aname(aid)+' '+changewords[add]+' your team')
+      else:
+        if aid == self.id:
+          self.messages.append('You were expelled from your team')
+        else:
+          self.messages.append('Your team expelled '+self.aname(aid))
     else:
       self.messages.append('No agents '+changewords[add]+' your team')
   
