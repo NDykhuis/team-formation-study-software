@@ -3,6 +3,7 @@ from agentgroup import *
 from utils import *
 import datetime
 import operator
+import json
 
 CURR = u'\xA7'
 
@@ -42,6 +43,20 @@ class humanagent(agent):
     self.current_ratings = {}
     
     send_message(self.client, ('setmyid', self.id))
+    self.sendcfg()
+    
+
+  def sendcfg(self):
+    cfgdict = self.cfg.outputcfg(showhidden=True)
+    # remove all things that are not jsonnable
+    jsoncfg = {}
+    for k,v in cfgdict.iteritems():
+      try:    # This is hacky...
+        json.dumps(v)
+        jsoncfg[k] = v
+      except TypeError:
+        pass
+    send_message(self.client, ('setconfig', jsoncfg))
 
   def gname(self, gid):
     return self.gletters[gid]
@@ -59,8 +74,7 @@ class humanagent(agent):
   def instructions(self):
     if self.cfg._do_ratings: self.hideratings()
     
-    cfgdict = self.cfg.outputcfg(showhidden=True)
-    send_message(self.client, ('setconfig', cfgdict))
+    self.sendcfg()
     
     send_message(self.client, ('instructions', 0))
     receive_message(self.client)

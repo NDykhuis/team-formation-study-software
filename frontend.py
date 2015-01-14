@@ -900,15 +900,21 @@ class TFGui(object):
   
   
   
-  
-  def make_instructions(self):
-    instrframe = tk.Frame(self.content)
-    instr1 = tk.Label(instrframe, text='Team formation game', font=self.fontmed)
+  def update_instruction_text(self):
     longtext = "In this game, you will try to form a team with the other players. Your payoff will depend on which players you have on your team. The payoff your current team will receive is always shown in the upper-right corner of the screen.\n\nThis game has "+('4' if self.cfgdict['expel_agents'] else '3') +" stages:\n1. Apply: you can apply to join any neighboring teams. The amount you will earn on each team is shown.\n2. Accept: your team will receive applications from neighboring players. You can vote on which you would like to accept (if any) to join your team. The amount of money your team will make if each of the other players joins is shown.\n3. Join: if you receive any acceptances from other teams, you may choose which team to join.\n"
     if self.cfgdict['expel_agents']:
       longtext += "4. Expel: in some games, you may vote for a player to be expelled from your team.\n"
     longtext += "\nThe game will continue until no one changes teams for a round, or until "+str(self.cfgdict['nsteps'])+" rounds have passed.\nThese instructions will be repeated throughout the game for reference. Have fun!\n"
+    
+    self.instruction_text.config(text=longtext)
+    
+  
+  def make_instructions(self):
+    instrframe = tk.Frame(self.content)
+    instr1 = tk.Label(instrframe, text='Team formation game', font=self.fontmed)
+    longtext = 'These are the instructions' # Placeholder
     instr2 = tk.Label(instrframe, text=longtext, font=self.fontsm, wraplength=800, justify=tk.LEFT)
+    self.instruction_text = instr2
     if not self.infobutton:
       self.infobutton = tk.Button(instrframe, text='OK', font=self.fontmed, command=self.submit_information_blocking)
     self.infobutton.grid(row=2, column=0)
@@ -934,18 +940,28 @@ class TFGui(object):
     self.widgetrefs.extend([cframe, c1, c2, c3])
     return cframe
     
-  def make_publicgoods_instructions(self):
-    instrframe = tk.Frame(self.content)
+  def update_pubgoods_instruction_text(self):
     titletext = 'Teamwork stage' if not self.cfgdict['_hide_publicgoods'] else 'Bonus stage'
-    instr1 = tk.Label(instrframe, text=titletext, font=self.fontmed)
-    #longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(int((self.cfgdict['pubgoods_mult']-1)*100))+"% and split evenly among everyone on your team.\n"
+    self.pubgoods_title_text.config(text=titletext)
     
     if not self.cfgdict['_hide_publicgoods']:
       longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(self.cfgdict['pubgoods_mult'])+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
     else:
       longtext = "Your team has been entered into a lottery. You may contribute as much of your pay as you would like to the lottery. The amount you contribute determines the amount you are eligible to win."
     
+    self.pubgoods_instruction_text.config(text=longtext)
+    
+  def make_publicgoods_instructions(self):
+    instrframe = tk.Frame(self.content)
+    titletext = 'Next Stage'    # Placeholder
+    instr1 = tk.Label(instrframe, text=titletext, font=self.fontmed)
+    self.pubgoods_title_text = instr1
+    
+    #longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(int((self.cfgdict['pubgoods_mult']-1)*100))+"% and split evenly among everyone on your team.\n"
+    
+    longtext = 'These are the instructions for public goods'    # Placeholder
     instr2 = tk.Label(instrframe, text=longtext, font=self.fontsm, wraplength=800, justify=tk.LEFT)
+    self.pubgoods_instruction_text = instr2
     
     if not self.infobutton:
       self.infobutton = tk.Button(instrframe, text='OK', font=self.fontmed, command=self.submit_information_blocking)
@@ -1453,6 +1469,7 @@ class TFGui(object):
     
   def m_instructions(self, event):
     self.getdata(event)
+    self.update_instruction_text()
     self.show_screen(self.instructions)
     if self.infobutton:
       self.infobutton.destroy()
@@ -1461,6 +1478,7 @@ class TFGui(object):
     
   def m_publicgoods_instructions(self, event):
     self.getdata(event)
+    self.update_pubgoods_instruction_text()
     self.show_screen(self.publicgoods_instructions)
     #self.infobutton.grid()
     if self.infobutton:
