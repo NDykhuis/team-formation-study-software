@@ -211,6 +211,8 @@ class TFGui(object):
     self.root.bind('<<exitsurvey>>', self.m_exitsurvey)
     self.root.bind('<<exit>>', self.m_exit)
     
+    self.root.bind('<<setconfig>>', self.m_setconfig)
+    
     self.root.bind('<<ultimatum>>', self.m_ultimatum)
     self.root.bind('<<u_instructions>>', self.m_u_instructions)
     self.root.bind('<<u_makeoffer>>', self.m_u_makeoffer)
@@ -396,6 +398,10 @@ class TFGui(object):
     
 
     return sframe
+  
+  def m_setconfig(self, event):
+    self.cfgdict = self.getdata(event)
+    self.backend.sendqueue.put('done')
   
   def m_initratings(self, event):
     neighbors = self.getdata(event)
@@ -898,10 +904,10 @@ class TFGui(object):
   def make_instructions(self):
     instrframe = tk.Frame(self.content)
     instr1 = tk.Label(instrframe, text='Team formation game', font=self.fontmed)
-    longtext = "In this game, you will try to form a team with the other players. Your payoff will depend on which players you have on your team. The payoff your current team will receive is always shown in the upper-right corner of the screen.\n\nThis game has "+('4' if configuration.expel_agents else '3') +" stages:\n1. Apply: you can apply to join any neighboring teams. The amount you will earn on each team is shown.\n2. Accept: your team will receive applications from neighboring players. You can vote on which you would like to accept (if any) to join your team. The amount of money your team will make if each of the other players joins is shown.\n3. Join: if you receive any acceptances from other teams, you may choose which team to join.\n"
-    if configuration.expel_agents:
+    longtext = "In this game, you will try to form a team with the other players. Your payoff will depend on which players you have on your team. The payoff your current team will receive is always shown in the upper-right corner of the screen.\n\nThis game has "+('4' if self.cfgdict['expel_agents'] else '3') +" stages:\n1. Apply: you can apply to join any neighboring teams. The amount you will earn on each team is shown.\n2. Accept: your team will receive applications from neighboring players. You can vote on which you would like to accept (if any) to join your team. The amount of money your team will make if each of the other players joins is shown.\n3. Join: if you receive any acceptances from other teams, you may choose which team to join.\n"
+    if self.cfgdict['expel_agents']:
       longtext += "4. Expel: in some games, you may vote for a player to be expelled from your team.\n"
-    longtext += "\nThe game will continue until no one changes teams for a round, or until "+str(configuration.nsteps)+" rounds have passed.\nThese instructions will be repeated throughout the game for reference. Have fun!\n"
+    longtext += "\nThe game will continue until no one changes teams for a round, or until "+str(self.cfgdict['nsteps'])+" rounds have passed.\nThese instructions will be repeated throughout the game for reference. Have fun!\n"
     instr2 = tk.Label(instrframe, text=longtext, font=self.fontsm, wraplength=800, justify=tk.LEFT)
     if not self.infobutton:
       self.infobutton = tk.Button(instrframe, text='OK', font=self.fontmed, command=self.submit_information_blocking)
@@ -915,7 +921,7 @@ class TFGui(object):
     cframe = tk.Frame(self.content)
     c1 = tk.Label(cframe, text='The experiment is done!', font=self.fontmed)
     c2 = tk.Label(cframe, text='You earned '+CURR+str(round(self.totalpay,2))+'.', font=self.fontsm)
-    exrate = configuration.exchange_rate
+    exrate = self.cfgdict['exchange_rate']
     c3 = tk.Label(cframe, text=u'At the exchange rate of {}{:.2f}/$1, this converts to ${:.2f}.'.format(CURR, exrate, self.totalpay/exrate), font=self.fontsm)
     
     
@@ -930,12 +936,12 @@ class TFGui(object):
     
   def make_publicgoods_instructions(self):
     instrframe = tk.Frame(self.content)
-    titletext = 'Teamwork stage' if not configuration._hide_publicgoods else 'Bonus stage'
+    titletext = 'Teamwork stage' if not self.cfgdict['_hide_publicgoods'] else 'Bonus stage'
     instr1 = tk.Label(instrframe, text=titletext, font=self.fontmed)
-    #longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(int((configuration.pubgoods_mult-1)*100))+"% and split evenly among everyone on your team.\n"
+    #longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(int((self.cfgdict['pubgoods_mult']-1)*100))+"% and split evenly among everyone on your team.\n"
     
-    if not configuration._hide_publicgoods:
-      longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(configuration.pubgoods_mult)+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
+    if not self.cfgdict['_hide_publicgoods']:
+      longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(self.cfgdict['pubgoods_mult'])+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
     else:
       longtext = "Your team has been entered into a lottery. You may contribute as much of your pay as you would like to the lottery. The amount you contribute determines the amount you are eligible to win."
     
@@ -1024,7 +1030,7 @@ class TFGui(object):
       ### Create the label(s), checkbox/radio button
       #tk.Label(gframe, text='Team '+self.gname(gid)+' ('+str(gsize)+' members)', font=self.fontsm).grid(row=0)
       grouptext = 'Team '+self.gname(gid)
-      if not configuration._show_other_team_members:
+      if not self.cfgdict['_show_other_team_members']:
         grouptext += ' ('+str(gsize)+' member'+('s' if gsize != 1 else '')+')'
       grouptext += '\nEarn: '+CURR+str(round(pay,2))
       
@@ -1041,7 +1047,7 @@ class TFGui(object):
       #gbutton.grid(row=0, column=0, sticky='ew')
       gbutton.grid(row=i, column=0, sticky='ew')  
       
-      if configuration._show_other_team_members:    # Add view of other team members
+      if self.cfgdict['_show_other_team_members']:    # Add view of other team members
         #tframe = tk.Frame(gframe, background=self.colors[gid])
         tframe = tk.Frame(sb, background=self.colors[gid])
         r = 0; c = 0
@@ -1190,7 +1196,7 @@ class TFGui(object):
     #neighbors.remove(self.myid)
     #neighbors.insert(0,self.myid)  # THIS BREAKS SYNCHRONIZATION WITH CONTRIBS
     
-    if not configuration._hide_publicgoods:
+    if not self.cfgdict['_hide_publicgoods']:
       tk.Label(self.teamview, text='Contributions:', font=self.fontsm).grid(row=0, column=0, sticky='nsew')
     
     rowoffset = 1
@@ -1200,7 +1206,7 @@ class TFGui(object):
       img = tk.Label(frame, image=self.avatars[aid], height=64)
       #lab = tk.Label(frame, text=CURR+str(contrib), font=self.fontmed)
       lab = tk.Label(frame, text=(' You' if aid == self.myid else ' '+self.aname(aid)), font=self.fontsm, justify=tk.LEFT)
-      ctext = ' '+CURR+str(contrib) if not configuration._hide_publicgoods else ''
+      ctext = ' '+CURR+str(contrib) if not self.cfgdict['_hide_publicgoods'] else ''
       lab2 = tk.Label(frame, text=ctext, font=self.fontsm, justify=tk.LEFT)
       img.grid(row=0, rowspan=2, column=0)
       lab.grid(row=0, column=1, sticky='ew')
@@ -1237,7 +1243,7 @@ class TFGui(object):
     self.ratinglog = []
     
     #titlelabel = tk.Label(rb, text='Player ratings', font=self.fontsm)
-    if not configuration._hide_publicgoods:
+    if not self.cfgdict['_hide_publicgoods']:
       titletext = 'Here, you can rate the other players.\nThese ratings are for your reference\nand will not be shown to the other players'
     else:
       titletext = 'Here is a list of the other players.'
@@ -1260,7 +1266,7 @@ class TFGui(object):
       rw = self.ratingwidgets[aid] = []
       v = self.ratingvars[aid] = tk.IntVar()
       bframe = tk.Frame(frame)
-      if aid != self.myid and not configuration._hide_publicgoods:  ## Do not allow you to rate yourself!
+      if aid != self.myid and not self.cfgdict['_hide_publicgoods']:  ## Do not allow you to rate yourself!
         for j in range(5):
           button=tk.Radiobutton(bframe, image=self.staroff, relief=tk.FLAT, indicatoron=False, variable=v, value=j+1)
           #button.bind("<Enter>", lambda e, aid=aid: self.star_enter(e,aid))
@@ -1485,7 +1491,7 @@ class TFGui(object):
       self.vidrec = None
       self.sframe = self.stime = self.eframe = self.etime = -1
 
-    if configuration._capture_screenshots:
+    if self.cfgdict['_capture_screenshots']:
       self.scrprefix = '../data/ses_{sessionid:02d}_{date}/user_{userid:02d}/scr_{sessionid:02d}-{userid:02d}'.format(
         sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
       if not os.path.exists(os.path.dirname(self.scrprefix)):
@@ -1508,7 +1514,7 @@ class TFGui(object):
     self.backend.sendqueue.put('done')
   
   def save_screen(self, stime, sframe):
-    if configuration._capture_screenshots:
+    if self.cfgdict['_capture_screenshots']:
       filename = self.scrprefix+"_{}_{}_scrcap.png".format(stime, sframe)
       try:
         subprocess.call("import -window root "+filename, shell=True)   # Note that shell=True is dangerous, but should be ok because we're creating the filename right here
@@ -1663,7 +1669,7 @@ class TFGui(object):
     information = self.getdata(event)
     self.show_screen(self.mainscreen)
     self.mwidgets['title'].config(text='Round Done', bg=self.bgdefault)
-    #if not configuration._do_ratings:
+    #if not self.cfgdict['_do_ratings']:
     #  self.sb.destroy()
     self.mwidgets['instructions'].config(text=information)
     if self.infobutton:
@@ -1686,7 +1692,7 @@ class TFGui(object):
     if 'pgwidgets' not in self.mwidgets:
       pgw = self.mwidgets['pgwidgets'] = {}
       content = pgw['content'] = tk.Frame(self.mwidgets['sidebar'],width=self.sidebarwid)
-      cdesc = 'the shared pot' if not configuration._hide_publicgoods else 'the lottery'
+      cdesc = 'the shared pot' if not self.cfgdict['_hide_publicgoods'] else 'the lottery'
       pgw['offerlab'] = tk.Label(content, text='How much do you contribute\nto '+cdesc+'?', font=self.fontmid)
       pgw['offerlab'].grid(row=0, column=0)
       pgw['offervar'] = tk.IntVar()
@@ -1694,7 +1700,7 @@ class TFGui(object):
       pgw['offerspin'] = tk.Scale(content, from_=0, to=nowpay, font=self.fontmid, variable=pgw['offervar'], tickinterval=nowpay/5, orient=tk.HORIZONTAL) #width=3,
       pgw['offerspin'].grid(row=1, column=0, sticky='ew')
       pgw['offervar'].trace(mode='w', callback = self.update_pay_publicgoods)
-      if configuration._hide_publicgoods:
+      if self.cfgdict['_hide_publicgoods']:
         pgw['winnings'] = tk.Label(content, text='You could win between '+CURR+'0 and '+CURR+'0', font=self.fontsm)
         pgw['winnings'].grid(row=2, column=0)
       pgw['submit'] = tk.Button(content, text='Submit', font=self.fontmid, command=self.submit_publicgoods)
@@ -1704,7 +1710,7 @@ class TFGui(object):
       pgw['offerspin'].grid()
       pgw['offervar'].set(0)
       pgw['offerspin'].config(to=nowpay)
-      if configuration._hide_publicgoods:
+      if self.cfgdict['_hide_publicgoods']:
         pgw['winnings'].config(text='You could win between '+CURR+'0 and '+CURR+'0')
       pgw['submit'].config(text='Submit')
       self.setState(pgw['submit'], tk.NORMAL)
@@ -1719,8 +1725,8 @@ class TFGui(object):
     # update neighbor view with team members
     # -- this is done by the humanagent on the server before this function is called
 
-    if not configuration._hide_publicgoods:
-      longtext = 'At this stage, choose how much of your potential pay you\nwould like to contribute to the shared pot and select "Submit"\nThe pot will be increased by '+str(configuration.pubgoods_mult)+"% and split evenly among everyone on your team.\nEach team member's contribution will be shown publicly to the other members of the team."
+    if not self.cfgdict['_hide_publicgoods']:
+      longtext = 'At this stage, choose how much of your potential pay you\nwould like to contribute to the shared pot and select "Submit"\nThe pot will be increased by '+str(self.cfgdict['pubgoods_mult'])+"% and split evenly among everyone on your team.\nEach team member's contribution will be shown publicly to the other members of the team."
     else:
       longtext = "Choose how much of your pay you would like to enter in the lottery.\nThe amount you contribute determines the amount you are eligible to win."
 
@@ -1734,7 +1740,7 @@ class TFGui(object):
   def update_pay_publicgoods(self, varname, elementname, mode):
     amount = int(self.mwidgets['pgwidgets']['offerspin'].get())
     self.mwidgets['nowpay'].config(text=CURR+str(self.pg_nowpay - amount))
-    if configuration._hide_publicgoods:
+    if self.cfgdict['_hide_publicgoods']:
       minwin = amount*1.2 / self.nteam
       maxwin = (amount + self.pg_nowpay*(self.nteam-1))*1.2 / self.nteam
       self.mwidgets['pgwidgets']['winnings'].config(text='You could win between '+CURR+str(minwin)+' and '+CURR+str(maxwin))

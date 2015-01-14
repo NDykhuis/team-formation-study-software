@@ -561,13 +561,13 @@ class configuration(object):
       if k[0] != '_':
         print k, v
       
-  def outputcfg(self):
+  def outputcfg(self, showhidden=False):
     cfg = {}
     vard = dict(vars(configuration))
     vard.update(vars(self))
     for k,v in vard.iteritems():
       dtype = type(v).__name__
-      if dtype!='instancemethod' and dtype != 'function' and k[0] != "_":
+      if dtype!='instancemethod' and dtype != 'function' and (showhidden or k[0] != "_"):
         cfg[k] = v
     return cfg
 

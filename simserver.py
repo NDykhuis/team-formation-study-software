@@ -83,9 +83,6 @@ if __name__ == '__main__':
       std.strategy = 'random'
       std.ndumb = 0
     
-    if std.social_sim_agents:   ## TESTING
-      std.expel_agents = True
-    
     std.simnumber = 0
     std.nhumans = len(conns)
     std.conns = conns
@@ -148,6 +145,9 @@ if __name__ == '__main__':
     
     
     if DYNAMIC:
+      if std.social_sim_agents:   ## TESTING
+        std.expel_agents = True     # only on 2nd and future sims; not necessary in first game.
+      
       cfg = std     # Grab the standard config 
       #G = Gdone     # Grab the graph (assumes we did the intro sim)
       #sim = simulation()   # Keep the intro simulation

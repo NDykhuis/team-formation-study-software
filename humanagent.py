@@ -58,6 +58,10 @@ class humanagent(agent):
     
   def instructions(self):
     if self.cfg._do_ratings: self.hideratings()
+    
+    cfgdict = self.cfg.outputcfg(showhidden=True)
+    send_message(self.client, ('setconfig', cfgdict))
+    
     send_message(self.client, ('instructions', 0))
     receive_message(self.client)
     #if self.cfg._do_ratings: self.showratings()
