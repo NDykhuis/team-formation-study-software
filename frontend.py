@@ -170,6 +170,8 @@ class TFGui(object):
     self.staroff = tk.PhotoImage(file='star_off3.gif')
 
     self.sidebarwid = 264
+    self.sidebarheight = 400
+    self.csize = 400            # Canvas size for neighbor view
     
     self.infobutton = None
 
@@ -930,8 +932,6 @@ class TFGui(object):
     exrate = self.cfgdict['exchange_rate']
     c3 = tk.Label(cframe, text=u'At the exchange rate of {}{:.2f}/$1, this converts to ${:.2f}.'.format(CURR, exrate, self.totalpay/exrate), font=self.fontsm)
     
-    
-    
     #self.infobutton = tk.Button(cframe, text='OK', font=self.fontmed, command=self.submit_information)
     c1.grid(row=0, column=0)
     c2.grid(row=1, column=0)
@@ -974,6 +974,7 @@ class TFGui(object):
   def make_mainscreen(self):
     mainframe = tk.Frame(self.content)
     mainframe.grid_columnconfigure(1, minsize=self.sidebarwid)  # keep the sidebar size constant
+    mainframe.grid_rowconfigure(1, minsize=self.sidebarheight)
     mainframe.grid_rowconfigure(2, minsize=150) # keep the instructions row from changing sizes
     
     mw = self.mwidgets = {}
@@ -1019,10 +1020,25 @@ class TFGui(object):
     
     return mainframe
     
+  def update_sidebar_size(self):
+    mw = self.mwidgets
+    # For complete graphs, remove the neighbor view entirely
+    if self.cfgdict['graph_type'] == 'complete_graph':
+      mw['neighbors'].grid_remove()
+      mw['sidebar'].grid(row=1,column=0, sticky='nsew', columnspan=2)
+      mw['sidebar'].config(height=self.csize)
+    else:
+      mw['neighbors'].grid(row=1, column=0)
+      mw['sidebar'].grid(row=1, column=1)
+    
   def make_sidebar(self, gdata, chooseone=False):
     if self.sb is not None:
       self.sb.destroy()
     
+    # Controls number of rows before we start a new column in the list of groups
+    MAX_GROUP_ROWS = 6
+    
+    # Controls rows of avatar icons within the group button
     maxgsize = max(len(g[3]) for g in gdata)
     ROW_MAX_ICONS = 3 if maxgsize <= 6 else 4
     
@@ -1036,6 +1052,14 @@ class TFGui(object):
     self.choices = {}
     sb.grid_columnconfigure(0, weight=1)
     sb.grid_columnconfigure(1, weight=1)
+    
+    grow = 0; gcol = 0  # row and column of the current group button
+    def nextspot(r, c):
+      r += 1
+      if r >= MAX_GROUP_ROWS:
+        r = 0; c += 2
+      return r, c
+    
     for i,(gid, gsize, pay, gmembers) in enumerate(gdata):
       #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
       if gsize == 0:
@@ -1061,34 +1085,38 @@ class TFGui(object):
         self.choices[gid] = chosen
         
       #gbutton.grid(row=0, column=0, sticky='ew')
-      gbutton.grid(row=i, column=0, sticky='ew')  
+      #gbutton.grid(row=i, column=0, sticky='ew')  
+      gbutton.grid(row=grow, column=gcol, sticky='ew')  
       
       if self.cfgdict['_show_other_team_members']:    # Add view of other team members
         #tframe = tk.Frame(gframe, background=self.colors[gid])
         tframe = tk.Frame(sb, background=self.colors[gid])
-        r = 0; c = 0
+        tr = 0; tc = 0
         for aid in gmembers:
-          tk.Label(tframe, image=self.avatars_sm[aid], background=self.colors[gid]).grid(row=r,column=c)
-          c += 1
-          if c >= ROW_MAX_ICONS:
-            c = 0; r += 1
+          tk.Label(tframe, image=self.avatars_sm[aid], background=self.colors[gid]).grid(row=tr,column=tc)
+          tc += 1
+          if tc >= ROW_MAX_ICONS:
+            tc = 0; tr += 1
         #tframe.grid(row=0, column=1, sticky='nsew', ipadx=5)
-        tframe.grid(row=i, column=1, sticky='nsew', ipadx=5)
+        #tframe.grid(row=i, column=1, sticky='nsew', ipadx=5)
+        tframe.grid(row=grow, column=gcol+1, sticky='nsew', ipadx=5)
       
       #gframe.grid(row=i, column=0, sticky='ew')
-      sb.grid_rowconfigure(i, weight=1)
-    
+      sb.grid_rowconfigure(grow, weight=1)
+      
+      grow, gcol = nextspot(grow, gcol)
+      
     if chooseone:
-      i += 1
+      #grow, gcol = nextspot(grow, gcol)
       #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
       #gframe.grid(row=i, column=0, sticky='ew')
-      tk.Radiobutton(sb, text='Stay with Team '+self.gname(self.myteam)+'\nEarn: '+self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=i, sticky='ew', columnspan=2)
-      i += 1
+      tk.Radiobutton(sb, text='Stay with Team '+self.gname(self.myteam)+'\nEarn: '+self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=grow, column=gcol, sticky='ew', columnspan=2)
+      grow, gcol = nextspot(grow, gcol)
       self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_accept)
     else:
       self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_propose)
     
-    self.submit.grid(row=i+1, column=0, sticky='ew', columnspan=2)
+    self.submit.grid(row=grow, column=gcol, sticky='ew', columnspan=2)
     
     self.sb = sb
     
@@ -1142,7 +1170,6 @@ class TFGui(object):
     self.sb = sb
     
   def make_neighborview(self):
-    self.csize = 400
     self.nsize = 50
     self.canvas = tk.Canvas(self.mwidgets['neighbors'], height=self.csize, width=self.csize)
     can = self.canvas
@@ -1382,7 +1409,9 @@ class TFGui(object):
     self.backend.sendqueue.put('done')
   
   def update_neighbors(self, gdata):
+    # Draw the graphical representation of the social network
     if not len(gdata):    return
+    if self.cfgdict['graph_type'] == 'complete_graph':   return     # No sense drawing if we can't see it.
     # gdata is (nbrid, gid) pairs
     # 400 x 400 drawing area
     can = self.canvas
@@ -1475,6 +1504,8 @@ class TFGui(object):
       self.infobutton.destroy()
     self.infobutton = tk.Button(self.instructions, text='OK', font=self.fontmed, command=self.submit_information_blocking)
     self.infobutton.grid(row=2, column=0)
+    # Update anything else that needs to change based on the current configuration
+    self.update_sidebar_size()
     
   def m_publicgoods_instructions(self, event):
     self.getdata(event)

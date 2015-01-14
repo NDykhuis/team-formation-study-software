@@ -144,14 +144,15 @@ class graphmanager:
       graph_ok = graph_ok and nx.is_connected(G)
       
       # Ensure that humans (or everyone) have reasonable number of edges
-      degrees = [d for d in G.degree().values() if d > cfg.max_connections]
-      if len(degrees):
-        print "Too many edges:", degrees
-      graph_ok = graph_ok and not len(degrees)
+      if not cfg.graph_type == 'complete_graph':
+        degrees = [d for d in G.degree().values() if d > cfg.max_connections]
+        if len(degrees):
+          print "Too many edges:", degrees
+        graph_ok = graph_ok and not len(degrees)
       
       ntries += 1
       if ntries > 200:
-        raise nx.NetworkXError("Maximum number of tries exceeded")
+        raise nx.NetworkXError("Could not create valid graph; maximum number of tries exceeded")
 
     if cfg.graphseed is not None:
       random.setstate(currstate)

@@ -38,7 +38,8 @@ def log(text, level=DEBUG):
 if __name__ == '__main__':
   alt_options = ['single', 'auto']
   
-  DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
+  DYNAMIC = False   # Temporary; should be replaced with command-line or configuration.py option
+  KEEP_GRAPH = True
   
   if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
     allconfs = multiconfig()
@@ -79,7 +80,7 @@ if __name__ == '__main__':
       #std.n = 16   # Get this from configuration class
       std.connections= 6
       std.prob_rewire = 0
-      std.graph_type = 'connected_watts_strogatz_graph'
+      std.graph_type = 'complete_graph' #'connected_watts_strogatz_graph'
       std.strategy = 'random'
       std.ndumb = 0
     
@@ -144,7 +145,7 @@ if __name__ == '__main__':
     ## END INTRO SIMULATION
     
     
-    if DYNAMIC:
+    if KEEP_GRAPH:
       if std.social_sim_agents:   ## TESTING
         std.expel_agents = True     # only on 2nd and future sims; not necessary in first game.
       

@@ -83,7 +83,7 @@ class configuration(object):
   _pause_after_sim = False
   _draw_graph = False            # Controls graphical output
   _pause_graph = False
-  _draw_graph_after_sim = True
+  _draw_graph_after_sim = False
   _verbose = 4                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  

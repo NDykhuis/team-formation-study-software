@@ -168,7 +168,7 @@ class agent(actor):
     ### IMPLEMENT IN HUMAN CLIENT ###
     pass
   
-  def notifyjoin(self, aid, add=True):
+  def notifyjoin(self, aid, add=True, expel=False):
     ### IMPLEMENT IN HUMAN CLIENT ###
     pass
   
@@ -457,12 +457,12 @@ class group(actor):
         print "Group", self.id, "expels", pick.id
       for a in self.agents:
         # Notify the group about the agent that joined
-        a.notifyjoin(pick.id, add=False)    ## TEMPORARY: should probably be "notifygexpel"
+        a.notifyjoin(pick.id, add=False, expel=True)    ## TEMPORARY: should probably be "notifygexpel"
       return pick
     else:
       for a in self.agents:
         # Notify the group about the agent that joined
-        a.notifyjoin(-1, add=False)
+        a.notifyjoin(-1, add=False, expel=True)
       return None
 
   def postprocess(self):

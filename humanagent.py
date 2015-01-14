@@ -353,10 +353,10 @@ class humanagent(agent):
     else:
       self.messages.append(actor+' voted to allow no one to join your team')
     
-  def notifyjoin(self, aid, add=True):
+  def notifyjoin(self, aid, add=True, expel=False):
     changewords = ['left', 'joined']
     if aid != -1:
-      if add:
+      if not expel:
         self.messages.append(self.aname(aid)+' '+changewords[add]+' your team')
       else:
         if aid == self.id:
