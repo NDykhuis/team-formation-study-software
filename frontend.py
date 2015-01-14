@@ -401,7 +401,7 @@ class TFGui(object):
   
   def m_setconfig(self, event):
     self.cfgdict = self.getdata(event)
-    self.backend.sendqueue.put('done')
+    self.backend.sendqueue.put('send_done')
   
   def m_initratings(self, event):
     neighbors = self.getdata(event)

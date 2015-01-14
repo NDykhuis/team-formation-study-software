@@ -57,6 +57,7 @@ class humanagent(agent):
       except TypeError:
         pass
     send_message(self.client, ('setconfig', jsoncfg))
+    receive_message(self.client)    # Make sure the config gets set before moving on
 
   def gname(self, gid):
     return self.gletters[gid]

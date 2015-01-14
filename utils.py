@@ -2,7 +2,7 @@ import cPickle as pickle
 import json
 import struct
 
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 4096
 SERVER_PORT = 1234
 
 DEBUG_COMM = False
@@ -12,7 +12,8 @@ def send_message(connection, message):
     print "Sending", message
   s = json.dumps(message)
   if len(s) >= BUFFER_SIZE:
-    return False
+    raise IOError("Message too large to send!")
+    #return False
   connection.sendall(struct.pack('!I', len(s)))
   connection.sendall(s)
   return True
