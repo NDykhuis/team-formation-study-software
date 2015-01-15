@@ -63,6 +63,8 @@ class humanagent(agent):
     return self.gletters[gid]
   
   def aname(self, aid):
+    if aid == self.myid:
+      return "You"
     return self.anames[aid]
   
   def initvideo(self):
@@ -364,7 +366,10 @@ class humanagent(agent):
         else:
           self.messages.append('Your team expelled '+self.aname(aid))
     else:
-      self.messages.append('No agents '+changewords[add]+' your team')
+      if expel:
+        self.messages.append('No agents were expelled from your team')
+      else:
+        self.messages.append('No agents '+changewords[add]+' your team')
   
   def postprocess_iter(self):
     # Send all data to GUI and blocking receive

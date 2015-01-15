@@ -401,7 +401,7 @@ class group(actor):
 
   def expelvote_thread(self, a, votes):
     vote = a.expelvote()
-    votes.append(vote)
+    votes[a] = vote
 
   def expel_agent(self):
     if self.gsize == 1:
@@ -413,7 +413,7 @@ class group(actor):
     badagent = None
     
     # Have each member vote on who to accept (-1 means accept no one)
-    votes = []
+    votes = {}
     if self.cfg._threaded_sim:
       mythreads = []
       for a in random.sample(self.agents, self.gsize):
@@ -423,26 +423,30 @@ class group(actor):
           t.start()
           mythreads.append(t)
         else:
-          votes.append(a.expelvote())
+          votes[a] = a.expelvote()
       for t in mythreads:
         t.join()
     else:
-      votes = [a.expelvote() for a in self.agents]
+      votes = {a:a.expelvote() for a in self.agents}
+    
+    voters = votes.keys()
+    votes = votes.values()
     
     if not len(votes):
       print "ERROR: no votes received!"
       self.applications = []
       return
     if self.cfg._verbose > 3 and self.slow:
-      print "Group", self.id, "receives expel votes:", [(a.id if a is not None else -1) for a in votes]
+      #print "Group", self.id, "receives expel votes:", [(a.id if a is not None else -1) for a in votes]
+      print "Group", self.id, "receives expel votes:", {v.id:(a.id if a is not None else -1) for v,a in zip(voters,votes)}
     
     # Master list of agents to expel
     expelees = []
     
     # If any agent votes for itself, make it leave the group
     newvotes = []
-    for v,a in zip(votes, self.agents):
-      if v == a.id:
+    for v,a in zip(votes, voters):
+      if v != None and v.id == a.id:
         expelees.append(a)
       else:
         newvotes.append(v)  # If agent left the group, remove from the expel vote.
