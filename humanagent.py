@@ -329,12 +329,12 @@ class humanagent(agent):
     
     self.logratings(step='consider')
     
-    if choice_id != -1:
-      self.messages.append('You switched to group '+self.gname(choice_id))
-      self.switchgroup(idgroups[choice_id])
-    else:
+    if choice_id == -1:
       # Player does not want to switch groups.
       pass 
+    else:
+      self.messages.append('You switched to group '+self.gname(choice_id))
+      self.switchgroup(idgroups[choice_id])
     
     gids = list(gids); gsizes = list(gsizes); gpays = list(gpays)
     gids.append(-1); gsizes.append(self.group.gsize); gpays.append(self.nowpay)  # Add your current group (no change)
