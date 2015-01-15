@@ -1168,7 +1168,7 @@ class TFGui(object):
     if self.cfgdict['allow_leaving'] and expelstep:
       # Add a button to leave the group
       # TEMPORARY: assume you get $0 on your own
-      tk.Radiobutton(sb, text='Leave Team '+self.gname(self.myteam)+'\nEarn: '+CURR+'0', font=self.fontsm, variable=self.choice, value=self.myid, indicatoron=0).grid(row=r, column=c, sticky='ew')
+      tk.Radiobutton(sb, text='Leave Team '+self.gname(self.myteam)+'\nEarn: '+CURR+'0.0', font=self.fontsm, variable=self.choice, value=self.myid, indicatoron=0).grid(row=r, column=c, sticky='ew')
       r,c = nextspot(r,c)
     
     #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
