@@ -136,7 +136,7 @@ if __name__ == '__main__':
       ann.dumpsummarydb(dblog)
       if outfile: 
         ann.dumpsummary(outfile)
-      if std._draw_graph_after_sim or cfg._draw_graph:
+      if std._draw_graph_after_sim or std._draw_graph:
         ann.drawgraph()
         print "Close plot to end program"
         plt.show()
