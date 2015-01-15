@@ -277,8 +277,8 @@ class humanagent(agent):
     myg = self.group
   
     idagents = {a.id:a for a in myg.agents}
-    del idagents[self.id]
-    gdata = sorted([ (a.id, task(myg.withoutskills(a))/(myg.gsize-1)) for aid, a in sorted(idagents.items())])
+    #del idagents[self.id]
+    gdata = sorted([ (a.id, task(myg.withoutskills(a))/(myg.gsize-1)) for aid, a in sorted(idagents.items()) if aid != self.id])
     naids, newpays = zip(*gdata)
     
     self.logratings()
@@ -297,12 +297,12 @@ class humanagent(agent):
 
     print "Agent", self.id, "votes to expel", expel_id
 
-    if expel_id != -1:
-      #self.messages.append('You voted to expel agent '+str(accept_id)+' from the group')
-      return idagents[expel_id]
-    else:
+    if expel_id == -1:
       # No member should leave the team
       return None
+    else:
+      #self.messages.append('You voted to expel agent '+str(accept_id)+' from the group')
+      return idagents[expel_id]
 
 
   def consider(self):
