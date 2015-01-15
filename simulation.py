@@ -287,13 +287,15 @@ class simulation:
       ### SERIAL - expel agents
       expelee = None
       if cfg.expel_agents:
+        # Theoretically, there should always be enough empty groups for everyone
         emptygroups = [g for g in groups if not len(g.agents)]
         for g in random.sample(groups, n):
           if len(g.agents) > 1:
-            expelee = g.expel_agent()
-            if expelee is not None:
-              newgroup = emptygroups.pop()
-              expelee.switchgroup(newgroup)
+            expelees = g.expel_agent()
+            if expelees is not None:
+              for expelee in expelees:
+                newgroup = emptygroups.pop()
+                expelee.switchgroup(newgroup)
 
       ### PARALLEL - postprocess_iter
       if cfg._threaded_sim:

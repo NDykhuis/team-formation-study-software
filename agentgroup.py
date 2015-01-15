@@ -458,7 +458,7 @@ class group(actor):
       for a in self.agents:
         # Notify the group about the agent that joined
         a.notifyjoin(pick.id, add=False, expel=True)    ## TEMPORARY: should probably be "notifygexpel"
-      return pick
+      return [pick]
     else:
       for a in self.agents:
         # Notify the group about the agent that joined
