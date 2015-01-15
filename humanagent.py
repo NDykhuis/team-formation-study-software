@@ -63,7 +63,7 @@ class humanagent(agent):
     return self.gletters[gid]
   
   def aname(self, aid):
-    if aid == self.myid:
+    if aid == self.id:
       return "You"
     return self.anames[aid]
   

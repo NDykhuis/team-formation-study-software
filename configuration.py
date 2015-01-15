@@ -53,7 +53,7 @@ class configuration(object):
   
   show_skills = False    # show skills to the player
   
-  keep_teams = True     # After a simulation, keep the current teams
+  keep_teams = False     # After a simulation, keep the current teams
   
   agent_memory = True   ## TESTING - agents stop applying to groups that have rejected them
   agent_mem_threshold = 1

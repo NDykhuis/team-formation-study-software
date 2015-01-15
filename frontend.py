@@ -134,6 +134,8 @@ class TFGui(object):
     return self.gletters[gid]
   
   def aname(self, aid):
+    if aid == self.myid:
+      return "You"
     return self.anames[aid]
 
   def run(self):
