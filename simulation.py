@@ -292,10 +292,9 @@ class simulation:
         for g in random.sample(groups, n):
           if len(g.agents) > 1:
             expelees = g.expel_agent()
-            if expelees is not None:
-              for expelee in expelees:
-                newgroup = emptygroups.pop()
-                expelee.switchgroup(newgroup)
+            for expelee in expelees:
+              newgroup = emptygroups.pop()
+              expelee.switchgroup(newgroup)
 
       ### PARALLEL - postprocess_iter
       if cfg._threaded_sim:

@@ -436,6 +436,23 @@ class group(actor):
     if self.cfg._verbose > 3 and self.slow:
       print "Group", self.id, "receives expel votes:", [(a.id if a is not None else -1) for a in votes]
     
+    # Master list of agents to expel
+    expelees = []
+    
+    # If any agent votes for itself, make it leave the group
+    newvotes = []
+    for v,a in zip(votes, self.agents):
+      if v == a.id:
+        expelees.append(a)
+      else:
+        newvotes.append(v)  # If agent left the group, remove from the expel vote.
+    votes = newvotes
+    
+    for a in self.agents:
+      # Notify the group about agents that left
+      for e in expelees:
+        a.notifyjoin(e.id, add=False)
+    
     # Tabulate the votes
     voted = {}
     for v in votes:
@@ -456,14 +473,15 @@ class group(actor):
       if self.cfg._verbose > 5:
         print "Group", self.id, "expels", pick.id
       for a in self.agents:
-        # Notify the group about the agent that joined
+        # Notify the group about the agent that got expelled
         a.notifyjoin(pick.id, add=False, expel=True)    ## TEMPORARY: should probably be "notifygexpel"
-      return [pick]
+      expelees.append(pick)
     else:
       for a in self.agents:
-        # Notify the group about the agent that joined
+        # Notify the group that no one got expelled
         a.notifyjoin(-1, add=False, expel=True)
-      return None
+    
+    return expelees
 
   def postprocess(self):
     pass
