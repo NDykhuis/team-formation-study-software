@@ -124,6 +124,9 @@ class configuration(object):
   groups_can_merge = False
   expel_agents = False
   fully_connect_groups = False
+  
+  allow_leaving = True
+  
   rewire_grid_graph = False
   strengthen_teams = False
   rewire_discontent = False

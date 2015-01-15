@@ -1122,7 +1122,7 @@ class TFGui(object):
     
   ###TODO: make_sidebar_agent for voting on agents to accept
   ###It is dumb to have copied the make_sidebar code, but it would change several things to adapit it.
-  def make_sidebar_agent(self, adata, groupmerge=False):
+  def make_sidebar_agent(self, adata, groupmerge=False, expelstep=False):
     if self.sb is not None:
       self.sb.destroy()
     
@@ -1139,6 +1139,13 @@ class TFGui(object):
     r = 0
     c = 0
     MAXROWS = 5
+    
+    def nextspot(r,c):
+      r += 1
+      if r >= MAXROWS:
+        r = 0; c += 1
+      return r, c
+    
     for i,(aid, pay) in enumerate(adata):
       aframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
       
@@ -1150,16 +1157,19 @@ class TFGui(object):
       abtn.grid(row=0,column=1, sticky='nsew')
       
       aframe.grid(row=r, column=c, sticky='ew')
-      r += 1
-      if r > MAXROWS:
-        r = 0
-        c += 1
+      r,c = nextspot(r,c)
     
     # if groupmerge:
     #   for i, (gid, pay) in enumerate(gdata):
     #     ...
     #     variable=self.choice, value=-gid-2
     #     same logic of columns and rows
+    
+    if self.cfgdict['allow_leaving'] and expelstep:
+      # Add a button to leave the group
+      # TEMPORARY: assume you get $0 on your own
+      tk.Radiobutton(sb, text='Leave Team '+self.gname(self.myteam)+'\nEarn: '+CURR+'0', font=self.fontsm, variable=self.choice, value=self.myid, indicatoron=0).grid(row=r, column=c, sticky='ew')
+      r,c = nextspot(r,c)
     
     #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
     #gframe.grid(row=i, column=0, sticky='ew')
@@ -1692,7 +1702,7 @@ class TFGui(object):
     self.show_screen(self.mainscreen)
     self.mwidgets['title'].config(text='Expel', bg='red')
     # create neighbor group propose checkboxes
-    self.make_sidebar_agent(data)
+    self.make_sidebar_agent(data, expelstep=True)
     # update neighbor view?
     #self.update_neighbors()
     itext = 'Cast your vote for at most one agent to accept to expel from your team.'
