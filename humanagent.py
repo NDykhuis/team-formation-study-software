@@ -158,7 +158,7 @@ class humanagent(agent):
 
   def logratings(self, simnum = None, iternum = None, step = 'NA'):
     if not self.cfg._do_ratings: return
-    send_message(self.client, ('getratings', 0))
+    send_message(self.client, ('getratinglog', 0))
     ratings = receive_message(self.client)
     if not len(ratings):
       return

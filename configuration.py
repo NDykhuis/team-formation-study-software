@@ -51,6 +51,8 @@ class configuration(object):
   
   _do_ratings = True
   
+  show_agent_info = 'ratings'   # ['none', 'ratings', 'history']
+  
   show_skills = False    # show skills to the player
   
   keep_teams = False     # After a simulation, keep the current teams

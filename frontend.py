@@ -261,11 +261,13 @@ class TFGui(object):
     self.root.bind('<<publicgoods_conclusion>>', self.m_publicgoods_conclusion)
     
     self.root.bind('<<initratings>>', self.m_initratings)
+    self.root.bind('<<getratinglog>>', self.m_getratinglog)
     self.root.bind('<<getratings>>', self.m_getratings)
     self.root.bind('<<showratings>>', self.m_showratings)
     self.root.bind('<<hideratings>>', self.m_hideratings)
     self.root.bind('<<disableratings>>', self.m_disableratings)
     self.root.bind('<<enableratings>>', self.m_enableratings)
+    self.root.bind('<<updateratings>>', self.m_updateratings)
     
     self.root.bind('<<conclusion>>', self.m_conclusion)
   
@@ -1386,10 +1388,15 @@ class TFGui(object):
     
     
     
+  def m_getratinglog(self, event):
+    self.getdata(event)
+    ratinglog = copy.copy(self.ratinglog)
+    self.ratinglog = []
+    self.backend.sendqueue.put(ratinglog)
+    
   def m_getratings(self, event):
     self.getdata(event)
-    ratings = copy.copy(self.ratinglog)
-    self.ratinglog = []
+    ratings = {aid:ratingvar.get() for aid, ratingvar in self.ratingvars.iteritems()}
     self.backend.sendqueue.put(ratings)
     
   def m_showratings(self, event):
@@ -1419,6 +1426,12 @@ class TFGui(object):
     #self.ratingbox.grid_remove()
     self.setState(self.ratingbox, tk.NORMAL)
     self.backend.sendqueue.put('done')
+  
+  def m_updateratings(self, event):
+    rdata = self.getdata(event)
+    ## TODO: implement
+    self.backend.sendqueue.put('done')
+  
   
   def update_neighbors(self, gdata):
     # Draw the graphical representation of the social network
