@@ -41,3 +41,7 @@ def receive_message(connection):
   if DEBUG_COMM:
     print "Received", s2
   return data
+
+def send_and_receive(connection, message):
+  send_message(connection, message)
+  return receive_message(connection)
