@@ -58,9 +58,12 @@ class TFNetBack(threading.Thread):
       # Should be a 2-tuple of (command, data)
       try:
         command, data = msg
-      except TypeError:
+      except TypeError as e:
         print "Received non-tuple message:", msg
-        continue
+        raise e
+      except ValueError as e:
+        print "Problem with message:", msg
+        raise e
       self.handle_message(command, data)
       self.msgnum += 1
 
@@ -170,6 +173,10 @@ class TFGui(object):
     self.xno = tk.PhotoImage(file='redx16.gif')
     self.staron = tk.PhotoImage(file='star_on.gif')
     self.staroff = tk.PhotoImage(file='star_off3.gif')
+    self.starson = tk.PhotoImage(file='5_stars_on.gif')
+    self.starsoff = tk.PhotoImage(file='5_stars_off.gif')
+    self.starson.size = [85,16]   # Hardcoding!
+    self.starsoff.size = [85,16]   # Hardcoding!
 
     self.sidebarwid = 264
     self.sidebarheight = 400
@@ -267,7 +274,9 @@ class TFGui(object):
     self.root.bind('<<hideratings>>', self.m_hideratings)
     self.root.bind('<<disableratings>>', self.m_disableratings)
     self.root.bind('<<enableratings>>', self.m_enableratings)
-    self.root.bind('<<updateratings>>', self.m_updateratings)
+    
+    self.root.bind('<<updateglobalratings>>', self.m_updateglobalratings)
+    self.root.bind('<<updatehistory>>', self.m_updatehistory)
     
     self.root.bind('<<conclusion>>', self.m_conclusion)
   
@@ -1298,6 +1307,8 @@ class TFGui(object):
     self.ratingwidgets = {}
     self.ratingvars = {}
     self.ratinglog = []
+    self.globalratingwidgets = {}
+    self.historywidgets = {}
     
     #titlelabel = tk.Label(rb, text='Player ratings', font=self.fontsm)
     if not self.cfgdict['_hide_publicgoods']:
@@ -1332,7 +1343,20 @@ class TFGui(object):
           button.grid(row=0, column=j)
           rw.append(button)
         v.trace('w', lambda x,y,z,aid=aid, *args: self.rating_change(aid))    ## THIS IS KIND OF A HACK
-      
+        
+        grw = self.globalratingwidgets[aid] = {}
+        grw['frame'] = tk.Frame(bframe)
+        grw['ratingoff'] = tk.Label(grw['frame'], height=self.starson.size[1], width=self.starson.size[0], image=self.starsoff)
+        grw['ratingon'] = tk.Label(grw['frame'], height=self.starson.size[1], width=0, image=self.starson)
+        grw['ratingoff'].grid(row=0, column=0)
+        grw['ratingon'].grid(row=0, column=0)
+        grw['frame'].grid(row=1, column=0, columnspan=5)  # Assign grid location
+        grw['frame'].grid_remove()  # but don't show until we have data
+        
+        hlabel = self.historywidgets[aid] = tk.Label(bframe, text='[no history]', font=self.fontxsm)
+        hlabel.grid(row=2, column=0, columnspan=5)  # Assign grid location
+        hlabel.grid_remove()  # but don't show until we have data
+        
       bframe.grid(row=1, column=1, sticky='nsew')
       frame.grid(row=r, column=c, sticky='nsew')
       r += 1
@@ -1386,6 +1410,21 @@ class TFGui(object):
     print "Rating:", aid, self.ratingvars[aid].get()
     self.ratinglog.append( [self.myid, aid, self.ratingvars[aid].get(), eframe, etime] )
     
+  def hide_reputation(self, aid):
+    self.globalratingwidgets[aid].grid_remove()
+    self.historywidgets[aid].grid_remove()
+    
+  def update_history(self, aid, history):
+    hlabel = self.historywidgets[aid]
+    hlabel.config(text=', '.join([str(c) for c in history]))
+    hlabel.grid()
+  
+  def update_global_rating(self, aid, rating):
+    grw = self.globalratingwidgets[aid]
+    imgwid = self.starson.size[0] * (rating*0.2)
+    grw['ratingon'].config(width=imgwid)
+    grw['frame'].grid()
+  
     
     
   def m_getratinglog(self, event):
@@ -1427,10 +1466,18 @@ class TFGui(object):
     self.setState(self.ratingbox, tk.NORMAL)
     self.backend.sendqueue.put('done')
   
-  def m_updateratings(self, event):
-    rdata = self.getdata(event)
-    ## TODO: implement
+  def m_updateglobalratings(self, event):
+    rdata = self.getdata(event) # dictionary of aid,rating pairs
+    for aid, rating in rdata.iteritems():
+      self.update_global_rating(aid, rating)
     self.backend.sendqueue.put('done')
+  
+  def m_updatehistory(self, event):
+    hdata = self.getdata(event) # dictionary of aid,[contribs,] pairs
+    for aid, history in hdata.iteritems():
+      self.update_history(aid, rating)
+    self.backend.sendqueue.put('done')
+  
   
   
   def update_neighbors(self, gdata):

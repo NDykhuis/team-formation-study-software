@@ -93,6 +93,8 @@ if __name__ == '__main__':
     sim = simulation()
     sim.setup(gm.G, std)
     
+    pglog = {a.id:[] for a in sim.agents}
+    
     # Init video only once!
     for a in sim.humans:
       a.initvideo()
@@ -140,13 +142,17 @@ if __name__ == '__main__':
         ann.drawgraph()
         print "Close plot to end program"
         plt.show()
+      
+      # update public goods history
+      for aid, contribpct in std.pgsummary:
+        pglog[aid].append(contribpct)
     
     agent.agentid=0
     ## END INTRO SIMULATION
     
     
     if KEEP_GRAPH:
-      if std.social_sim_agents:   ## TESTING
+      if std.social_sim_agents and std.keep_teams:   ## TESTING
         std.expel_agents = True     # only on 2nd and future sims; not necessary in first game.
       
       cfg = std     # Grab the standard config 
@@ -176,7 +182,14 @@ if __name__ == '__main__':
           print "Close plot to end program"
           plt.show()
         
-        agent.agentid=0
+        # update public goods history
+        for aid, contribpct in std.pgsummary:
+          pglog[aid].append(contribpct)
+          
+        #pghistory = {aid:(sum(p)/len(p)) for aid,p in pglog.iteritems()}   # for average contrib
+          
+        for a in sim.agents:
+          a.updatehistory(pglog)
         
         tnow = time.time()
         elapsed = (tnow - starttime)/60
@@ -187,6 +200,7 @@ if __name__ == '__main__':
           print "OUT OF TIME!"
           break
         
+        agent.agentid=0
         sim.reset()
         cfg.simnumber += 1
       

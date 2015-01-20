@@ -471,7 +471,30 @@ class simulation:
         if cfg._threaded_sim:
           for t in mythreads:
             t.join()
-    
+            
+        ## Give statistics and rating data to the agents
+        self.pgsummary = {a.id:(pgdict[a][0]/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
+        print "pgsummary:", std.pgsummary
+        
+        if cfg.show_global_ratings:
+          ratings = {}
+          for a in self.agents:
+            arates = a.getratings()
+            for aid, rating in arates.iteritems():
+              try:
+                ratings[aid].append(rating)
+              except KeyError:
+                ratings[aid] = [rating]
+          
+          for aid in ratings:
+            ratings[aid] = sum(float(ratings[aid]))/len(ratings[aid])
+            
+          print "Ratings:", ratings
+            
+          for a in self.agents:
+            a.updateratings(ratings)
+        
+        
     trunend = time.time()
     
     # Log time spent in public goods

@@ -189,6 +189,17 @@ class humanagent(agent):
       avgrtgs = minrtgs = maxrtgs = [-1 for aid in otherids]
     self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, currtgs, avgrtgs, minrtgs, maxrtgs)
 
+  def getratings(self):
+    ratings = send_and_receive(self.client, ('getratings', 0))
+    self.current_ratings.update(ratings)
+    return self.current_ratings
+  
+  def updateratings(self, ratings):
+    send_message(self.client, ('updateglobalratings', ratings))
+
+  def updatehistory(self, pghistory):
+    send_message(self.client, ('updatehistory', pghistory))
+
   def propose(self):
     task=self.cfg.task
     self.update()   ## Maybe needs to come after the propose message!

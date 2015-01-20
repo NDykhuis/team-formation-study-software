@@ -51,7 +51,8 @@ class configuration(object):
   
   _do_ratings = True
   
-  show_agent_info = 'ratings'   # ['none', 'ratings', 'history']
+  show_global_ratings = True
+  show_nhistory = 5      # Set to zero to disable
   
   show_skills = False    # show skills to the player
   

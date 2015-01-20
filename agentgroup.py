@@ -201,6 +201,15 @@ class agent(actor):
   def publicgoods_postprocess(self, newpay, teampays):
     pass
     
+  def getratings(self):
+    return {}
+  
+  def updatehistory(self, pghistory):
+    pass
+  
+  def updateratings(self, ratings):
+    pass
+    
   def reset(self):
     if not self.cfg.keep_teams:
       self.group = 0
@@ -209,6 +218,7 @@ class agent(actor):
     self.gsize = 1      # for compatibility with group merging
     self.nowpay = 0
     self.neighbors()
+    
     
 class group(actor):
   def __init__(self, gid, cfg):
@@ -517,3 +527,4 @@ class group(actor):
     self.gsize = 0
     self.nowpay = 0
     self.worth = 0
+
