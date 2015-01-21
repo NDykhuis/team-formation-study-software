@@ -124,9 +124,9 @@ class agent(actor):
   
   def update(self):
     if self.cfg.bias:
-      self.nowpay = self.nowpaycalc(self.cfg.task(self.group.skills))
+      self.nowpay = self.nowpaycalc(self.cfg.task(self.group.agents))
     else:
-      self.nowpay = self.cfg.task(self.group.skills)/self.group.gsize
+      self.nowpay = self.cfg.task(self.group.agents)/self.group.gsize
     
   def nowpaycalc(self, pay, addagent=-1, delagent=-1):
     alist = [a.id for a in self.group.agents if a.id != delagent]
@@ -246,10 +246,10 @@ class group(actor):
     self.slow = any(a.slow for a in self.agents)
     try:
       if self.cfg.bias:
-        self.nowearns = self.cfg.task(self.skills)
+        self.nowearns = self.cfg.task(self.agents)
         self.nowpay = sum(a.nowpaycalc(self.nowearns) for a in self.agents)/self.gsize
       else:
-        self.nowpay = self.cfg.task(self.skills)/self.gsize
+        self.nowpay = self.cfg.task(self.agents)/self.gsize
     except ZeroDivisionError:
       self.nowpay = 0
 

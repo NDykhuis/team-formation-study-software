@@ -165,7 +165,7 @@ class configuration(object):
   
   
   def __init__(self):
-    self.task = self.nmemtask
+    self.task = self.ppgtask
     #self.task = self.bdtask
     #self.setupbdtask()
   
@@ -176,6 +176,7 @@ class configuration(object):
   
   # This task returns the total possible contribution of everyone in the group
   def ppgtask(self, agents):
+    print [a.totalpay for a in agents], sum([a.totalpay for a in agents])
     return sum(a.totalpay for a in agents)
   
   # This task rewards groups based only on how many members are on a team

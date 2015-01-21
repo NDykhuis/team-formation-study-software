@@ -131,9 +131,9 @@ class humanagent(agent):
 
   def update(self):
     if self.cfg.bias:
-      self.nowpay = self.nowpaycalc(self.cfg.task(self.group.skills))
+      self.nowpay = self.nowpaycalc(self.cfg.task(self.group.agents))
     else:
-      self.nowpay = self.cfg.task(self.group.skills)/self.group.gsize
+      self.nowpay = self.cfg.task(self.group.agents)/self.group.gsize
     send_message(self.client, ('updatepay', self.nowpay) )
     
     if self.cfg.show_skills:
@@ -404,7 +404,7 @@ class humanagent(agent):
     self.messages.append('You earned '+CURR+str(round(self.nowpay,2)))
         
     self.logratings()
-    self.addpay(round(newpay, 2))
+    self.addpay(round(self.nowpay, 2))
     send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
     done = receive_message(self.client)
     self.logratings(step='postprocess')
@@ -462,9 +462,17 @@ class humanagent(agent):
     
   def publicgoods_postprocess(self, newpay, teampays):
     contrib = teampays[self.id]
-    keep = self.nowpay - contrib
-    potpay = newpay - (self.nowpay-contrib)
-    self.messages.append('You made '+CURR+str(round(self.nowpay, 2))+' by working with this team.')
+    if self.cfg.persistent_pubgoods:
+      maxcontrib = self.totalpay
+    else:
+      maxcontrib = self.nowpay
+    keep = maxcontrib - contrib
+    potpay = newpay - (maxcontrib-contrib)
+    
+    if self.cfg.persistent_pubgoods:
+      self.messages.append('Your team started with '+CURR+str(round(self.nowpay, 2))+' total wealth.')
+    else:
+      self.messages.append('You made '+CURR+str(round(self.nowpay, 2))+' by working with this team.')
     self.messages.append('You contributed '+CURR+str(contrib)+' to the pot and kept '+CURR+str(round(keep,2)))
     cdesc = 'the shared pot' if not configuration._hide_publicgoods else 'the lottery'
     self.messages.append('You received '+CURR+str(round(potpay,2))+' from '+cdesc)
