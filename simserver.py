@@ -96,6 +96,11 @@ if __name__ == '__main__':
     
     pglog = {a.id:[] for a in sim.agents}
     
+    if std.persistent_pubgoods:
+      # Give initial endowment
+      for a in sim.agents:
+        a.totalpay = std.ppg_startpay
+    
     # Init video only once!
     for a in sim.humans:
       a.initvideo()
