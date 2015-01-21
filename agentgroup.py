@@ -126,7 +126,7 @@ class agent(actor):
     if self.cfg.bias:
       self.nowpay = self.nowpaycalc(self.cfg.task(self.group.agents))
     else:
-      self.nowpay = self.cfg.task(self.group.agents)/self.group.gsize
+      self.nowpay = self.cfg.task(self.group.agents)
     
   def nowpaycalc(self, pay, addagent=-1, delagent=-1):
     alist = [a.id for a in self.group.agents if a.id != delagent]
@@ -247,9 +247,9 @@ class group(actor):
     try:
       if self.cfg.bias:
         self.nowearns = self.cfg.task(self.agents)
-        self.nowpay = sum(a.nowpaycalc(self.nowearns) for a in self.agents)/self.gsize
+        self.nowpay = sum(a.nowpaycalc(self.nowearns) for a in self.agents)
       else:
-        self.nowpay = self.cfg.task(self.agents)/self.gsize
+        self.nowpay = self.cfg.task(self.agents)
     except ZeroDivisionError:
       self.nowpay = 0
 
@@ -299,7 +299,7 @@ class group(actor):
       if g == self:
         continue
       newskills = g.withagent(self)
-      if task(newskills)/(g.gsize+self.gsize) >= self.nowpay:
+      if task(newskills)/(g.gsize+self.gsize) >= self.nowpay:   ## BROKEN
         #print "group", self.id, "proposing to", g.id
         g.takeapplication(self)
 

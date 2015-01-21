@@ -133,7 +133,7 @@ class humanagent(agent):
     if self.cfg.bias:
       self.nowpay = self.nowpaycalc(self.cfg.task(self.group.agents))
     else:
-      self.nowpay = self.cfg.task(self.group.agents)/self.group.gsize
+      self.nowpay = self.cfg.task(self.group.agents)
     send_message(self.client, ('updatepay', self.nowpay) )
     
     if self.cfg.show_skills:
@@ -212,7 +212,7 @@ class humanagent(agent):
     
     idgroups = {g.id:g for g in nbrgroups}
 
-    gdata = sorted([ (g.id, g.gsize, task(g.withagent(self))/(g.gsize+1), [a.id for a in g.agents]) for g in nbrgroups])
+    gdata = sorted([ (g.id, g.gsize, task(g.withagent(self)), [a.id for a in g.agents]) for g in nbrgroups])
     gids, gsizes, newpays, gmembers = zip(*gdata)
 
     self.logratings()
@@ -253,7 +253,7 @@ class humanagent(agent):
     # acceptvote_groupmerge
     
     idagents = {a.id:a for a in applicants}
-    gdata = sorted([ (a.id, task(self.group.withagent(a))/(self.group.gsize+a.gsize)) for a in applicants])
+    gdata = sorted([ (a.id, task(self.group.withagent(a))) for a in applicants])
     naids, newpays = zip(*gdata)
     
     self.logratings()
@@ -291,7 +291,7 @@ class humanagent(agent):
   
     idagents = {a.id:a for a in myg.agents}
     #del idagents[self.id]
-    gdata = sorted([ (a.id, task(myg.withoutagent(a))/(myg.gsize-1)) for aid, a in sorted(idagents.items()) if aid != self.id])
+    gdata = sorted([ (a.id, task(myg.withoutagent(a))) for aid, a in sorted(idagents.items()) if aid != self.id])
     naids, newpays = zip(*gdata)
     
     self.logratings()
@@ -328,7 +328,7 @@ class humanagent(agent):
     
     idgroups = {g.id:g for g in self.acceptances}
 
-    gdata = sorted([ (g.id, g.gsize, task(g.withagent(self))/(g.gsize+1), [a.id for a in g.agents]) for g in self.acceptances])
+    gdata = sorted([ (g.id, g.gsize, task(g.withagent(self)), [a.id for a in g.agents]) for g in self.acceptances])
     gids, gsizes, gpays, gmembers = zip(*gdata)
     
     self.logratings()

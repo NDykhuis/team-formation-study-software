@@ -125,10 +125,10 @@ class simagent(agent, ultagent):
         if self.cfg._verbose > 5:
           print "agent", self.id, "in group", self.group.id, "proposing to", g.id
         #if task(newskills)*np.mean([self.bias.get(n, 1.0) for n in alist])/(len(alist)+1) >= self.nowpay:
-        if task(newskills)/(len(alist)+1)*self.biasavg(alist) >= self.nowpay:
+        if task(newskills)*self.biasavg(alist) >= self.nowpay:
           g.takeapplication(self)
       else:
-        gpay = task(newskills)/(g.gsize+1)
+        gpay = task(newskills)
         if gpay > self.nowpay and totalweights.get(g.id, 0) >= 1:
           #if self.cfg._verbose > 5:
           #  print "agent", self.id, "in group", self.group.id, "proposing to", g.id
@@ -152,7 +152,7 @@ class simagent(agent, ultagent):
       #pay, memory, random, agent
       nowgsize = self.group.gsize
       clow, chigh = self.cfg.pg_contribrange[self.disposition]
-      utility = [(task(self.group.withagent(a))/(nowgsize + a.gsize) - nowpay, self.pgmem.get(a.id, 1.0)-clow, random.random(), a) for a in self.group.applications]
+      utility = [(task(self.group.withagent(a)) - nowpay, self.pgmem.get(a.id, 1.0)-clow, random.random(), a) for a in self.group.applications]
     else:
       utility = self.cfg.utility_group(self.group)
 
@@ -218,14 +218,14 @@ class simagent(agent, ultagent):
       
       # Expel agents that contrib less than me in PG (first pass at AI)
       utilities = [
-        (max(0, (task(myg.withoutagent(agent))/(myg.gsize-1) - nowpay)), # Always expel agents that lower pay, but keep the option open to expel ones that raise pay
+        (max(0, (task(myg.withoutagent(agent)) - nowpay)), # Always expel agents that lower pay, but keep the option open to expel ones that raise pay
         (clow+chigh)*0.5 - self.pgmem.get(agent.id,chigh) - random.random(), # Probability to expel agents that contrib less than my average
         agent)
         for agent in myg.agents if agent != self]
       worstagent = self.cfg.utility_tiebreaker(utilities)
       return worstagent
     else:
-      utilities = [(task(myg.withoutagent(agent))/(myg.gsize-1) - nowpay, random.random(), agent) for agent in myg.agents if agent != self]
+      utilities = [(task(myg.withoutagent(agent)) - nowpay, random.random(), agent) for agent in myg.agents if agent != self]
       worstagent = self.cfg.utility_tiebreaker(utilities)
       return worstagent
     
@@ -235,9 +235,9 @@ class simagent(agent, ultagent):
         #continue
       #if self.cfg.bias:
         #newpay = task(myg.withoutagent(agent))
-        #paysans = float(sum([a.nowpaycalc(newpay, delagent=agent) for a in myg.agents]))/len(myg.agents)
+        #paysans = float(sum([a.nowpaycalc(newpay, delagent=agent) for a in myg.agents]))
       #else:
-        #paysans = task(myg.withoutagent(agent))/(myg.gsize-1)
+        #paysans = task(myg.withoutagent(agent))
       #if paysans > nowpay:
         #return agent
       #else:
