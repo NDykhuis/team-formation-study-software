@@ -1347,9 +1347,9 @@ class TFGui(object):
         grw = self.globalratingwidgets[aid] = {}
         grw['frame'] = tk.Frame(bframe)
         grw['ratingoff'] = tk.Label(grw['frame'], height=self.starson.size[1], width=self.starson.size[0], image=self.starsoff)
-        grw['ratingon'] = tk.Label(grw['frame'], height=self.starson.size[1], width=0, image=self.starson)
-        grw['ratingoff'].grid(row=0, column=0)
-        grw['ratingon'].grid(row=0, column=0)
+        grw['ratingon'] = tk.Label(grw['frame'], height=self.starson.size[1], width=1, image=self.starson)
+        grw['ratingoff'].grid(row=0, column=0, sticky='w')
+        grw['ratingon'].grid(row=0, column=0, sticky='w')
         grw['frame'].grid(row=1, column=0, columnspan=5)  # Assign grid location
         grw['frame'].grid_remove()  # but don't show until we have data
         
@@ -1415,13 +1415,15 @@ class TFGui(object):
     self.historywidgets[aid].grid_remove()
     
   def update_history(self, aid, history):
+    if aid == self.myid: return
     hlabel = self.historywidgets[aid]
     hlabel.config(text=', '.join([str(c) for c in history]))
     hlabel.grid()
   
   def update_global_rating(self, aid, rating):
+    if aid == self.myid: return
     grw = self.globalratingwidgets[aid]
-    imgwid = self.starson.size[0] * (rating*0.2)
+    imgwid = max(self.starson.size[0] * (rating*0.2)-1, 1)
     grw['ratingon'].config(width=imgwid)
     grw['frame'].grid()
   
@@ -1469,13 +1471,13 @@ class TFGui(object):
   def m_updateglobalratings(self, event):
     rdata = self.getdata(event) # dictionary of aid,rating pairs
     for aid, rating in rdata.iteritems():
-      self.update_global_rating(aid, rating)
+      self.update_global_rating(int(aid), rating)
     self.backend.sendqueue.put('done')
   
   def m_updatehistory(self, event):
     hdata = self.getdata(event) # dictionary of aid,[contribs,] pairs
     for aid, history in hdata.iteritems():
-      self.update_history(aid, rating)
+      self.update_history(aid, history)
     self.backend.sendqueue.put('done')
   
   

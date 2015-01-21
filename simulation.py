@@ -424,13 +424,14 @@ class simulation:
       for a in self.agents:
         arates = a.getratings()
         for aid, rating in arates.iteritems():
+          aid = int(aid)
           try:
             ratings[aid].append(rating)
           except KeyError:
             ratings[aid] = [rating]
       
       for aid in ratings:
-        ratings[aid] = sum(float(ratings[aid]))/len(ratings[aid])
+        ratings[aid] = float(sum(ratings[aid]))/len(ratings[aid])
         
       print "Ratings:", ratings
         
@@ -519,7 +520,7 @@ class simulation:
         t.join()
         
     ## Give statistics and rating data to the agents
-    self.pgsummary = {a.id:(pgdict[a][0]/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
+    self.pgsummary = {a.id:(float(pgdict[a][0])/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
     print "pgsummary:", self.pgsummary
     
   
