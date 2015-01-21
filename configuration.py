@@ -172,8 +172,8 @@ class configuration(object):
   # This task rewards groups based only on how many members are on a team
   # Calculates number of members assuming that maxskills == 1
   # Team max size is given by nskills
-  def nmemtask(self, skills):
-    nmem = sum(skills)
+  def nmemtask(self, agents):
+    nmem = len(agents)
     increward = 5
     npay = min(nmem, self.nskills)
     pay = npay * increward * (npay-1)   # (npay*increward) for each of the first (npay) members
@@ -181,8 +181,9 @@ class configuration(object):
   
   # Optimized function to answer the question:
   # How much pay for a given set of skills?
-  def multitask(self, skills):
+  def multitask(self, agents):
     # This task will payoff only if the team has all of the required skills
+    skills = sum(np.array(a.skills) for a in agents)
     tskills=tuple(skills)
     try:
       return self._taskdict[tskills]
@@ -199,7 +200,8 @@ class configuration(object):
     return pay
 
   # This task rewards breadth and depth
-  def bdtask(self, skills):
+  def bdtask(self, agents):
+    skills = sum(np.array(a.skills) for a in agents)
     tskills = tuple(skills)
     try: 
       return self._taskdict[tskills]
@@ -220,6 +222,7 @@ class configuration(object):
   
   # This task rewards breadth and depth with different values for each skill
   def bdtask2(self, skills):
+    skills = sum(np.array(a.skills) for a in agents)
     tskills = tuple(skills)
     try: 
       return self._taskdict[tskills]

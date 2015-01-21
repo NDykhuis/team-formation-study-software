@@ -255,7 +255,7 @@ class group(actor):
   def add(self, agent):
     self.notifyjoin(agent.id, add=True)
     self.agents.append(agent)
-    self.skills = self.withskills(agent)
+    self.skills = self.withagent(agent)
     self.update()
     
     if self.cfg.fully_connect_groups:
@@ -268,16 +268,17 @@ class group(actor):
   def remove(self, agent):
     if agent in self.agents:
       self.agents.remove(agent)
-      self.skills = self.withoutskills(agent)
+      self.skills = self.withoutagent(agent)
       self.update()
       self.notifyjoin(agent.id, add=False)
 
-  def withskills(self, agent):
+  def withagent(self, agent):
     #return [self.skills[i] + agent.skills[i] for i in range(self.nskills)]
     #print type(self.skills), type(agent.skills)
-    return self.skills + agent.skills
-  def withoutskills(self, agent):
-    return self.skills - agent.skills
+    return self.agents+[agent]
+  def withoutagent(self, agent):
+    #return self.skills - agent.skills
+    return [a for a in self.agents if a != agent]
 
   def takeapplication(self, agent):
     self.applications.append(agent)
@@ -292,7 +293,7 @@ class group(actor):
     for g in nbrgroups.values():
       if g == self:
         continue
-      newskills = g.withskills(self)
+      newskills = g.withagent(self)
       if task(newskills)/(g.gsize+self.gsize) >= self.nowpay:
         #print "group", self.id, "proposing to", g.id
         g.takeapplication(self)
