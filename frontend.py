@@ -123,6 +123,10 @@ class TFGui(object):
       # Icky hardcoding
       self.anames = ['Cat', 'Dog', 'Bear', 'Bird', 'Cow', 'Elephant', 'Fish', 'Frog', 'Gorilla', 'Lion', 'Monkey', 'Bee', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Sheep', 'Donkey']
     
+    self.payword = 'Wealth: ' if configuration.persistent_pubgoods else 'Earn: '
+    self.paywording = 'Current wealth:'  if configuration.persistent_pubgoods else 'Currently earning:'
+    self.payworded = "Your wealth" if configuration.persistent_pubgoods else "You've earned"
+    
     self.initTk()
     if serverIP is not None:
       self.backend = TFNetBack(serverIP, self)
@@ -629,7 +633,7 @@ class TFGui(object):
       
       pb = pw['paybox'] = tk.Frame(infobar, relief=tk.GROOVE, borderwidth=2)
       
-      pw['paylab'] = tk.Label(pb, text="You've earned", font=self.fontxsm)
+      pw['paylab'] = tk.Label(pb, text=self.payworded, font=self.fontxsm)
       pw['payamt'] = tk.Label(pb, text=CURR+str(self.totalpay), font=self.fontmid)
       pw['paylab'].grid(row=0,column=0,sticky='ew')
       pw['payamt'].grid(row=1,column=0,sticky='nsew')
@@ -995,7 +999,7 @@ class TFGui(object):
     mw['neighbors'] = tk.Frame(mainframe, height=400, width=400)
     mw['paybox'] = tk.Frame(mainframe, relief=tk.GROOVE, borderwidth=2)
     paybox = mw['paybox']
-    mw['paylab'] = tk.Label(paybox, text='Currently earning:', font=self.fontmid)
+    mw['paylab'] = tk.Label(paybox, text=self.paywording, font=self.fontmid)
     mw['nowpay'] = tk.Label(paybox, text=CURR+'0', justify=tk.RIGHT, font=self.fontmed)
     mw['sidebar'] = tk.Frame(mainframe, relief=tk.SUNKEN, borderwidth=2, width=self.sidebarwid)
     
@@ -1011,7 +1015,7 @@ class TFGui(object):
       
     #eb = mw['earnbox'] = tk.Frame(infobar, relief=tk.GROOVE, borderwidth=2)
     eb = mw['earnbox'] = tk.Frame(mainframe, relief=tk.GROOVE, borderwidth=2)
-    mw['earnlab'] = tk.Label(eb, text="You've earned", font=self.fontxsm)
+    mw['earnlab'] = tk.Label(eb, text=self.payworded, font=self.fontxsm)
     mw['earnamt'] = tk.Label(eb, text=CURR+str(self.totalpay), font=self.fontmid)
     mw['earnlab'].grid(row=0,column=0,sticky='ew')
     mw['earnamt'].grid(row=1,column=0,sticky='nsew')
@@ -1085,7 +1089,7 @@ class TFGui(object):
       grouptext = 'Team '+self.gname(gid)
       if not self.cfgdict['_show_other_team_members']:
         grouptext += ' ('+str(gsize)+' member'+('s' if gsize != 1 else '')+')'
-      grouptext += '\nEarn: '+CURR+str(round(pay,2))
+      grouptext += '\n'+self.payword++CURR+str(round(pay,2))
       
       if chooseone:
         gbutton = tk.Radiobutton(sb, text=grouptext, font=self.fontsm, variable=self.choice, value=gid, indicatoron=0, 
@@ -1123,7 +1127,7 @@ class TFGui(object):
       #grow, gcol = nextspot(grow, gcol)
       #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
       #gframe.grid(row=i, column=0, sticky='ew')
-      tk.Radiobutton(sb, text='Stay with Team '+self.gname(self.myteam)+'\nEarn: '+self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=grow, column=gcol, sticky='ew', columnspan=2)
+      tk.Radiobutton(sb, text='Stay with Team '+self.gname(self.myteam)+'\n'+self.payword++self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=grow, column=gcol, sticky='ew', columnspan=2)
       grow, gcol = nextspot(grow, gcol)
       self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_accept)
     else:
@@ -1164,7 +1168,7 @@ class TFGui(object):
       
       ### Create the label(s), checkbox/radio button
       alab = tk.Label(aframe, image=self.avatars_sm[aid])
-      abtn = tk.Radiobutton(aframe, text=self.aname(aid)+'\nEarn: '+CURR+str(round(pay,2)), font=self.fontsm, variable=self.choice, value=aid, indicatoron=0)
+      abtn = tk.Radiobutton(aframe, text=self.aname(aid)+'\n'+self.payword++CURR+str(round(pay,2)), font=self.fontsm, variable=self.choice, value=aid, indicatoron=0)
       alab.grid(row=0, column=0, sticky='nsew')
       #avlab.grid(row=0, column=1)
       abtn.grid(row=0,column=1, sticky='nsew')
@@ -1181,12 +1185,12 @@ class TFGui(object):
     if self.cfgdict['allow_leaving'] and expelstep:
       # Add a button to leave the group
       # TEMPORARY: assume you get $0 on your own
-      tk.Radiobutton(sb, text='Leave Team '+self.gname(self.myteam)+'\nEarn: '+CURR+'0.0', font=self.fontsm, variable=self.choice, value=self.myid, indicatoron=0).grid(row=r, column=c, sticky='ew')
+      tk.Radiobutton(sb, text='Leave Team '+self.gname(self.myteam)+'\n'+self.payword++CURR+'0.0', font=self.fontsm, variable=self.choice, value=self.myid, indicatoron=0).grid(row=r, column=c, sticky='ew')
       r,c = nextspot(r,c)
     
     #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
     #gframe.grid(row=i, column=0, sticky='ew')
-    tk.Radiobutton(sb, text='None\nEarn: '+self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=r, column=c, sticky='ew')
+    tk.Radiobutton(sb, text='None\n'+self.payword++self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=r, column=c, sticky='ew')
     self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_accept)
     self.submit.grid(row=MAXROWS+1, column=0, columnspan=c+1, sticky='ew')
     
@@ -1901,7 +1905,7 @@ class TFGui(object):
     
     self.make_teamview_publicgoods(neighbors, contribs)
     
-    self.mwidgets['paylab'].config(text='Currently earning:')
+    self.mwidgets['paylab'].config(text=self.paywording)
     self.mwidgets['nowpay'].config(text=CURR+str(round(mypay,2)))
     
     self.canvas.grid_remove()
