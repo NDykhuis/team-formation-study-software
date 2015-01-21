@@ -361,4 +361,24 @@ class simagent(agent, ultagent):
     alpha = self.cfg.social_learning_rate
     for aid,contrib in teampays.iteritems():
       pctcontrib = float(contrib) / prepay
-      self.pgmem[aid] = (alpha*pctcontrib + (1.0-alpha)*self.pgmem.get(aid, 0.5))
+      if aid in self.pgmem:
+        self.pgmem[aid] = (alpha*pctcontrib + (1.0-alpha)*self.pgmem[aid]))
+      else:
+        self.pgmem[aid] = pctcontrib
+
+  def getratings(self):
+    ratings = {}
+    clow, chigh = self.cfg.pg_contribrange[self.disposition]
+    for aid, pctcontrib in self.pgmem.iteritems():
+      #rating = min(max(int(pctcontrib/chigh*4.0+1),1),5)   # Fancy version
+      #rating = int(pctcontrib*4.0+1)                       # Simple version
+      noise = random.random()-0.5   # Half a rating
+      rating = int(min(max(pctcontrib*4.0+1+noise, 1),5))    # Noisy version
+      
+      # More likely to post rating if high or low
+      probs = [99, 0.8, 0.5, 0.25, 0.5, 0.8]    # Can't rate zero; ratings can be 1-5
+      if random.random() < probs[rating]:
+        ratings[aid] = rating
+    return ratings
+  
+  
