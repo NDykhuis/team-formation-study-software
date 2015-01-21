@@ -186,8 +186,9 @@ if __name__ == '__main__':
           plt.show()
         
         # update public goods history
-        for aid, contribpct in sim.pgsummary.iteritems():
-          pglog[aid].append(contribpct)
+        for aid, (contrib, total) in sim.pgsummary.iteritems():
+          #contribpct = float(contrib)/total
+          pglog[aid].append( (contrib, total) )
         #pghistory = {aid:(sum(p)/len(p)) for aid,p in pglog.iteritems()}   # for average contrib
         for a in sim.agents:
           a.updatehistory(pglog)

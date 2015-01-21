@@ -1417,7 +1417,8 @@ class TFGui(object):
   def update_history(self, aid, history):
     if aid == self.myid: return
     hlabel = self.historywidgets[aid]
-    hlabel.config(text=', '.join([str(c) for c in history]))
+    #hlabel.config(text=', '.join([str(round(c,2)) for c in history]))
+    hlabel.config(text=', '.join([str(round(contrib,2)) for contrib,total in history]))
     hlabel.grid()
   
   def update_global_rating(self, aid, rating):
@@ -1477,7 +1478,7 @@ class TFGui(object):
   def m_updatehistory(self, event):
     hdata = self.getdata(event) # dictionary of aid,[contribs,] pairs
     for aid, history in hdata.iteritems():
-      self.update_history(aid, history)
+      self.update_history(int(aid), history)
     self.backend.sendqueue.put('done')
   
   

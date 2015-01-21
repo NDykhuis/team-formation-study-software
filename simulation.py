@@ -520,7 +520,8 @@ class simulation:
         t.join()
         
     ## Give statistics and rating data to the agents
-    self.pgsummary = {a.id:(float(pgdict[a][0])/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
+    #self.pgsummary = {a.id:(float(pgdict[a][0])/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
+    self.pgsummary = {a.id:(pgdict[a][0],(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
     print "pgsummary:", self.pgsummary
     
   
