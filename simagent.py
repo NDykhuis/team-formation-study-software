@@ -345,7 +345,10 @@ class simagent(agent, ultagent):
 
   def publicgoods(self,pgdict):
     self.update()
-    nowpayint = int(self.nowpay)
+    if self.cfg.persistent_pubgoods:
+      nowpayint = int(self.totalpay)
+    else:
+      nowpayint = int(self.nowpay)
     
     self.tf_delay('publicgoods')
     

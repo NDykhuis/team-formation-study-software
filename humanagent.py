@@ -442,16 +442,22 @@ class humanagent(agent):
       teamdata = [(n.id, n.group.id, -1) for n in self.group.agents if n != self]
     send_message(self.client, ('updatenbrs', teamdata) )    
     
+    if self.cfg.persistent_pubgoods:
+      maxcontrib = self.totalpay
+    else:
+      maxcontrib = self.nowpay
+    maxcontrib = int(maxcontrib)
+    
     self.logratings()
     # Send current pay with the publicgoods message
-    send_message(self.client, ('publicgoods', int(self.nowpay)))
+    send_message(self.client, ('publicgoods', maxcontrib))
     contrib = receive_message(self.client)
     self.logratings(step='publicgoods')
     
-    print "Agent", self.id, "contribs", contrib, "/", int(self.nowpay)
+    print "Agent", self.id, "contribs", contrib, "/", maxcontrib
     
     #return contrib
-    pgdict[self] = (contrib, int(self.nowpay)-contrib)
+    pgdict[self] = (contrib, maxcontrib-contrib)
   
     
   def publicgoods_postprocess(self, newpay, teampays):

@@ -49,7 +49,7 @@ class configuration(object):
   
   
   persistent_pubgoods = True
-  
+  ppg_startpay = 10
   
   
   _show_other_team_members = True
