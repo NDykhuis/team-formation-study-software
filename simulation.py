@@ -385,6 +385,8 @@ class simulation:
       print "Simulation early termination due to user interrupt!"
       print "Summarizing results up to this point"
       time.sleep(1)
+    
+    ## END MAIN SIMULATION LOOP
 
     #trunend = time.time()
     

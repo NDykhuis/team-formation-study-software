@@ -362,7 +362,7 @@ class simagent(agent, ultagent):
     for aid,contrib in teampays.iteritems():
       pctcontrib = float(contrib) / prepay
       if aid in self.pgmem:
-        self.pgmem[aid] = (alpha*pctcontrib + (1.0-alpha)*self.pgmem[aid]))
+        self.pgmem[aid] = (alpha*pctcontrib + (1.0-alpha)*self.pgmem[aid])
       else:
         self.pgmem[aid] = pctcontrib
 
