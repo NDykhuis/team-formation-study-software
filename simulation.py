@@ -369,7 +369,7 @@ class simulation:
         lastteams = teams
         iters += 1
       
-      if endtime and time.time() > endtime:
+      if endtime and time.time() > endtime and iternum > 2:
         print "ENDING SIM: OUT OF TIME"
         enditer = iternum
         break
@@ -415,9 +415,7 @@ class simulation:
           g.postprocess()
     elif self.humans:
       self.publicgoods()
-        
-      
-    ## End of if do public goods
+    
         
     if cfg.show_global_ratings:
       ratings = {}
