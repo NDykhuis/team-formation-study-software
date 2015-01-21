@@ -257,6 +257,10 @@ class simagent(agent, ultagent):
     #  return
     nbrs = set(a.id for a in self.nbrs)
     
+    ## Add payoff to my wealth
+    self.totalpay += self.nowpay
+    
+    
     self.leftovers = self.maxweight - sum(dat['weight'] for dat in G[self.id].itervalues())
     
     if not len(nbrs):
@@ -356,6 +360,9 @@ class simagent(agent, ultagent):
     prepay = self.nowpay
     if prepay == 0:
       return
+    
+    ## Add payoff to my wealth
+    self.totalpay += self.nowpay
     
     # Keep a running mean of percent contribution for each neighbor
     alpha = self.cfg.social_learning_rate
