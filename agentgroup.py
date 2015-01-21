@@ -105,6 +105,8 @@ class agent(actor):
     self.dumb = False
     self.type = 'sim'
     
+    self.totalpay = 0
+    
   def randskills(self):
     nskills = len(self.skills)
     lev = random.randint(1,min(nskills,self.cfg.maxskills))
@@ -200,6 +202,9 @@ class agent(actor):
   
   def publicgoods_postprocess(self, newpay, teampays):
     pass
+    
+  def addpay(self, pay):
+    self.totalpay += pay
     
   def getratings(self):
     return {}

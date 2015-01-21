@@ -99,7 +99,7 @@ if __name__ == '__main__':
     if std.persistent_pubgoods:
       # Give initial endowment
       for a in sim.agents:
-        a.totalpay = std.ppg_startpay
+        a.addpay(std.ppg_startpay)
     
     # Init video only once!
     for a in sim.humans:

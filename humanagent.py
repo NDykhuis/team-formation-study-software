@@ -404,7 +404,7 @@ class humanagent(agent):
     self.messages.append('You earned '+CURR+str(round(self.nowpay,2)))
         
     self.logratings()
-    send_message(self.client, ('addpay', round(self.nowpay, 2)) )
+    self.addpay(round(newpay, 2))
     send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
     done = receive_message(self.client)
     self.logratings(step='postprocess')
@@ -418,7 +418,7 @@ class humanagent(agent):
     
     self.logratings()
     send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
-    #send_message(self.client, ('addpay', round(self.nowpay, 2)) )
+    #self.addpay(round(newpay, 2))
     done = receive_message(self.client)
     self.logratings(step='postprocess')
     
@@ -484,8 +484,8 @@ class humanagent(agent):
     send_message(self.client, ('updatenbrs', teamdata) )
     
     send_message(self.client, ('publicgoods_conclusion', (newpay, (teammateids, contribs))))
-    send_message(self.client, ('addpay', round(newpay, 2)) )
-    
+    self.addpay(round(newpay, 2))
+        
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_pubgoods(self.cfg.simnumber, 
         self.id, self.group.id, 
@@ -501,6 +501,10 @@ class humanagent(agent):
     
     self.messages = []
     
+    
+  def addpay(self, pay):
+    self.totalpay += pay
+    send_message(self.client, ('addpay', pay) )
     
     
   ## ULTIMATUM FUNCTIONS:
