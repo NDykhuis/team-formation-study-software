@@ -413,86 +413,29 @@ class simulation:
         
         for g in groups:
           g.postprocess()
-    else:
-      ## PUBLIC GOODS GAME
-      if self.humans:
-        for g in groups:
-          if len(g.agents):
-            g.update()
+    elif self.humans:
+      self.publicgoods()
         
-        ## Acquire public goods contributions
-        pgdict = {}     # Stores agent contribution choices
-        if cfg._threaded_sim:
-          mythreads = []
-          for a in self.agents:
-            if len(a.group.agents) == 1:
-              t = threading.Thread(target=a.postprocess())
-              mythreads.append(t)
-              t.start()
-            elif a.slow:
-              t = threading.Thread(target=a.publicgoods, args=(pgdict,))
-              mythreads.append(t)
-              t.start()
-            else:
-              #contrib, keep = a.publicgoods()
-              a.publicgoods(pgdict)
-            #pgdict[a] = (contrib, keep)    # This will get added by the publicgoods threads
-          for t in mythreads:
-            t.join()
-        else:
-          for a in self.agents:
-            if len(a.group.agents) == 1: 
-              a.postprocess()
-            #contrib, keep = a.publicgoods()
-            #pgdict[a] = (contrib, keep)    # This will get added by the publicgoods threads
-            else:
-              a.publicgoods(pgdict)
+      
+    ## End of if do public goods
         
-        ## Distribute money back to agents
-        mythreads = []
-        for g in groups:
-          if len(g.agents) <= 1: 
-          #  for a in g.agents:
-          #    a.postprocess()
-            continue
-          teampays = {a.id:pgdict[a][0] for a in g.agents}
-          sharedpay = sum(teampays.values())*(1.0+cfg.pubgoods_mult*0.01)/float(len(g.agents))
-          for a in g.agents:
-            apay = pgdict[a][1] + sharedpay
-            if a.type == 'human':
-              a.showratings()
-            if a.slow and cfg._threaded_sim:
-              t = threading.Thread(target=a.publicgoods_postprocess, args=(apay, teampays))
-              mythreads.append(t)
-              t.start()
-            else:
-              a.publicgoods_postprocess(apay, teampays)
-            a.nowpay = apay
-        if cfg._threaded_sim:
-          for t in mythreads:
-            t.join()
-            
-        ## Give statistics and rating data to the agents
-        self.pgsummary = {a.id:(pgdict[a][0]/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
-        print "pgsummary:", std.pgsummary
+    if cfg.show_global_ratings:
+      ratings = {}
+      for a in self.agents:
+        arates = a.getratings()
+        for aid, rating in arates.iteritems():
+          try:
+            ratings[aid].append(rating)
+          except KeyError:
+            ratings[aid] = [rating]
+      
+      for aid in ratings:
+        ratings[aid] = sum(float(ratings[aid]))/len(ratings[aid])
         
-        if cfg.show_global_ratings:
-          ratings = {}
-          for a in self.agents:
-            arates = a.getratings()
-            for aid, rating in arates.iteritems():
-              try:
-                ratings[aid].append(rating)
-              except KeyError:
-                ratings[aid] = [rating]
-          
-          for aid in ratings:
-            ratings[aid] = sum(float(ratings[aid]))/len(ratings[aid])
-            
-          print "Ratings:", ratings
-            
-          for a in self.agents:
-            a.updateratings(ratings)
+      print "Ratings:", ratings
+        
+      for a in self.agents:
+        a.updateratings(ratings)
         
         
     trunend = time.time()
@@ -511,6 +454,73 @@ class simulation:
     cfg._dblog.log_conclusion(groups, self.cfg.simnumber)
     #cfg._dblog.log_simtime(cfg.simnumber, -1, trunstart, trunend)
     
+    
+  def publicgoods(self):
+    cfg = self.cfg
+    n = cfg.n
+    agents = self.agents
+    groups = self.groups
+    
+    ## PUBLIC GOODS GAME
+    for g in groups:
+      if len(g.agents):
+        g.update()
+    
+    ## Acquire public goods contributions
+    pgdict = {}     # Stores agent contribution choices
+    if cfg._threaded_sim:
+      mythreads = []
+      for a in self.agents:
+        if len(a.group.agents) == 1:
+          t = threading.Thread(target=a.postprocess())
+          mythreads.append(t)
+          t.start()
+        elif a.slow:
+          t = threading.Thread(target=a.publicgoods, args=(pgdict,))
+          mythreads.append(t)
+          t.start()
+        else:
+          #contrib, keep = a.publicgoods()
+          a.publicgoods(pgdict)
+        #pgdict[a] = (contrib, keep)    # This will get added by the publicgoods threads
+      for t in mythreads:
+        t.join()
+    else:
+      for a in self.agents:
+        if len(a.group.agents) == 1: 
+          a.postprocess()
+        #contrib, keep = a.publicgoods()
+        #pgdict[a] = (contrib, keep)    # This will get added by the publicgoods threads
+        else:
+          a.publicgoods(pgdict)
+    
+    ## Distribute money back to agents
+    mythreads = []
+    for g in groups:
+      if len(g.agents) <= 1: 
+      #  for a in g.agents:
+      #    a.postprocess()
+        continue
+      teampays = {a.id:pgdict[a][0] for a in g.agents}
+      sharedpay = sum(teampays.values())*(1.0+cfg.pubgoods_mult*0.01)/float(len(g.agents))
+      for a in g.agents:
+        apay = pgdict[a][1] + sharedpay
+        if a.type == 'human':
+          a.showratings()
+        if a.slow and cfg._threaded_sim:
+          t = threading.Thread(target=a.publicgoods_postprocess, args=(apay, teampays))
+          mythreads.append(t)
+          t.start()
+        else:
+          a.publicgoods_postprocess(apay, teampays)
+        a.nowpay = apay
+    if cfg._threaded_sim:
+      for t in mythreads:
+        t.join()
+        
+    ## Give statistics and rating data to the agents
+    self.pgsummary = {a.id:(pgdict[a][0]/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
+    print "pgsummary:", self.pgsummary
     
   
   def reset(self, Gdone=None):
