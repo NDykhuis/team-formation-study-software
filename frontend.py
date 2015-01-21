@@ -1089,7 +1089,7 @@ class TFGui(object):
       grouptext = 'Team '+self.gname(gid)
       if not self.cfgdict['_show_other_team_members']:
         grouptext += ' ('+str(gsize)+' member'+('s' if gsize != 1 else '')+')'
-      grouptext += '\n'+self.payword++CURR+str(round(pay,2))
+      grouptext += '\n'+self.payword+CURR+str(round(pay,2))
       
       if chooseone:
         gbutton = tk.Radiobutton(sb, text=grouptext, font=self.fontsm, variable=self.choice, value=gid, indicatoron=0, 
@@ -1127,7 +1127,7 @@ class TFGui(object):
       #grow, gcol = nextspot(grow, gcol)
       #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
       #gframe.grid(row=i, column=0, sticky='ew')
-      tk.Radiobutton(sb, text='Stay with Team '+self.gname(self.myteam)+'\n'+self.payword++self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=grow, column=gcol, sticky='ew', columnspan=2)
+      tk.Radiobutton(sb, text='Stay with Team '+self.gname(self.myteam)+'\n'+self.payword+self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=grow, column=gcol, sticky='ew', columnspan=2)
       grow, gcol = nextspot(grow, gcol)
       self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_accept)
     else:
@@ -1168,7 +1168,7 @@ class TFGui(object):
       
       ### Create the label(s), checkbox/radio button
       alab = tk.Label(aframe, image=self.avatars_sm[aid])
-      abtn = tk.Radiobutton(aframe, text=self.aname(aid)+'\n'+self.payword++CURR+str(round(pay,2)), font=self.fontsm, variable=self.choice, value=aid, indicatoron=0)
+      abtn = tk.Radiobutton(aframe, text=self.aname(aid)+'\n'+self.payword+CURR+str(round(pay,2)), font=self.fontsm, variable=self.choice, value=aid, indicatoron=0)
       alab.grid(row=0, column=0, sticky='nsew')
       #avlab.grid(row=0, column=1)
       abtn.grid(row=0,column=1, sticky='nsew')
@@ -1185,12 +1185,12 @@ class TFGui(object):
     if self.cfgdict['allow_leaving'] and expelstep:
       # Add a button to leave the group
       # TEMPORARY: assume you get $0 on your own
-      tk.Radiobutton(sb, text='Leave Team '+self.gname(self.myteam)+'\n'+self.payword++CURR+'0.0', font=self.fontsm, variable=self.choice, value=self.myid, indicatoron=0).grid(row=r, column=c, sticky='ew')
+      tk.Radiobutton(sb, text='Leave Team '+self.gname(self.myteam)+'\n'+self.payword+CURR+'0.0', font=self.fontsm, variable=self.choice, value=self.myid, indicatoron=0).grid(row=r, column=c, sticky='ew')
       r,c = nextspot(r,c)
     
     #gframe = tk.Frame(sb, relief=tk.GROOVE, borderwidth=2)
     #gframe.grid(row=i, column=0, sticky='ew')
-    tk.Radiobutton(sb, text='None\n'+self.payword++self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=r, column=c, sticky='ew')
+    tk.Radiobutton(sb, text='None\n'+self.payword+self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=r, column=c, sticky='ew')
     self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_accept)
     self.submit.grid(row=MAXROWS+1, column=0, columnspan=c+1, sticky='ew')
     
