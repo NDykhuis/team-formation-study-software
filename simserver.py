@@ -38,7 +38,7 @@ def log(text, level=DEBUG):
 if __name__ == '__main__':
   alt_options = ['single', 'auto']
   
-  DYNAMIC = False   # Temporary; should be replaced with command-line or configuration.py option
+  DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
   KEEP_GRAPH = True
   
   if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
@@ -81,6 +81,7 @@ if __name__ == '__main__':
       std.connections= 6
       std.prob_rewire = 0
       std.graph_type = 'complete_graph' #'connected_watts_strogatz_graph'
+      std.nskills = 5
       std.strategy = 'random'
       std.ndumb = 0
     
