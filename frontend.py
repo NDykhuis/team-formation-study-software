@@ -1418,7 +1418,9 @@ class TFGui(object):
     if aid == self.myid: return
     hlabel = self.historywidgets[aid]
     #hlabel.config(text=', '.join([str(round(c,2)) for c in history]))
-    hlabel.config(text=', '.join([str(round(contrib,2)) for contrib,total in history]))
+    #hlabel.config(text=', '.join([str(round(contrib,2)) for contrib,total in history]))
+    nhist = self.cfgdict['show_nhistory']
+    hlabel.config(text='Past:'+', '.join([str(int(contrib)) for contrib,total in history[-nhist:]))
     hlabel.grid()
   
   def update_global_rating(self, aid, rating):
