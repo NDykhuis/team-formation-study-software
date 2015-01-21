@@ -1334,16 +1334,19 @@ class TFGui(object):
       rw = self.ratingwidgets[aid] = []
       v = self.ratingvars[aid] = tk.IntVar()
       bframe = tk.Frame(frame)
-      if aid != self.myid and not self.cfgdict['_hide_publicgoods']:  ## Do not allow you to rate yourself!
-        for j in range(5):
-          button=tk.Radiobutton(bframe, image=self.staroff, relief=tk.FLAT, indicatoron=False, variable=v, value=j+1)
-          #button.bind("<Enter>", lambda e, aid=aid: self.star_enter(e,aid))
-          #button.bind("<Leave>", lambda e, aid=aid: self.star_leave(e,aid))
-          button.bind("<Button-1>", lambda e, aid=aid: self.star_click(e,aid))
-          button.grid(row=0, column=j)
-          rw.append(button)
-        v.trace('w', lambda x,y,z,aid=aid, *args: self.rating_change(aid))    ## THIS IS KIND OF A HACK
+      if not self.cfgdict['_hide_publicgoods']:
+        ## Rating stars
+        if aid != self.myid: ## Do not allow you to rate yourself!
+          for j in range(5):
+            button=tk.Radiobutton(bframe, image=self.staroff, relief=tk.FLAT, indicatoron=False, variable=v, value=j+1)
+            #button.bind("<Enter>", lambda e, aid=aid: self.star_enter(e,aid))
+            #button.bind("<Leave>", lambda e, aid=aid: self.star_leave(e,aid))
+            button.bind("<Button-1>", lambda e, aid=aid: self.star_click(e,aid))
+            button.grid(row=0, column=j)
+            rw.append(button)
+          v.trace('w', lambda x,y,z,aid=aid, *args: self.rating_change(aid))    ## THIS IS KIND OF A HACK
         
+        ## Global rating
         grw = self.globalratingwidgets[aid] = {}
         grw['frame'] = tk.Frame(bframe)
         grw['ratingoff'] = tk.Label(grw['frame'], height=self.starson.size[1], width=self.starson.size[0], image=self.starsoff)
@@ -1353,9 +1356,10 @@ class TFGui(object):
         grw['frame'].grid(row=1, column=0, columnspan=5)  # Assign grid location
         grw['frame'].grid_remove()  # but don't show until we have data
         
-        hlabel = self.historywidgets[aid] = tk.Label(bframe, text='[no history]', font=self.fontxsm)
-        hlabel.grid(row=2, column=0, columnspan=5)  # Assign grid location
-        hlabel.grid_remove()  # but don't show until we have data
+      ## Contribution history
+      hlabel = self.historywidgets[aid] = tk.Label(bframe, text='[no history]', font=self.fontxsm)
+      hlabel.grid(row=2, column=0, columnspan=5)  # Assign grid location
+      hlabel.grid_remove()  # but don't show until we have data
         
       bframe.grid(row=1, column=1, sticky='nsew')
       frame.grid(row=r, column=c, sticky='nsew')
@@ -1424,7 +1428,7 @@ class TFGui(object):
     hlabel.grid()
   
   def update_global_rating(self, aid, rating):
-    if aid == self.myid: return
+    #if aid == self.myid: return
     grw = self.globalratingwidgets[aid]
     imgwid = max(self.starson.size[0] * (rating*0.2)-1, 1)
     grw['ratingon'].config(width=imgwid)

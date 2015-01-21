@@ -38,7 +38,7 @@ class configuration(object):
   
   _do_publicgoods = True
   #pubgoods_mult = 1.2
-  pubgoods_mult = 20     # Percent the pot is increased
+  pubgoods_mult = 25     # Percent the pot is increased
   _hide_publicgoods = True
   pg_contribrange = {   # Percent to contribute in pubgoods, low to high
     'nice':(0.7, 1.0),
