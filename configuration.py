@@ -47,6 +47,11 @@ class configuration(object):
     'random':(0.0, 1.0)
   }
   
+  
+  persistent_pubgoods = True
+  
+  
+  
   _show_other_team_members = True
   
   _do_ratings = True
@@ -168,6 +173,10 @@ class configuration(object):
     #self.task = self.bdtask
     #self.setupbdtask()
     pass
+  
+  # This task returns the total possible contribution of everyone in the group
+  def ppgtask(self, agents):
+    return sum(a.totalpay for a in agents)
   
   # This task rewards groups based only on how many members are on a team
   # Calculates number of members assuming that maxskills == 1
