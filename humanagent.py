@@ -469,11 +469,10 @@ class humanagent(agent):
     pgdict[self] = (contrib, int(self.nowpay)-contrib)
   
     
-  def publicgoods_postprocess(self, newpay, teampays):
-    contrib = teampays[self.id]
-    keep = self.nowpay - contrib
-    potpay = newpay - (self.nowpay-contrib)
-    self.messages.append('You made '+CURR+str(round(self.nowpay, 2))+' by working with this team.')
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+    maxcontrib = startpay
+    newpay = privatepay + potpay
+    self.messages.append('You made '+CURR+str(round(startpay, 2))+' by working with this team.')
     self.messages.append('You contributed '+CURR+str(contrib)+' to the pot and kept '+CURR+str(round(keep,2)))
     cdesc = 'the shared pot' if not configuration.hide_publicgoods else 'the lottery'
     self.messages.append('You received '+CURR+str(round(potpay,2))+' from '+cdesc)
@@ -483,13 +482,13 @@ class humanagent(agent):
     
     ### UPDATE UI WITH DATA ABOUT TEAM CONTRIBS
     teammateids = [n.id for n in self.group.agents]
-    contribs = [teampays[n] for n in teammateids]
+    contribs = [teampays[n][0] for n in teammateids]
     
     send_message(self.client, ('updatemyteam', (self.group.id, str(contrib)) )) 
     teammates = list(self.group.agents)
     teammates.remove(self)
     teamids = [n.id for n in teammates]
-    teamdata = [(n.id, n.group.id, teampays[n.id]) for n in teammates]
+    teamdata = [(n.id, n.group.id, teampays[n.id][0]) for n in teammates]
     send_message(self.client, ('updatenbrs', teamdata) )
     
     send_message(self.client, ('publicgoods_conclusion', (newpay, (teammateids, contribs))))
@@ -499,7 +498,7 @@ class humanagent(agent):
     self.cfg._dblog.log_pubgoods(self.cfg.simnumber, 
         self.id, self.group.id, 
         teamids, contrib, 
-        [teampays[n.id] for n in teammates], 
+        [teampays[n.id][0] for n in teammates], 
         keep, newpay,
         sframe, eframe, stime, etime)
     

@@ -198,7 +198,7 @@ class agent(actor):
   def publicgoods(self, pgdict):
     pass
   
-  def publicgoods_postprocess(self, newpay, teampays):
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
     pass
     
   def getratings(self):

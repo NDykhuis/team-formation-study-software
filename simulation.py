@@ -509,19 +509,23 @@ class simulation:
       #  for a in g.agents:
       #    a.postprocess()
         continue
-      teampays = {a.id:pgdict[a][0] for a in g.agents}
+      teampays = {a.id:pgdict[a] for a in g.agents}
       sharedpay = sum(teampays.values())*(1.0+cfg.pubgoods_mult*0.01)/float(len(g.agents))
       for a in g.agents:
-        apay = pgdict[a][1] + sharedpay
+        #startpay, keep, contrib, privatepay, potpay, teampays):
+        contrib, keep = pgdict[a]
+        startpay = contrib + keep
+        private_mult = cfg.private_payoff*0.01+1.0
+        privatepay = keep*private_mult
         if a.type == 'human':
           a.showratings()
         if a.slow and cfg._threaded_sim:
-          t = threading.Thread(target=a.publicgoods_postprocess, args=(apay, teampays))
+          t = threading.Thread(target=a.publicgoods_postprocess, args=(startpay, keep, contrib, privatepay, sharedpay, teampays))
           mythreads.append(t)
           t.start()
         else:
-          a.publicgoods_postprocess(apay, teampays)
-        a.nowpay = apay
+          a.publicgoods_postprocess(startpay, keep, contrib, privatepay, sharedpay, teampays)
+        a.nowpay = privatepay + sharedpay
     if cfg._threaded_sim:
       for t in mythreads:
         t.join()

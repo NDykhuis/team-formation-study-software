@@ -350,19 +350,21 @@ class simagent(agent, ultagent):
     #return contrib
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, newpay, teampays):
-    self.pgpay = newpay
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+    self.pgpay = privatepay+potpay
     
-    prepay = self.nowpay
-    if prepay == 0:
+    prepay = startpay
+    if prepay == 0:     # This may be a problem
       return
+  
+    ## Add payoff to my wealth
+    newpay = privatepay + potpay
+    #self.addpay(newpay)             ## Only useful in PPG
     
     # Keep a running mean of percent contribution for each neighbor
     alpha = self.cfg.social_learning_rate
-    for aid,contrib in teampays.iteritems():
-      if aid == self.id:
-        continue
-      pctcontrib = float(contrib) / prepay
+    for aid,(contrib, keep) in teampays.iteritems():
+      pctcontrib = 0 if (contrib + keep) == 0 else float(contrib) / (contrib + keep)
       if aid in self.pgmem:
         self.pgmem[aid] = (alpha*pctcontrib + (1.0-alpha)*self.pgmem[aid])
       else:
