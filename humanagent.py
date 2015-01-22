@@ -212,7 +212,10 @@ class humanagent(agent):
     
     idgroups = {g.id:g for g in nbrgroups}
 
-    gdata = sorted([ (g.id, g.gsize, task(g.withagent(self)), [a.id for a in g.agents]) for g in nbrgroups])
+    if self.cfg.persistent_pubgoods and self.cfg.task == self.cfg.ppgtask:
+      gdata = sorted([ (g.id, g.gsize, task(g.agents), [a.id for a in g.agents]) for g in nbrgroups])
+    else:
+      gdata = sorted([ (g.id, g.gsize, task(g.withagent(self)), [a.id for a in g.agents]) for g in nbrgroups])
     gids, gsizes, newpays, gmembers = zip(*gdata)
 
     self.logratings()
@@ -253,7 +256,10 @@ class humanagent(agent):
     # acceptvote_groupmerge
     
     idagents = {a.id:a for a in applicants}
-    gdata = sorted([ (a.id, task(self.group.withagent(a))) for a in applicants])
+    if self.cfg.persistent_pubgoods and self.cfg.task == self.cfg.ppgtask:
+      gdata = sorted([ (a.id, a.totalpay) for a in applicants])
+    else:
+      gdata = sorted([ (a.id, task(self.group.withagent(a))) for a in applicants])
     naids, newpays = zip(*gdata)
     
     self.logratings()
@@ -291,7 +297,10 @@ class humanagent(agent):
   
     idagents = {a.id:a for a in myg.agents}
     #del idagents[self.id]
-    gdata = sorted([ (a.id, task(myg.withoutagent(a))) for aid, a in sorted(idagents.items()) if aid != self.id])
+    if self.cfg.persistent_pubgoods and self.cfg.task == self.cfg.ppgtask:
+      gdata = sorted([ (a.id, a.totalpay) for aid, a in sorted(idagents.items()) if aid != self.id])
+    else:
+      gdata = sorted([ (a.id, task(myg.withoutagent(a))) for aid, a in sorted(idagents.items()) if aid != self.id])
     naids, newpays = zip(*gdata)
     
     self.logratings()
@@ -328,7 +337,10 @@ class humanagent(agent):
     
     idgroups = {g.id:g for g in self.acceptances}
 
-    gdata = sorted([ (g.id, g.gsize, task(g.withagent(self)), [a.id for a in g.agents]) for g in self.acceptances])
+    if self.cfg.persistent_pubgoods and self.cfg.task == self.cfg.ppgtask:
+      gdata = sorted([ (g.id, g.gsize, task(g.agents), [a.id for a in g.agents]) for g in self.acceptances])
+    else:
+      gdata = sorted([ (g.id, g.gsize, task(g.withagent(self)), [a.id for a in g.agents]) for g in self.acceptances])
     gids, gsizes, gpays, gmembers = zip(*gdata)
     
     self.logratings()
@@ -450,9 +462,11 @@ class humanagent(agent):
     
     self.logratings()
     # Send current pay with the publicgoods message
-    send_message(self.client, ('publicgoods', maxcontrib))
-    contrib = receive_message(self.client)
+    contrib = send_and_receive(self.client, ('publicgoods', maxcontrib))
     self.logratings(step='publicgoods')
+    
+    if self.cfg.persistent_pubgoods:
+      self.addpay(-contrib)     # Remove the contribution from my total pay
     
     print "Agent", self.id, "contribs", contrib, "/", maxcontrib
     
@@ -463,11 +477,13 @@ class humanagent(agent):
   def publicgoods_postprocess(self, newpay, teampays):
     contrib = teampays[self.id]
     if self.cfg.persistent_pubgoods:
-      maxcontrib = self.totalpay
+      maxcontrib = self.totalpay+contrib
     else:
       maxcontrib = self.nowpay
     keep = maxcontrib - contrib
-    potpay = newpay - (maxcontrib-contrib)
+    potpay = newpay - keep
+    
+    print "Agent", self.id, "newpay", newpay, "totalpay", self.totalpay, "contrib", contrib
     
     if self.cfg.persistent_pubgoods:
       self.messages.append('Your team started with '+CURR+str(round(self.nowpay, 2))+' total wealth.')
@@ -476,7 +492,10 @@ class humanagent(agent):
     self.messages.append('You contributed '+CURR+str(contrib)+' to the pot and kept '+CURR+str(round(keep,2)))
     cdesc = 'the shared pot' if not configuration._hide_publicgoods else 'the lottery'
     self.messages.append('You received '+CURR+str(round(potpay,2))+' from '+cdesc)
-    self.messages.append('You earned '+CURR+str(round(newpay,2))+' this round.')
+    if self.cfg.persistent_pubgoods:
+      self.messages.append('You now have '+CURR+str(round(newpay,2))+'.')
+    else:
+      self.messages.append('You earned '+CURR+str(round(newpay,2))+' this round.')
     #if self.cfg._do_ratings and self.group.gsize > 1:
     #  self.messages.append('You may now rate the behavior of your teammates if you wish.')
     
@@ -492,8 +511,11 @@ class humanagent(agent):
     send_message(self.client, ('updatenbrs', teamdata) )
     
     send_message(self.client, ('publicgoods_conclusion', (newpay, (teammateids, contribs))))
-    self.addpay(round(newpay, 2))
-        
+    if self.cfg.persistent_pubgoods:
+      self.addpay(round(potpay, 2))
+    else:
+      self.addpay(round(newpay, 2))
+    
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_pubgoods(self.cfg.simnumber, 
         self.id, self.group.id, 

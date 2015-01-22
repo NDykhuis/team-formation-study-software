@@ -524,6 +524,7 @@ class simulation:
     self.pgsummary = {a.id:(pgdict[a][0],(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
     print "pgsummary:", self.pgsummary
     
+    print "wealth:", [(a.id, a.totalpay) for a in self.agents]
   
   def reset(self, Gdone=None):
     if Gdone is None:

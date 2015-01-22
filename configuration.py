@@ -102,7 +102,7 @@ class configuration(object):
   _print_summary = True
   _print_group_summary = False
 
-  delaytime = 0.25     # delay between iterations in seconds, for watching the sim
+  delaytime = 0.0     # delay between iterations in seconds, for watching the sim
 
   _threaded_sim = True  # Start new threads for each agent when actions can be completed in parallel (turn on for human subjects)
 
@@ -176,8 +176,11 @@ class configuration(object):
   
   # This task returns the total possible contribution of everyone in the group
   def ppgtask(self, agents):
-    print [a.totalpay for a in agents], sum([a.totalpay for a in agents])
-    return sum(a.totalpay for a in agents)
+    try:
+      print [a.totalpay for a in agents], sum([a.totalpay for a in agents])
+      return sum(a.totalpay for a in agents)
+    except TypeError:   # A single agent
+      return agents.totalpay
   
   # This task rewards groups based only on how many members are on a team
   # Calculates number of members assuming that maxskills == 1
@@ -651,6 +654,7 @@ elif PROTOCOL == 99:
   configuration._time_limit = 10
   configuration._margin_time = 3
   configuration.delay_sim_agents = False
+  configuration.nsteps = 5      # TEMPORARY
 
 
 

@@ -354,18 +354,27 @@ class simagent(agent, ultagent):
     
     clow, chigh = self.cfg.pg_contribrange[self.disposition]
     contrib = random.randint(int(clow*nowpayint), int(chigh*nowpayint))
+    
+    if self.cfg.persistent_pubgoods:
+      self.addpay(-contrib)     # Remove the contribution from my total pay
+
     #return contrib
     pgdict[self] = (contrib, nowpayint-contrib)
   
   def publicgoods_postprocess(self, newpay, teampays):
     self.pgpay = newpay
     
-    prepay = self.nowpay
+    prepay = self.nowpay    # This is wrong in PPG
     if prepay == 0:
       return
+  
+    print "Agent", self.id, "has", self.totalpay, "nowpay", self.nowpay, "newpay", newpay
     
     ## Add payoff to my wealth
-    self.addpay(self.nowpay)
+    if self.cfg.persistent_pubgoods:
+      self.addpay(newpay-self.totalpay)
+    else:
+      self.addpay(newpay)
     
     # Keep a running mean of percent contribution for each neighbor
     alpha = self.cfg.social_learning_rate
