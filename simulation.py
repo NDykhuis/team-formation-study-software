@@ -505,7 +505,8 @@ class simulation:
       teampays = {a.id:pgdict[a][0] for a in g.agents}
       sharedpay = sum(teampays.values())*(1.0+cfg.pubgoods_mult*0.01)/float(len(g.agents))
       for a in g.agents:
-        apay = pgdict[a][1] + sharedpay
+        private_mult = cfg.private_payoff*0.01+1.0
+        apay = pgdict[a][1]*private_mult + sharedpay
         if a.type == 'human':
           a.showratings()
         if a.slow and cfg._threaded_sim:

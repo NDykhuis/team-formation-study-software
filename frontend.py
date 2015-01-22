@@ -965,6 +965,8 @@ class TFGui(object):
       longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(self.cfgdict['pubgoods_mult'])+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
     else:
       longtext = "Your team has been entered into a lottery. You may contribute as much of your pay as you would like to the lottery. The amount you contribute determines the amount you are eligible to win."
+    if self.cfgdict['private_payoff']:
+      longtext += 'Any pay you choose not to contribute will be increased by '+str(self.cfgdict['private_payoff'])+'.\n'
     
     self.pubgoods_instruction_text.config(text=longtext)
     

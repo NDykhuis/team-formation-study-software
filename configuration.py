@@ -50,7 +50,7 @@ class configuration(object):
   
   persistent_pubgoods = True
   ppg_startpay = 10
-  
+  private_payoff = 20   # Percent return on money kept, rather than contributed
   
   _show_other_team_members = True
   
