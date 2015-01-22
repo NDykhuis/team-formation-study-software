@@ -137,17 +137,18 @@ if __name__ == '__main__':
       sim.run()
       Gdone = sim.export()
       
-      ann = analyzer()
-      ann.load(Gdone, std)
-      ann.groupsummary()
-      ann.summary()
-      ann.dumpsummarydb(dblog)
-      if outfile: 
-        ann.dumpsummary(outfile)
-      if std._draw_graph_after_sim or std._draw_graph:
-        ann.drawgraph()
-        print "Close plot to end program"
-        plt.show()
+      if not std.persistent_pubgoods:   ## TEMPORARY until analyzer is fixed
+        ann = analyzer()
+        ann.load(Gdone, std)
+        ann.groupsummary()
+        ann.summary()
+        ann.dumpsummarydb(dblog)
+        if outfile: 
+          ann.dumpsummary(outfile)
+        if std._draw_graph_after_sim or std._draw_graph:
+          ann.drawgraph()
+          print "Close plot to end program"
+          plt.show()
       
       # update public goods history
       for aid, contribpct in sim.pgsummary.iteritems():
@@ -179,17 +180,18 @@ if __name__ == '__main__':
         sim.run(endtime = starttime+cfg._time_limit*60)
         Gdone = sim.export()
         
-        ann = analyzer()
-        ann.load(Gdone, cfg)
-        ann.groupsummary()
-        ann.summary()
-        ann.dumpsummarydb(dblog)
-        if outfile: 
-          ann.dumpsummary(outfile)
-        if cfg._draw_graph_after_sim or cfg._draw_graph:
-          ann.drawgraph()
-          print "Close plot to end program"
-          plt.show()
+        if not std.persistent_pubgoods:   ## TEMPORARY until analyzer is fixed
+          ann = analyzer()
+          ann.load(Gdone, cfg)
+          ann.groupsummary()
+          ann.summary()
+          ann.dumpsummarydb(dblog)
+          if outfile: 
+            ann.dumpsummary(outfile)
+          if cfg._draw_graph_after_sim or cfg._draw_graph:
+            ann.drawgraph()
+            print "Close plot to end program"
+            plt.show()
         
         # update public goods history
         for aid, (contrib, total) in sim.pgsummary.iteritems():

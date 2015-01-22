@@ -38,7 +38,7 @@ class configuration(object):
   
   _do_publicgoods = True
   #pubgoods_mult = 1.2
-  pubgoods_mult = 25     # Percent the pot is increased
+  pubgoods_mult = 50     # Percent the pot is increased
   _hide_publicgoods = True
   pg_contribrange = {   # Percent to contribute in pubgoods, low to high
     'nice':(0.7, 1.0),
@@ -295,9 +295,9 @@ class configuration(object):
     nowpay = myagent.nowpay
     task = self.task
     nowgsize = myagent.group.gsize
-    #bestgroup = max([( task(g.withskills(myagent))/(g.gsize + 1) - nowpay,   g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
+    #bestgroup = max([( task(g.withagent(myagent))/(g.gsize + 1) - nowpay,   g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
     #return bestgroup
-    return [( task(g.withskills(myagent)) - nowpay,   g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
+    return [( task(g.withagent(myagent)) - nowpay,   g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
        
   # pay, random
   def utility_group_random(self, mygroup):
@@ -305,9 +305,9 @@ class configuration(object):
     nowpay = mygroup.nowpay
     task = self.task
     nowgsize = mygroup.gsize
-    #bestagent = max([( task(mygroup.withskills(a))/(nowgsize + a.gsize) - nowpay,  random.random(),  a ) for a in applications])
+    #bestagent = max([( task(mygroup.withagent(a))/(nowgsize + a.gsize) - nowpay,  random.random(),  a ) for a in applications])
     #return bestagent
-    return [( task(mygroup.withskills(a)) - nowpay,  random.random(),  a ) for a in applications]
+    return [( task(mygroup.withagent(a)) - nowpay,  random.random(),  a ) for a in applications]
     
   # pay, random - but will not accept unless pay > 0
   def utility_groupmerge_random(self, mygroup):
@@ -315,9 +315,9 @@ class configuration(object):
     nowpay = mygroup.nowpay
     task = self.task
     nowgsize = mygroup.gsize
-    #bestgroup = max([( task(mygroup.withskills(g))/(nowgsize + g.gsize) - nowpay,  random.random()-1.0,  g ) for g in acceptances])
+    #bestgroup = max([( task(mygroup.withagent(g))/(nowgsize + g.gsize) - nowpay,  random.random()-1.0,  g ) for g in acceptances])
     #return bestgroup
-    return [( task(mygroup.withskills(g)) - nowpay,  random.random()-1.0,  g ) for g in acceptances]
+    return [( task(mygroup.withagent(g)) - nowpay,  random.random()-1.0,  g ) for g in acceptances]
 
 
   ## WEIGHTED UTILITY FUNCTIONS
@@ -342,21 +342,21 @@ class configuration(object):
     nowavg = nowweight/max(nownbrs, 1)
     
     # This uses total weight:
-    #bestgroup = max([( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0) - nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
+    #bestgroup = max([( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0) - nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
     
     # This uses average weight:
-    #bestgroup = max([( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
+    #bestgroup = max([( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
     
     #if myagent.id == 84:
-    #  print "Agent", myagent.id, "\nUtility:\n", '\n'.join([str(( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1),  g.gsize-nowgsize,   random.random()-0.5,   g.id )) for g in acceptances])
+    #  print "Agent", myagent.id, "\nUtility:\n", '\n'.join([str(( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1),  g.gsize-nowgsize,   random.random()-0.5,   g.id )) for g in acceptances])
     
     #return bestgroup
     
     # Average weight
-    #return [( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowavg,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
+    #return [( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowavg,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
     
     # Total weight
-    return [( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
+    return [( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
 
   def utility_group_weighted(self, mygroup):
     applications = mygroup.applications
@@ -373,21 +373,21 @@ class configuration(object):
       numnbrs[v] = numnbrs.get(v,0) + 1
     
     # This uses total weight:
-    #bestagent = max([( task(mygroup.withskills(a)) - nowpay,  totalweights[a.id],  random.random(),  a ) for a in applications])
+    #bestagent = max([( task(mygroup.withagent(a)) - nowpay,  totalweights[a.id],  random.random(),  a ) for a in applications])
     
     # This uses average weight:
-    #bestagent = max([( task(mygroup.withskills(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a ) for a in applications])
+    #bestagent = max([( task(mygroup.withagent(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a ) for a in applications])
     
-    #print "Group", mygroup.id, "\nUtility:\n", '\n'.join([str(( task(mygroup.withskills(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a.id )) for a in applications])
+    #print "Group", mygroup.id, "\nUtility:\n", '\n'.join([str(( task(mygroup.withagent(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a.id )) for a in applications])
     
     #return bestagent
     
     # Average weight
-    #return [( task(mygroup.withskills(a)) - nowpay,  totalweights.get(a.id, 0.0)/numnbrs.get(a.id, 1),  random.random(),  a ) for a in applications]
+    #return [( task(mygroup.withagent(a)) - nowpay,  totalweights.get(a.id, 0.0)/numnbrs.get(a.id, 1),  random.random(),  a ) for a in applications]
     
     # Total weight
     # 0.99 requires that a group have >= 1 connection strength with a prospective agent
-    return [( task(mygroup.withskills(a)) - nowpay,  totalweights.get(a.id, 0.0) - 0.99,  random.random(),  a ) for a in applications]
+    return [( task(mygroup.withagent(a)) - nowpay,  totalweights.get(a.id, 0.0) - 0.99,  random.random(),  a ) for a in applications]
     
   def utility_groupmerge_weighted(self, mygroup):
     acceptances = mygroup.acceptances
@@ -410,18 +410,18 @@ class configuration(object):
       numnbrs[nbrgroup] = numnbrs.get(nbrgroup,0) + 1
     
     # This uses total weight:
-    #bestgroup = max([( task(mygroup.withskills(g)) - nowpay,  totalweights[g.id],  random.random()-1.0,  g ) for g in acceptances])
+    #bestgroup = max([( task(mygroup.withagent(g)) - nowpay,  totalweights[g.id],  random.random()-1.0,  g ) for g in acceptances])
     
     # This uses average weight:
-    #bestgroup = max([( task(mygroup.withskills(g)) - nowpay,  totalweights[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances])
+    #bestgroup = max([( task(mygroup.withagent(g)) - nowpay,  totalweights[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances])
     
     #return bestgroup
     
     # Average weight
-    #return [( task(mygroup.withskills(g)) - nowpay,  totalweights[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances]
+    #return [( task(mygroup.withagent(g)) - nowpay,  totalweights[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances]
     
     # Total weight
-    return [( task(mygroup.withskills(g)) - nowpay,  totalweights.get(g.id, 0.0) - 0.99,  random.random()-1.0,  g ) for g in acceptances]
+    return [( task(mygroup.withagent(g)) - nowpay,  totalweights.get(g.id, 0.0) - 0.99,  random.random()-1.0,  g ) for g in acceptances]
   
   
   ## BIAS UTILITY FUNCTIONS
@@ -446,16 +446,16 @@ class configuration(object):
     nowavg = nowbias/max(nownbrs, 1)
     
     # This uses total weight:
-    #bestgroup = max([( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0) - nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
+    #bestgroup = max([( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0) - nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
     
     # This uses average weight:
-    #bestgroup = max([( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
+    #bestgroup = max([( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances])
     
     #if myagent.id == 84:
-    #  print "Agent", myagent.id, "\nUtility:\n", '\n'.join([str(( task(g.withskills(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1),  g.gsize-nowgsize,   random.random()-0.5,   g.id )) for g in acceptances])
+    #  print "Agent", myagent.id, "\nUtility:\n", '\n'.join([str(( task(g.withagent(myagent)) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1),  g.gsize-nowgsize,   random.random()-0.5,   g.id )) for g in acceptances])
     
     #return bestgroup
-    return [( task(g.withskills(myagent)) - nowpay,  totalbias.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
+    return [( task(g.withagent(myagent)) - nowpay,  totalbias.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
 
   def utility_group_bias(self, mygroup):
     applications = mygroup.applications
@@ -472,15 +472,15 @@ class configuration(object):
       numnbrs[v] = numnbrs.get(v,0) + 1
     
     # This uses total weight:
-    #bestagent = max([( task(mygroup.withskills(a)) - nowpay,  totalweights[a.id],  random.random(),  a ) for a in applications])
+    #bestagent = max([( task(mygroup.withagent(a)) - nowpay,  totalweights[a.id],  random.random(),  a ) for a in applications])
     
     # This uses average weight:
-    #bestagent = max([( task(mygroup.withskills(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a ) for a in applications])
+    #bestagent = max([( task(mygroup.withagent(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a ) for a in applications])
     
-    #print "Group", mygroup.id, "\nUtility:\n", '\n'.join([str(( task(mygroup.withskills(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a.id )) for a in applications])
+    #print "Group", mygroup.id, "\nUtility:\n", '\n'.join([str(( task(mygroup.withagent(a)) - nowpay,  totalweights[a.id]/numnbrs[a.id],  random.random(),  a.id )) for a in applications])
     
     #return bestagent
-    return [( task(mygroup.withskills(a)) - nowpay,  totalbias[a.id]/numnbrs[a.id],  random.random(),  a ) for a in applications]
+    return [( task(mygroup.withagent(a)) - nowpay,  totalbias[a.id]/numnbrs[a.id],  random.random(),  a ) for a in applications]
     
   def utility_groupmerge_bias(self, mygroup):
     acceptances = mygroup.acceptances
@@ -496,13 +496,13 @@ class configuration(object):
       numnbrs[nbrgroup] = numnbrs.get(nbrgroup,0) + 1
     
     # This uses total weight:
-    #bestgroup = max([( task(mygroup.withskills(g)) - nowpay,  totalweights[g.id],  random.random()-1.0,  g ) for g in acceptances])
+    #bestgroup = max([( task(mygroup.withagent(g)) - nowpay,  totalweights[g.id],  random.random()-1.0,  g ) for g in acceptances])
     
     # This uses average weight:
-    #bestgroup = max([( task(mygroup.withskills(g)) - nowpay,  totalweights[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances])
+    #bestgroup = max([( task(mygroup.withagent(g)) - nowpay,  totalweights[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances])
     
     #return bestgroup
-    return [( task(mygroup.withskills(g)) - nowpay,  totalbias[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances]
+    return [( task(mygroup.withagent(g)) - nowpay,  totalbias[g.id]/numnbrs[g.id],  random.random()-1.0,  g.id ) for g in acceptances]
     
     
   strategy = 'random'
