@@ -465,8 +465,8 @@ class humanagent(agent):
     contrib = send_and_receive(self.client, ('publicgoods', maxcontrib))
     self.logratings(step='publicgoods')
     
-    if self.cfg.persistent_pubgoods:
-      self.addpay(-contrib)     # Remove the contribution from my total pay
+    #if self.cfg.persistent_pubgoods:
+    #  self.addpay(-contrib)     # Remove the contribution from my total pay
     
     print "Agent", self.id, "contribs", contrib, "/", maxcontrib
     
@@ -475,9 +475,10 @@ class humanagent(agent):
   
     
   def publicgoods_postprocess(self, newpay, teampays):
+    ## newpay === keep + potpay
     contrib = teampays[self.id]
     if self.cfg.persistent_pubgoods:
-      maxcontrib = self.totalpay+contrib
+      maxcontrib = self.totalpay#+contrib
     else:
       maxcontrib = self.nowpay
     keep = maxcontrib - contrib
@@ -512,7 +513,7 @@ class humanagent(agent):
     
     send_message(self.client, ('publicgoods_conclusion', (newpay, (teammateids, contribs))))
     if self.cfg.persistent_pubgoods:
-      self.addpay(round(potpay, 2))
+      self.addpay(round(potpay-contrib, 2))
     else:
       self.addpay(round(newpay, 2))
     

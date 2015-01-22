@@ -355,13 +355,14 @@ class simagent(agent, ultagent):
     clow, chigh = self.cfg.pg_contribrange[self.disposition]
     contrib = random.randint(int(clow*nowpayint), int(chigh*nowpayint))
     
-    if self.cfg.persistent_pubgoods:
-      self.addpay(-contrib)     # Remove the contribution from my total pay
+    #if self.cfg.persistent_pubgoods:
+    #  self.addpay(-contrib)     # Remove the contribution from my total pay
 
     #return contrib
     pgdict[self] = (contrib, nowpayint-contrib)
   
   def publicgoods_postprocess(self, newpay, teampays):
+    ## newpay === keep + potpay
     self.pgpay = newpay
     
     prepay = self.nowpay    # This is wrong in PPG
