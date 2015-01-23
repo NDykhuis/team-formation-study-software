@@ -43,8 +43,8 @@ class dumbagent(agent, ultagent):
     contrib = random.randint(0, nowpayint)
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, newpay, teampays):
-    self.pgpay = newpay
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+    self.pgpay = privatepay + potpay
 
 
 class simagent(agent, ultagent):
@@ -369,7 +369,7 @@ class simagent(agent, ultagent):
     if prepay == 0:     # This may be a problem
       return
   
-    print "Agent", self.id, "has", self.totalpay, "nowpay", self.nowpay, "newpay", newpay
+    print "Agent", self.id, "has", self.totalpay, "keep", keep, "contrib", contrib, "payback", privatepay + potpay
     
     ## Add payoff to my wealth
     newpay = privatepay + potpay

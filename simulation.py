@@ -501,9 +501,21 @@ class simulation:
       if len(g.agents) <= 1: 
       #  for a in g.agents:
       #    a.postprocess()
+      
+        ## This needs to go earlier because the agent is not getting the message; postprocess happened above
+        if g.agents and cfg.private_payoff and cfg.persistent_pubgoods: ## TEMP HACK
+          a = g.agents[0]
+          a.addpay( a.totalpay * (cfg.private_payoff*0.01) )
+          if a.type=='human':
+            a.messages.append('You received '+str(cfg.private_payoff)+'% interest on your private fund')
         continue
       teampays = {a.id:pgdict[a] for a in g.agents}
-      sharedpay = sum(teampays.values())*(1.0+cfg.pubgoods_mult*0.01)/float(len(g.agents))
+      potsize = sum(c for c,k in teampays.values())
+      potmult = (1.0+cfg.pubgoods_mult*0.01)
+      sharedpay = potsize*potmult/float(len(g.agents))
+      if cfg.experimental_pg_payoff:
+        #sharedpay = potsize*(1.0+potsize/100.0)/float(len(g.agents))
+        sharedpay = potsize*(1.0+float(len(g.agents))/cfg.n)/float(len(g.agents))
       for a in g.agents:
         #startpay, keep, contrib, privatepay, potpay, teampays):
         contrib, keep = pgdict[a]

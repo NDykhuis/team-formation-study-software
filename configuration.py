@@ -51,6 +51,7 @@ class configuration(object):
   persistent_pubgoods = True
   ppg_startpay = 10
   private_payoff = 20   # Percent return on money kept, rather than contributed
+  experimental_pg_payoff = True     # pubgoods multiplier = percent of the agents on the team
   
   _show_other_team_members = True
   
@@ -74,7 +75,7 @@ class configuration(object):
   _agent_delays = {'propose':4.0, 'acceptvote':5.0, 'join':5.0, 'expelvote':3.0, 'conclude':3.0, 'publicgoods':10.0}    # Based on pilot data
   _agent_delay_dev = {'propose':2.0, 'acceptvote':2.5, 'join':1.5, 'expelvote':1.5, 'conclude':1.0, 'publicgoods':5.0}  # Approx as half the IQR
   
-  social_sim_agents = True
+  social_sim_agents = False
   social_learning_rate = 0.66
   
   nsteps = 10      # Max number of iterations
@@ -177,7 +178,6 @@ class configuration(object):
   # This task returns the total possible contribution of everyone in the group
   def ppgtask(self, agents):
     try:
-      print [a.totalpay for a in agents], sum([a.totalpay for a in agents])
       return sum(a.totalpay for a in agents)
     except TypeError:   # A single agent
       return agents.totalpay

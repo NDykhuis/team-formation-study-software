@@ -41,6 +41,8 @@ if __name__ == '__main__':
   DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
   KEEP_GRAPH = True
   
+  configuration.n = 12
+  
   if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
     allconfs = multiconfig()
     if len(sys.argv) > 1:
@@ -73,6 +75,10 @@ if __name__ == '__main__':
       std.graph_type = 'cycle_graph'
       std.strategy = 'random'
       std.ndumb = 0
+      if std.persistent_pubgoods:   # TEMPORARY
+        std.connections= 4
+        std.prob_rewire = 0
+        std.graph_type = 'connected_watts_strogatz_graph'
     else:
       std.groups_can_merge = False
       std.expel_agents = False
@@ -100,6 +106,7 @@ if __name__ == '__main__':
       # Give initial endowment
       for a in sim.agents:
         a.addpay(std.ppg_startpay)
+      sim.agents[0].addpay(100) # Temp, just for me
     
     # Init video only once!
     for a in sim.humans:

@@ -481,12 +481,15 @@ class humanagent(agent):
     print "Agent", self.id, "newpay", newpay, "totalpay", self.totalpay, "contrib", contrib
     
     if self.cfg.persistent_pubgoods:
-      self.messages.append('Your team started with '+CURR+str(round(self.nowpay, 2))+' total wealth.')
+      self.messages.append('Your team started with '+CURR+str(round(self.group.nowpay, 2))+' total wealth.') ## STILL WRONG?
     else:
       self.messages.append('You made '+CURR+str(round(startpay, 2))+' by working with this team.')
     self.messages.append('You contributed '+CURR+str(contrib)+' to the pot and kept '+CURR+str(round(keep,2)))
     cdesc = 'the shared pot' if not configuration._hide_publicgoods else 'the lottery'
-    self.messages.append('You received '+CURR+str(round(potpay,2))+' from '+cdesc)
+    profitmsg = 'You received '+CURR+str(round(potpay,2))+' from '+cdesc
+    if self.cfg.private_payoff:
+      profitmsg += ' and '+CURR+str(round(privatepay-keep,2))+' from interest on your private fund'
+    self.messages.append(profitmsg)
     if self.cfg.persistent_pubgoods:
       self.messages.append('You now have '+CURR+str(round(newpay,2))+'.')
     else:
@@ -507,7 +510,7 @@ class humanagent(agent):
     
     send_message(self.client, ('publicgoods_conclusion', (newpay, (teammateids, contribs))))
     if self.cfg.persistent_pubgoods:
-      self.addpay(round(potpay-contrib, 2))
+      self.addpay(round(potpay-contrib+privatepay-keep, 2))
     else:
       self.addpay(round(newpay, 2))
     
