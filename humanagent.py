@@ -488,7 +488,7 @@ class humanagent(agent):
     cdesc = 'the shared pot' if not configuration._hide_publicgoods else 'the lottery'
     profitmsg = 'You received '+CURR+str(round(potpay,2))+' from '+cdesc
     if self.cfg.private_payoff:
-      profitmsg += ' and '+CURR+str(round(privatepay-keep,2))+' from interest on your private fund'
+      profitmsg += ' and '+CURR+str(round(privatepay-keep,2))+' of interest on the amount you kept'
     self.messages.append(profitmsg)
     if self.cfg.persistent_pubgoods:
       self.messages.append('You now have '+CURR+str(round(newpay,2))+'.')
