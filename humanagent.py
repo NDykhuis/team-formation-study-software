@@ -41,6 +41,7 @@ class humanagent(agent):
       self.anames = ['Cat', 'Dog', 'Bear', 'Bird', 'Cow', 'Elephant', 'Fish', 'Frog', 'Gorilla', 'Lion', 'Monkey', 'Bee', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Sheep', 'Donkey']
     
     self.current_ratings = {}
+    self.global_ratings = {}
     
     send_message(self.client, ('setmyid', self.id))
     self.sendcfg()
@@ -179,15 +180,20 @@ class humanagent(agent):
 
   def logratingstatus(self, eventtype, otherids, gmembers=None):
     if gmembers is not None:
-      rtgs = [[self.current_ratings.get(aid,-1) for aid in g] for g in gmembers if len(g)]
-      currtgs = [-1 for grats in rtgs]
-      avgrtgs = [sum(grats)/len(grats) for grats in rtgs]
-      minrtgs = [min(grats) for grats in rtgs]
-      maxrtgs = [max(grats) for grats in rtgs]
+      rtgs = [[self.current_ratings.get(aid) for aid in g if aid in self.current_ratings] for g in gmembers if len(g)]
+      grtgs = [[self.global_ratings.get(aid) for aid in g if aid in self.global_ratings] for g in gmembers if len(g)]
+      myrtgs = [-1 if not len(rats) else sum(rats)/len(rats) for rats in rtgs]
+      if self.cfg.show_global_ratings:
+        globalrtgs = [-1 if not len(grats) else sum(grats)/len(grats) for grats in rtgs]
+      else:
+        globalrtgs = [-1 for rats in rtgs]
+      minrtgs = [min(rats) for rats in rtgs]
+      maxrtgs = [max(rats) for rats in rtgs]
     else:
-      currtgs = [self.current_ratings.get(aid, -1) for aid in otherids]
-      avgrtgs = minrtgs = maxrtgs = [-1 for aid in otherids]
-    self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, currtgs, avgrtgs, minrtgs, maxrtgs)
+      myrtgs = [self.current_ratings.get(aid, -1) for aid in otherids]
+      globalrtgs = [-1 if not self.cfg.show_global_ratings else self.global_ratings.get(aid,-1) for aid in otherids]
+      minrtgs = maxrtgs = [-1 for aid in otherids]
+    self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs)
 
   def getratings(self):
     ratings = send_and_receive(self.client, ('getratings', 0))
@@ -195,6 +201,7 @@ class humanagent(agent):
     return self.current_ratings
   
   def updateratings(self, ratings):
+    self.global_ratings = ratings
     send_message(self.client, ('updateglobalratings', ratings))
 
   def updatehistory(self, pghistory):

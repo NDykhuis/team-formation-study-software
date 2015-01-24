@@ -94,7 +94,7 @@ class db_logger(object):
          timestamp real, sessionid integer, 
          eventtype text, simnum integer, iternum integer,
          userid integer, otherid integer,
-         currtg integer, avgrtg integer,
+         myrtg integer, globalrtg integer,
          minrtg integer, maxrtg integer
          )''')
     conn.execute('''CREATE TABLE IF NOT EXISTS globalratings
@@ -359,12 +359,12 @@ class db_logger(object):
     conn.commit()
     conn.close()
   
-  def log_ratingstatus(self, simnum, iternum, eventtype, aid, otherids, currtgs, avgrtgs, minrtgs, maxrtgs):
+  def log_ratingstatus(self, simnum, iternum, eventtype, aid, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs):
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
-    for otherid, currtg, avgrtg, minrtg, maxrtg in zip(otherids, currtgs, avgrtgs, minrtgs, maxrtgs):
-      inserts.append( (None, timestamp, self.sessionid, eventtype, simnum, iternum, aid, otherid, currtg, avgrtg, minrtg, maxrtg) )
+    for otherid, myrtg, globalrtg, minrtg, maxrtg in zip(otherids, myrtgs, globalrtgs, minrtgs, maxrtgs):
+      inserts.append( (None, timestamp, self.sessionid, eventtype, simnum, iternum, aid, otherid, myrtg, globalrtg, minrtg, maxrtg) )
     conn = sqlite3.connect(self.dbfile)
     conn.executemany('INSERT INTO ratingstatus VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', inserts)
     conn.commit()
