@@ -438,6 +438,7 @@ class simulation:
       for a in self.agents:
         a.updateratings(ratings)
         
+      cfg._dblog.log_globalratings(cfg.simnumber, iternum, ratings)
         
     trunend = time.time()
     

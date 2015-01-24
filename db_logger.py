@@ -97,6 +97,12 @@ class db_logger(object):
          currtg integer, avgrtg integer,
          minrtg integer, maxrtg integer
          )''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS globalratings
+        (rowid integer primary key asc,
+         timestamp real, sessionid integer,
+         simnum integer, iternum integer,
+         userid integer, avgrating real,
+         eframe real, etime real)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS tfrounds
         (rowid integer primary key asc,
          timestamp real, sessionid integer, 
@@ -361,6 +367,17 @@ class db_logger(object):
       inserts.append( (None, timestamp, self.sessionid, eventtype, simnum, iternum, aid, otherid, currtg, avgrtg, minrtg, maxrtg) )
     conn = sqlite3.connect(self.dbfile)
     conn.executemany('INSERT INTO ratingstatus VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', inserts)
+    conn.commit()
+    conn.close()
+  
+  def log_globalratings(self, simnum, iternum, aidratingdict, eframe=-1, etime=-1):
+    if self.NO_LOGGING: return
+    timestamp = time.time()
+    inserts = []
+    for aid, rating in aidratingdict.iteritems():
+      inserts.append( (None, timestamp, self.sessionid, simnum, iternum, aid, rating, eframe, etime) )
+    conn = sqlite3.connect(self.dbfile)
+    conn.executemany('INSERT INTO globalratings VALUES (?,?,?,?,?,?,?,?,?)', inserts)
     conn.commit()
     conn.close()
   
