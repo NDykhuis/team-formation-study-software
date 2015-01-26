@@ -1444,7 +1444,7 @@ class TFGui(object):
     
   def m_getratings(self, event):
     self.getdata(event)
-    ratings = {aid:ratingvar.get() for aid, ratingvar in self.ratingvars.iteritems()}
+    ratings = {aid:ratingvar.get() for aid, ratingvar in self.ratingvars.iteritems() if ratingvar.get() != 0}
     self.backend.sendqueue.put(ratings)
     
   def m_showratings(self, event):

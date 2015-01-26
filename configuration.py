@@ -52,7 +52,7 @@ class configuration(object):
   _do_ratings = True
   
   show_global_ratings = True
-  show_nhistory = 5      # Set to zero to disable
+  show_nhistory = 0      # Set to zero to disable
   
   show_skills = False    # show skills to the player
   

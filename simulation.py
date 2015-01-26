@@ -418,7 +418,8 @@ class simulation:
     elif self.humans:
       self.publicgoods()
     
-        
+    
+    ## Get average ratings from all agents
     if cfg.show_global_ratings:
       ratings = {}
       for a in self.agents:
@@ -430,10 +431,8 @@ class simulation:
           except KeyError:
             ratings[aid] = [rating]
       
-      for aid in ratings:
+      for aid in ratings:   # Average the ratings
         ratings[aid] = float(sum(ratings[aid]))/len(ratings[aid])
-        
-      print "Ratings:", ratings
         
       for a in self.agents:
         a.updateratings(ratings)

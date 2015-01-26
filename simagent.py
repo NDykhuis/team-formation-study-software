@@ -360,6 +360,8 @@ class simagent(agent, ultagent):
     # Keep a running mean of percent contribution for each neighbor
     alpha = self.cfg.social_learning_rate
     for aid,contrib in teampays.iteritems():
+      if aid == self.id:
+        continue
       pctcontrib = float(contrib) / prepay
       if aid in self.pgmem:
         self.pgmem[aid] = (alpha*pctcontrib + (1.0-alpha)*self.pgmem[aid])
