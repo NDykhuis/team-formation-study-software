@@ -45,6 +45,17 @@ class graphmanager:
         except nx.exception.NetworkXError as e: 
           print e
           raise
+      elif cfg.graph_type == 'random_cycle':
+        nodes = range(cfg.n)
+        G = nx.Graph()
+        hnodes = nodes[:cfg.nhumans]
+        snodes = nodes[cfg.nhumans:]
+        random.shuffle(hnodes)          # Keep human nodes together
+        random.shuffle(snodes)
+        nodes = hnodes + snodes
+        for i in range(len(nodes)-1):
+          G.add_edge(nodes[i], nodes[i+1])
+        G.add_edge(nodes[-1], nodes[0])
       elif cfg.graph_type == 'small world':
         try:
           G = nx.generators.random_graphs.watts_strogatz_graph(n,cfg.connections,cfg.prob_rewire)
@@ -123,7 +134,6 @@ class graphmanager:
           print e
           raise
       
-
       # Check if graph is ok
       graph_ok = True
       
