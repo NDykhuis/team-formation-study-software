@@ -187,8 +187,8 @@ class humanagent(agent):
         globalrtgs = [-1 if not len(grats) else sum(grats)/len(grats) for grats in rtgs]
       else:
         globalrtgs = [-1 for rats in rtgs]
-      minrtgs = [min(rats) for rats in rtgs]
-      maxrtgs = [max(rats) for rats in rtgs]
+      minrtgs = [-1 if not len(rats) else min(rats) for rats in rtgs]
+      maxrtgs = [-1 if not len(rats) else max(rats) for rats in rtgs]
     else:
       myrtgs = [self.current_ratings.get(aid, -1) for aid in otherids]
       globalrtgs = [-1 if not self.cfg.show_global_ratings else self.global_ratings.get(aid,-1) for aid in otherids]
