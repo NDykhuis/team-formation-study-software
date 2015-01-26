@@ -420,24 +420,24 @@ class simulation:
     
     
     ## Get average ratings from all agents
-    if cfg.show_global_ratings:
-      ratings = {}
-      for a in self.agents:
-        arates = a.getratings()
-        for aid, rating in arates.iteritems():
-          aid = int(aid)
-          try:
-            ratings[aid].append(rating)
-          except KeyError:
-            ratings[aid] = [rating]
+    ratings = {}
+    for a in self.agents:
+      arates = a.getratings()
+      for aid, rating in arates.iteritems():
+        aid = int(aid)
+        try:
+          ratings[aid].append(rating)
+        except KeyError:
+          ratings[aid] = [rating]
+    
+    for aid in ratings:   # Average the ratings
+      ratings[aid] = float(sum(ratings[aid]))/len(ratings[aid])
       
-      for aid in ratings:   # Average the ratings
-        ratings[aid] = float(sum(ratings[aid]))/len(ratings[aid])
-        
+    if cfg.show_global_ratings:
       for a in self.agents:
         a.updateratings(ratings)
         
-      cfg._dblog.log_globalratings(cfg.simnumber, iternum, ratings)
+    cfg._dblog.log_globalratings(cfg.simnumber, iternum, ratings)
         
     trunend = time.time()
     
