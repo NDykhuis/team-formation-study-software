@@ -71,10 +71,14 @@ class db_logger(object):
           eventtype text, value integer,
           sframe integer, eframe integer,
           stime real, etime real)''')
-    conn.execute('''CREATE TABLE IF NOT EXISTS tfsetup
+    conn.execute('''CREATE TABLE IF NOT EXISTS neighborlist
         (rowid integer primary key asc,
          timestamp real, sessionid integer, 
          simnum integer, userid integer, neighbors text)''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS neighbors
+        (rowid integer primary key asc,
+         timestamp real, sessionid integer, 
+         simnum integer, userid integer, neighbor integer)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS tflog
         (rowid integer primary key asc,
          timestamp real, sessionid integer, 
@@ -255,14 +259,17 @@ class db_logger(object):
     conn.commit()
     conn.close()
   
-  def log_topo(self, simnum, agent):
+  def log_topo(self, simnum, aid, nbrids):
     if self.NO_LOGGING: return
     timestamp = time.time()
-    aid = agent.id
-    nbrids = ','.join([str(n.id) for n in agent.nbrs])
+    nbridstring = ','.join([str(nid) for nid in nbrids])
     # Insert timestamp, round, aid, str(nbrids)
+    inserts = []
+    for nid in nbrids:
+      inserts.append( (None, timestamp, self.sessionid, simnum, aid, nid) )
     conn = sqlite3.connect(self.dbfile)
-    conn.execute('INSERT INTO tfsetup VALUES (?,?,?,?,?,?)', (None, timestamp, self.sessionid, simnum, aid, nbrids))
+    conn.execute('INSERT INTO neighborlist VALUES (?,?,?,?,?,?)', (None, timestamp, self.sessionid, simnum, aid, nbridstring))
+    conn.executemany('INSERT INTO neighbors VALUES (?,?,?,?,?,?)', inserts)
     conn.commit()
     conn.close()
   

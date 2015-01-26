@@ -219,7 +219,7 @@ class simulation:
       cfg.printself()
     
     for a in self.humans:
-      cfg._dblog.log_topo(self.cfg.simnumber, a)
+      cfg._dblog.log_topo(cfg.simnumber, a.id, [nbr.id for nbr in a.nbrs])
     
     print "Beginning run!"
     trunstart = time.time()
