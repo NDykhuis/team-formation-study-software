@@ -70,7 +70,7 @@ if __name__ == '__main__':
       #std.n = 16   # Get this from configuration class
       #std.connections= 2
       std.prob_rewire = 0
-      std.graph_type = 'cycle_graph'
+      std.graph_type = 'random_cycle'
       std.strategy = 'random'
       std.ndumb = 0
     else:
@@ -150,6 +150,8 @@ if __name__ == '__main__':
       #pghistory = {aid:(sum(p)/len(p)) for aid,p in pglog.iteritems()}   # for average contrib
       for a in sim.agents:
         a.updatehistory(pglog)
+        
+      std.simnumber += 1
     
     agent.agentid=0
     ## END INTRO SIMULATION
