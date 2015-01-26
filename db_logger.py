@@ -262,6 +262,7 @@ class db_logger(object):
   def log_topo(self, simnum, aid, nbrids):
     if self.NO_LOGGING: return
     timestamp = time.time()
+    nbrids = sorted(nbrids)
     nbridstring = ','.join([str(nid) for nid in nbrids])
     # Insert timestamp, round, aid, str(nbrids)
     inserts = []

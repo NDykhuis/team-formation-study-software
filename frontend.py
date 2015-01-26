@@ -1349,9 +1349,9 @@ class TFGui(object):
         ## Global rating
         grw = self.globalratingwidgets[aid] = {}
         grw['frame'] = tk.Frame(bframe)
-        grw['ratingoff'] = tk.Label(grw['frame'], height=self.starson.size[1], width=self.starson.size[0], image=self.starsoff)
+        #grw['ratingoff'] = tk.Label(grw['frame'], height=self.starson.size[1], width=self.starson.size[0], image=self.starsoff)
         grw['ratingon'] = tk.Label(grw['frame'], height=self.starson.size[1], width=1, image=self.starson)
-        grw['ratingoff'].grid(row=0, column=0, sticky='w')
+        #grw['ratingoff'].grid(row=0, column=0, sticky='w')
         grw['ratingon'].grid(row=0, column=0, sticky='w')
         grw['frame'].grid(row=1, column=0, columnspan=5)  # Assign grid location
         grw['frame'].grid_remove()  # but don't show until we have data
@@ -1424,8 +1424,11 @@ class TFGui(object):
     #hlabel.config(text=', '.join([str(round(c,2)) for c in history]))
     #hlabel.config(text=', '.join([str(round(contrib,2)) for contrib,total in history]))
     nhist = self.cfgdict['show_nhistory']
-    hlabel.config(text='Past: '+','.join([str(int(contrib)) for contrib,total in history[-nhist:]]))
-    hlabel.grid()
+    if nhist:
+      hlabel.config(text='Past: '+','.join([str(int(contrib)) for contrib,total in history[-nhist:]]))
+      hlabel.grid()
+    else:
+      hlabel.grid_remove()
   
   def update_global_rating(self, aid, rating):
     #if aid == self.myid: return

@@ -70,7 +70,7 @@ if __name__ == '__main__':
       #std.n = 16   # Get this from configuration class
       #std.connections= 2
       std.prob_rewire = 0
-      std.graph_type = 'random_cycle'
+      std.graph_type = 'random_cycle4'
       std.strategy = 'random'
       std.ndumb = 0
     else:
