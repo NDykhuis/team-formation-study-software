@@ -202,7 +202,8 @@ class humanagent(agent):
   
   def updateratings(self, ratings):
     self.global_ratings = ratings
-    send_message(self.client, ('updateglobalratings', ratings))
+    if self.cfg.show_global_ratings:
+      send_message(self.client, ('updateglobalratings', ratings))
 
   def updatehistory(self, pghistory):
     send_message(self.client, ('updatehistory', pghistory))
