@@ -56,6 +56,20 @@ class graphmanager:
         for i in range(len(nodes)-1):
           G.add_edge(nodes[i], nodes[i+1])
         G.add_edge(nodes[-1], nodes[0])
+      elif cfg.graph_type == 'random_cycle4':
+        nodes = range(cfg.n)
+        G = nx.Graph()
+        hnodes = nodes[:cfg.nhumans]
+        snodes = nodes[cfg.nhumans:]
+        random.shuffle(hnodes)          # Keep human nodes together
+        random.shuffle(snodes)
+        nodes = hnodes + snodes
+        for i in range(len(nodes)-2):
+          G.add_edge(nodes[i], nodes[i+1])
+          G.add_edge(nodes[i], nodes[i+2])
+        G.add_edge(nodes[-1], nodes[0])
+        G.add_edge(nodes[-2], nodes[0])
+        G.add_edge(nodes[-1], nodes[1])
       elif cfg.graph_type == 'small world':
         try:
           G = nx.generators.random_graphs.watts_strogatz_graph(n,cfg.connections,cfg.prob_rewire)
