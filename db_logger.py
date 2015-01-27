@@ -37,7 +37,9 @@ class db_logger(object):
          public_goods integer, hide_public_goods integer,
          pubgoods_mult real,
          ratings integer, timelimit real, nhumans integer,
-         show_team_members integer)''')
+         show_team_members integer, keep_teams integer,
+         dynamic_network integer, keep_graph integer,
+         show_global_ratings integer, show_nhistory integer)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS tfsummary
         (rowid integer primary key asc,
          timestamp real, sessionid integer, simnum integer,
@@ -98,7 +100,7 @@ class db_logger(object):
          timestamp real, sessionid integer, 
          eventtype text, simnum integer, iternum integer,
          userid integer, otherid integer,
-         myrtg integer, globalrtg integer,
+         myrtg real, globalrtg real,
          minrtg integer, maxrtg integer
          )''')
     conn.execute('''CREATE TABLE IF NOT EXISTS globalratings
@@ -153,11 +155,11 @@ class db_logger(object):
     conn.close()
     
     
-  def log_config(self, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam):
+  def log_config(self, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam, keepteams, dynamic, keepgraph, globalratings, nhistory):
     if self.NO_LOGGING: return
     conn = sqlite3.connect(self.dbfile)
     conn.execute('INSERT INTO session_config VALUES (?,?,?,?,?,?,?,?,?,?)',
-      (self.sessionid, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam))
+      (self.sessionid, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam, keepteams, dynamic, keepgraph, globalratings, nhistory))
     conn.commit()
     conn.close()
     
