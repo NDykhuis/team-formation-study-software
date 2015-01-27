@@ -158,7 +158,7 @@ class db_logger(object):
   def log_config(self, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam, keepteams, dynamic, keepgraph, globalratings, nhistory):
     if self.NO_LOGGING: return
     conn = sqlite3.connect(self.dbfile)
-    conn.execute('INSERT INTO session_config VALUES (?,?,?,?,?,?,?,?,?,?)',
+    conn.execute('INSERT INTO session_config VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
       (self.sessionid, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam, keepteams, dynamic, keepgraph, globalratings, nhistory))
     conn.commit()
     conn.close()
