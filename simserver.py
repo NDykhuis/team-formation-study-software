@@ -92,7 +92,7 @@ if __name__ == '__main__':
     
     std.simnumber = 0
     std.nhumans = len(conns)
-    std.conns = conns
+    std._conns = conns
 
     gm = graphmanager(std)
     gm.setup()
@@ -240,7 +240,7 @@ if __name__ == '__main__':
       for i,cfg in enumerate(confs):
         
         cfg.nhumans = len(conns)
-        cfg.conns = conns
+        cfg._conns = conns
         
         gm = graphmanager(cfg)
         try:
@@ -319,7 +319,7 @@ if __name__ == '__main__':
     cw = clientwaiter()
     conns = cw.getclients()
     cfg.nhumans = len(conns)
-    cfg.conns = conns
+    cfg._conns = conns
     
     gm = graphmanager(cfg)
     gm.setup()

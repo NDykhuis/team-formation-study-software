@@ -564,7 +564,7 @@ class simulation:
       humanodes = allnodes[0:cfg.nhumans]
       simnodes = allnodes[cfg.nhumans:]
       #humannodes = random.sample(allnodes, cfg.nhumans)
-      self.humans = [humanagent(cfg,conn,adat=dat) for conn,(nid,dat) in zip(cfg.conns, humanodes)]
+      self.humans = [humanagent(cfg,conn,adat=dat) for conn,(nid,dat) in zip(cfg._conns, humanodes)]
       #simagents = [simagent(cfg,adat=dat) for nid,dat in simnodes]
       simagents = self.makesimagents(simnodes)
       agents = self.humans + simagents
