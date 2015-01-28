@@ -25,7 +25,7 @@ class configuration(object):
   nhumans = 0      # Number of humans (set by simserver based on how many frontends connect)
   ndumb = 0        # Number of random agents (rather than rational)
   
-  exchange_rate = 5.0   # Divide sim-dollars by this to get real dollars
+  exchange_rate = 10.0   # Divide sim-dollars by this to get real dollars
   
   _do_video = False
   _capture_screenshots = False
@@ -64,7 +64,7 @@ class configuration(object):
   
   # Sim agents take real time to make their decisions 
   delay_sim_agents = True   ## SHOULD BE TRUE
-  delay_n_sims = 6          # Add a delay to only the first n agents
+  delay_n_sims = 8          # Add a delay to only the first n agents
   #_agent_delays = {'propose':2.5, 'acceptvote':1.5, 'join':1.0, 'expelvote':1.0, 'conclude':1.0, 'publicgoods':2.5}    # Arbitrary
   _agent_delays = {'propose':4.0, 'acceptvote':5.0, 'join':5.0, 'expelvote':3.0, 'conclude':3.0, 'publicgoods':10.0}    # Based on pilot data
   _agent_delay_dev = {'propose':2.0, 'acceptvote':2.5, 'join':1.5, 'expelvote':1.5, 'conclude':1.0, 'publicgoods':5.0}  # Approx as half the IQR
