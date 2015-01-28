@@ -199,10 +199,10 @@ class db_logger(object):
       try:
         v = float(value)
         inserts.append( (None, timestamp, self.sessionid, simnum, item, v, '') )
-      except ValueError:
+      except (ValueError, TypeError):
         t = str(value)
         inserts.append( (None, timestamp, self.sessionid, simnum, item, -1, t) )
-      except TypeError:
+      except:
         print "Problem with:", item, value
     conn = sqlite3.connect(self.dbfile)
     conn.executemany('INSERT INTO tfdata VALUES (?,?,?,?,?,?,?)', inserts)
