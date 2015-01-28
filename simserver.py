@@ -53,10 +53,10 @@ if __name__ == '__main__':
 
     ## Log this session's configuration
     u_rounds = 0 if not configuration._do_ultimatum else configuration.ultimatum_niter
-    dblog.log_config(u_rounds, configuration._do_intro_sim, configuration._do_publicgoods,
-                     configuration._hide_publicgoods, configuration.pubgoods_mult, configuration._do_ratings,
+    dblog.log_config(u_rounds, configuration._do_intro_sim, configuration.do_publicgoods,
+                     configuration.hide_publicgoods, configuration.pubgoods_mult, configuration.do_ratings,
                      configuration._time_limit-configuration._margin_time, len(conns),
-                     configuration._show_other_team_members, configuration.keep_teams,
+                     configuration.show_other_team_members, configuration.keep_teams,
                      DYNAMIC, KEEP_GRAPH,
                      configuration.show_global_ratings, configuration.show_nhistory)
     
@@ -121,7 +121,7 @@ if __name__ == '__main__':
       for a in sim.humans:
         a.startcapture()
   
-    if configuration._do_ratings:
+    if configuration.do_ratings:
       for a in sim.humans:
         a.initratings(range(configuration.n))
         a.showratings()
@@ -219,7 +219,7 @@ if __name__ == '__main__':
         for a in sim.humans:
           a.endcapture()  
       
-      if configuration._do_ratings:
+      if configuration.do_ratings:
         for a in sim.humans:
           a.disableratings()
         
@@ -282,7 +282,7 @@ if __name__ == '__main__':
         for a in sim.humans:
           a.endcapture()  
       
-      if configuration._do_ratings:
+      if configuration.do_ratings:
         for a in sim.humans:
           a.disableratings()
           
@@ -305,7 +305,7 @@ if __name__ == '__main__':
       paydata.append( (a.id, a.finalpay) )
     dblog.log_finalpay(paydata)
     
-    #if configuration._do_ratings:
+    #if configuration.do_ratings:
     #  for a in sim.humans:
     #    a.hideratings()
     

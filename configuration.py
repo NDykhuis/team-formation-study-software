@@ -36,10 +36,10 @@ class configuration(object):
   ultimatum_niter = 2
   dicatator_niter = 1
   
-  _do_publicgoods = True
+  do_publicgoods = True
   #pubgoods_mult = 1.2
   pubgoods_mult = 25     # Percent the pot is increased
-  _hide_publicgoods = True
+  hide_publicgoods = True
   pg_contribrange = {   # Percent to contribute in pubgoods, low to high
     'nice':(0.7, 1.0),
     'mean':(0.0, 0.25),
@@ -47,9 +47,9 @@ class configuration(object):
     'random':(0.0, 1.0)
   }
   
-  _show_other_team_members = True
+  show_other_team_members = True
   
-  _do_ratings = True
+  do_ratings = True
   
   show_global_ratings = True
   show_nhistory = 0      # Set to zero to disable
@@ -601,9 +601,9 @@ if PROTOCOL == 0:
   configuration._do_video = True
   configuration._do_intro_sim = True
   configuration._do_ultimatum = False
-  configuration._do_publicgoods = True
-  configuration._hide_publicgoods = True
-  configuration._do_ratings = True
+  configuration.do_publicgoods = True
+  configuration.hide_publicgoods = True
+  configuration.do_ratings = True
   configuration.delay_sim_agents = True
   configuration._time_limit = 45
   configuration._margin_time = 5
@@ -611,9 +611,9 @@ elif PROTOCOL == 1:
   configuration._do_video = True
   configuration._do_intro_sim = True
   configuration._do_ultimatum = False
-  configuration._do_publicgoods = True
-  configuration._hide_publicgoods = False
-  configuration._do_ratings = True
+  configuration.do_publicgoods = True
+  configuration.hide_publicgoods = False
+  configuration.do_ratings = True
   configuration.delay_sim_agents = True
   configuration._time_limit = 45
   configuration._margin_time = 5
@@ -621,9 +621,9 @@ elif PROTOCOL == 98:
   configuration._do_video = True
   configuration._do_intro_sim = True
   configuration._do_ultimatum = False
-  configuration._do_publicgoods = True
-  configuration._hide_publicgoods = False
-  configuration._do_ratings = True
+  configuration.do_publicgoods = True
+  configuration.hide_publicgoods = False
+  configuration.do_ratings = True
   configuration._time_limit = 10
   configuration._margin_time = 3
   configuration.delay_sim_agents = False
@@ -631,9 +631,9 @@ elif PROTOCOL == 99:
   configuration._do_video = False
   configuration._do_intro_sim = True
   configuration._do_ultimatum = False
-  configuration._do_publicgoods = True
-  configuration._hide_publicgoods = False
-  configuration._do_ratings = True
+  configuration.do_publicgoods = True
+  configuration.hide_publicgoods = False
+  configuration.do_ratings = True
   configuration._time_limit = 10
   configuration._margin_time = 3
   configuration.delay_sim_agents = False

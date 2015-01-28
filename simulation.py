@@ -189,7 +189,7 @@ class simulation:
     emptygroups = []
     
     # Hide ratings during instructions screen  (now handled by humanagent class)
-    #if cfg._do_ratings:
+    #if cfg.do_ratings:
     #  for a in self.humans:
     #    a.hideratings()     
     
@@ -211,7 +211,7 @@ class simulation:
     #raw_input()
     
     # Show ratings after instructions screen  (now handled by humanagent class)
-    if cfg._do_ratings:
+    if cfg.do_ratings:
       for a in self.humans:
         a.showratings()
     
@@ -404,7 +404,7 @@ class simulation:
       globalpay[s] = sum(globalpay[s])/len(globalpay[s])
     
     tpubstart = time.time()
-    if not cfg._do_publicgoods:
+    if not cfg.do_publicgoods:
       if self.humans:
         for a in self.humans:
           a.postprocess()

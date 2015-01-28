@@ -34,7 +34,7 @@ class humanagent(agent):
     
     # THIS IS DUPLICATED FROM FRONTEND.PY - should move to configuration?
     self.gletters = [chr(ord('A')+i) for i in range(configuration.n)]
-    if configuration._hide_publicgoods:
+    if configuration.hide_publicgoods:
       self.anames = ['Agent '+str(i) for i in range(configuration.n)]
     else:
       # Icky hardcoding
@@ -76,7 +76,7 @@ class humanagent(agent):
     send_message(self.client, ('startpreview', 0))
     
   def instructions(self):
-    if self.cfg._do_ratings: self.hideratings()
+    if self.cfg.do_ratings: self.hideratings()
     
     send_message(self.client, ('endpreview', 0))
     
@@ -84,7 +84,7 @@ class humanagent(agent):
     
     send_message(self.client, ('instructions', 0))
     receive_message(self.client)
-    #if self.cfg._do_ratings: self.showratings()
+    #if self.cfg.do_ratings: self.showratings()
     print "Instructions done for", self.id
 
   def initratings(self, neighbors):
@@ -159,7 +159,7 @@ class humanagent(agent):
     return receive_message(self.client)   # sframe, eframe, stime, etime
 
   def logratings(self, simnum = None, iternum = None, step = 'NA'):
-    if not self.cfg._do_ratings: return
+    if not self.cfg.do_ratings: return
     send_message(self.client, ('getratinglog', 0))
     ratings = receive_message(self.client)
     if not len(ratings):
@@ -400,7 +400,7 @@ class humanagent(agent):
     else:
       print "No new messages for human player"
     
-    #if self.cfg._do_ratings:
+    #if self.cfg.do_ratings:
     #  self.logratings(step='postprocess_iter')
     self.logratings()
     
@@ -439,10 +439,10 @@ class humanagent(agent):
   def publicgoods(self, pgdict):
     self.update()
     
-    if self.cfg._do_ratings: self.hideratings()
+    if self.cfg.do_ratings: self.hideratings()
     send_message(self.client, ('publicgoods_instructions', 0))
     receive_message(self.client)
-    if self.cfg._do_ratings: self.showratings()
+    if self.cfg.do_ratings: self.showratings()
     
     ## Send team as neighbors
     if self.cfg.show_skills:
@@ -469,10 +469,10 @@ class humanagent(agent):
     potpay = newpay - (self.nowpay-contrib)
     self.messages.append('You made '+CURR+str(round(self.nowpay, 2))+' by working with this team.')
     self.messages.append('You contributed '+CURR+str(contrib)+' to the pot and kept '+CURR+str(round(keep,2)))
-    cdesc = 'the shared pot' if not configuration._hide_publicgoods else 'the lottery'
+    cdesc = 'the shared pot' if not configuration.hide_publicgoods else 'the lottery'
     self.messages.append('You received '+CURR+str(round(potpay,2))+' from '+cdesc)
     self.messages.append('You earned '+CURR+str(round(newpay,2))+' this round.')
-    #if self.cfg._do_ratings and self.group.gsize > 1:
+    #if self.cfg.do_ratings and self.group.gsize > 1:
     #  self.messages.append('You may now rate the behavior of your teammates if you wish.')
     
     ### UPDATE UI WITH DATA ABOUT TEAM CONTRIBS
@@ -556,7 +556,7 @@ class humanagent(agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.ultevent_insert(self.id, other_player, 'conclusion', my_amount, sframe, eframe, stime, etime)
     
-    if self.cfg._do_ratings:
+    if self.cfg.do_ratings:
       self.logratings(step='ultimatum', simnum=-1, iternum=-1)
     
   def show_conclusion_d(self, other_player, amount, role):
