@@ -44,15 +44,16 @@ class vidcapthread(threading.Thread):
     tstart = time.time()
     fstart = self.frame
     while self.alive and self.cap.isOpened():
-      if self.capture:
+      if self.capture or self.preview:
         ret, frame = self.cap.read()
         if ret==True:
-          # write frame to video file
-          self.out.write(frame)
-          # set current time and frame in a thread-safe(?) way
-          self.nowtime, self.frame = time.time(), self.frame + 1
-          # write timestamp to file
-          self.outfile.write('{frame:08d}\t{time:.16f}\n'.format(frame=self.frame, time=self.nowtime))
+          if self.capture:
+            # write frame to video file
+            self.out.write(frame)
+            # set current time and frame in a thread-safe(?) way
+            self.nowtime, self.frame = time.time(), self.frame + 1
+            # write timestamp to file
+            self.outfile.write('{frame:08d}\t{time:.16f}\n'.format(frame=self.frame, time=self.nowtime))
           
           if self.preview:
             cv2.imshow('frame',frame)
@@ -60,7 +61,7 @@ class vidcapthread(threading.Thread):
           elif self.windowsup:
             cv2.destroyAllWindows()
           
-          if not self.frame % 120:
+          if self.capture and not self.frame % 120:
             tnow = time.time()
             print "FPS: ", (self.frame - fstart)/(tnow - tstart)
             tstart = tnow
@@ -99,6 +100,9 @@ class vidcapture(object):
     self.vidcap.alive = False
     self.vidcap.join()
     
+  def setpreview(self, preview):
+    self.vidcap.preview = preview
+  
   def queryframetime(self):
     return self.vidcap.frame, self.vidcap.nowtime
     

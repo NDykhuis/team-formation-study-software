@@ -1637,13 +1637,15 @@ class TFGui(object):
   def m_startpreview(self, event):
     self.getdata(event)
     if self.do_video:
-      self.vidrec.preview = True
+      print "Starting preview!"
+      self.vidrec.setpreview(True)
     self.backend.sendqueue.put('done')
   
   def m_endpreview(self, event):
     self.getdata(event)
     if self.do_video:
-      self.vidrec.preview = False
+      print "Ending preview!"
+      self.vidrec.setpreview(False)
     self.backend.sendqueue.put('done')
   
   def save_screen(self, stime, sframe):

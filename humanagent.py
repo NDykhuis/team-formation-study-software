@@ -78,6 +78,8 @@ class humanagent(agent):
   def instructions(self):
     if self.cfg._do_ratings: self.hideratings()
     
+    send_message(self.client, ('endpreview', 0))
+    
     self.sendcfg()
     
     send_message(self.client, ('instructions', 0))
@@ -98,7 +100,6 @@ class humanagent(agent):
     send_message(self.client, ('disableratings', 0))
 
   def introsurvey(self):
-    send_message(self.client, ('endpreview', 0))
     send_message(self.client, ('introsurvey', 0))
     gender, college, status = receive_message(self.client)
     self.cfg._dblog.log_introsurvey(self.id, (gender, college, status))
