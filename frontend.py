@@ -1312,7 +1312,11 @@ class TFGui(object):
     
     #titlelabel = tk.Label(rb, text='Player ratings', font=self.fontsm)
     if not self.cfgdict['hide_publicgoods']:
-      titletext = 'Here, you can rate the other players.\nThese ratings are for your reference\nand will not be shown to the other players'
+      titletext = 'Here, you can rate the other players.\n'
+      if self.cfgdict['show_global_ratings']:
+        titletext += 'Average ratings will be shown to all\nplayers, updated each round.'
+      else:
+        titletext += 'These ratings are for your reference\nand will not be shown to the other players'
     else:
       titletext = 'Here is a list of the other players.'
     instrlabel = tk.Label(rb, text=titletext, font=self.fontxsm)
