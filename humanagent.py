@@ -119,7 +119,7 @@ class humanagent(agent):
       
     self.cfg._dblog.log_exitsurvey(self.id, responses)
     self.logratings(step='exitsurvey')
-    self.logratingstatus('final', gids, gmembers)
+    self.logratingstatus('final', range(self.cfg.n))    # Log ratings of everyone
     
     print "Agent", self.id, "exit survey submitted"
 
@@ -186,7 +186,7 @@ class humanagent(agent):
       grtgs = [[self.global_ratings.get(aid) for aid in g if aid in self.global_ratings] for g in gmembers if len(g)]
       myrtgs = [-1 if not len(rats) else sum(rats)/len(rats) for rats in rtgs]
       if self.cfg.show_global_ratings:
-        globalrtgs = [-1 if not len(grats) else sum(grats)/len(grats) for grats in rtgs]
+        globalrtgs = [-1 if not len(grats) else sum(grats)/len(grats) for grats in grtgs]
       else:
         globalrtgs = [-1 for rats in rtgs]
       minrtgs = [-1 if not len(rats) else min(rats) for rats in rtgs]
@@ -453,7 +453,7 @@ class humanagent(agent):
     send_message(self.client, ('updatenbrs', teamdata) )    
     
     self.logratings()
-    self.logratingstatus('pubgoods', gids, gmembers)
+    self.logratingstatus('pubgoods', [n.id for n in self.group.agents if n != self])
     
     # Send current pay with the publicgoods message
     send_message(self.client, ('publicgoods', int(self.nowpay)))
@@ -506,7 +506,7 @@ class humanagent(agent):
     done = receive_message(self.client)
     self.logratings(step='pg_postprocess')
     
-    self.logratingstatus('simend', gids, gmembers)
+    self.logratingstatus('simend', teamids)
     
     self.messages = []
     
