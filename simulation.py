@@ -445,7 +445,8 @@ class simulation:
     # Total sim time is logged in tfsummary/tfdata
     cfg._dblog.log_simtime(cfg.simnumber, -1, tpubstart, trunend)
   
-    del self.cfg.iternum
+    #del self.cfg.iternum
+    self.cfg.iternum = -1
 
     self.G.graph['iterations'] = iternum+1
     self.G.graph['start_time'] = trunstart

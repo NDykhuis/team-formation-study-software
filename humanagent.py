@@ -195,7 +195,10 @@ class humanagent(agent):
       myrtgs = [self.current_ratings.get(aid, -1) for aid in otherids]
       globalrtgs = [-1 if not self.cfg.show_global_ratings else self.global_ratings.get(aid,-1) for aid in otherids]
       minrtgs = maxrtgs = [-1 for aid in otherids]
-    self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs)
+    try:
+      self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs)
+    except AttributeError:
+      self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, -1, eventtype, self.id, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs)
 
   def getratings(self):
     ratings = send_and_receive(self.client, ('getratings', 0))
