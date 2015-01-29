@@ -501,11 +501,12 @@ class humanagent(agent):
         sframe, eframe, stime, etime)
     
     self.logratings()
-    self.logratingstatus('simend', gids, gmembers)
     
     send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
     done = receive_message(self.client)
     self.logratings(step='pg_postprocess')
+    
+    self.logratingstatus('simend', gids, gmembers)
     
     self.messages = []
     
