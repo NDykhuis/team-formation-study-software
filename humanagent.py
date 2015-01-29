@@ -119,6 +119,7 @@ class humanagent(agent):
       
     self.cfg._dblog.log_exitsurvey(self.id, responses)
     self.logratings(step='exitsurvey')
+    self.logratingstatus('final', gids, gmembers)
     
     print "Agent", self.id, "exit survey submitted"
 
@@ -452,6 +453,8 @@ class humanagent(agent):
     send_message(self.client, ('updatenbrs', teamdata) )    
     
     self.logratings()
+    self.logratingstatus('pubgoods', gids, gmembers)
+    
     # Send current pay with the publicgoods message
     send_message(self.client, ('publicgoods', int(self.nowpay)))
     contrib = receive_message(self.client)
@@ -498,6 +501,8 @@ class humanagent(agent):
         sframe, eframe, stime, etime)
     
     self.logratings()
+    self.logratingstatus('simend', gids, gmembers)
+    
     send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
     done = receive_message(self.client)
     self.logratings(step='pg_postprocess')
