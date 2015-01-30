@@ -348,6 +348,12 @@ class simulation:
       teams = [a.group.id for a in agents]
       print lastteams
       print teams
+      
+      # Additional debug info for the experimenter
+      for g in groups:
+        if len(g.agents):
+          print "Group {%d}: {%s}".format(g.id, str(sorted([a.id for a in g.agents])))
+      
       if teams == lastteams:
         deaditers += 1
         print "DEADITERS:", deaditers
