@@ -64,7 +64,26 @@ class graphmanager:
         random.shuffle(hnodes)          # Keep human nodes together
         random.shuffle(snodes)
         nodes = hnodes + snodes
-        for i in range(len(nodes)-2):
+        for i in range(len(nodes)-2):   # Add connections between nodes
+          G.add_edge(nodes[i], nodes[i+1])
+          G.add_edge(nodes[i], nodes[i+2])
+        G.add_edge(nodes[-1], nodes[0])
+        G.add_edge(nodes[-2], nodes[0])
+        G.add_edge(nodes[-1], nodes[1])
+      elif cfg.graph_type == 'random_cycle4_zip':
+        nodes = range(cfg.n)
+        G = nx.Graph()
+        hnodes = nodes[:cfg.nhumans]
+        snodes = nodes[cfg.nhumans:]
+        random.shuffle(hnodes)
+        random.shuffle(snodes)
+        nodes = []
+        for h,s in zip(hnodes, snodes): # "Zip" the human and sim nodes together (not efficient)
+          nodes.append(h)
+          nodes.append(s)
+        nodes += hnodes[(cfg.n-cfg.nhumans):]   # Add the dangling parts
+        nodes += snodes[cfg.nhumans:]
+        for i in range(len(nodes)-2):   # Add connections between nodes
           G.add_edge(nodes[i], nodes[i+1])
           G.add_edge(nodes[i], nodes[i+2])
         G.add_edge(nodes[-1], nodes[0])
