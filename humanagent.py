@@ -456,7 +456,7 @@ class humanagent(agent):
     send_message(self.client, ('updatenbrs', teamdata) )    
     
     self.logratings()
-    self.logratingstatus('pubgoods', [n.id for n in self.group.agents if n != self])
+    self.logratingstatus('pubgood', [n.id for n in self.group.agents if n != self])
     
     # Send current pay with the publicgoods message
     send_message(self.client, ('publicgoods', int(self.nowpay)))
