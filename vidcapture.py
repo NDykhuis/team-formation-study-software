@@ -73,7 +73,8 @@ class vidcapthread(threading.Thread):
       if cv2.waitKey(1) & 0xFF == ord('q'):
           break
 
-    print "Video cleaning up!"          
+    print "Video cleaning up!"
+    self.alive = False
     # clean up
     self.outfile.close()
     # Release everything if job is finished
@@ -104,12 +105,17 @@ class vidcapture(object):
     self.vidcap.preview = preview
   
   def queryframetime(self):
-    return self.vidcap.frame, self.vidcap.nowtime
+    if self.vidcap.alive:
+      return self.vidcap.frame, self.vidcap.nowtime
+    else:
+      return 0, time.time()
     
   def mark_event(self, event_description):
     # event_description is a dictionary of column:value pairs
-    timestamp = self.vidcap.nowtime
-    frame = self.vidcap.frame
+    if self.vidcap.alive:
+      timestamp, frame = self.vidcap.nowtime, self.vidcap.frame
+    else:
+      timestamp, frame = time.time(), 0
     
     # write to file:
     # timestamp,frame,all_other_columns_in_event_description
