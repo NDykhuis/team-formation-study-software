@@ -237,7 +237,7 @@ class humanagent(agent):
     # Wait for user to reply with list of applications
     applications = receive_message(self.client)
     
-    self.logratings(step='propose')
+    self.logratings(step='apply')
     
     if len(applications):
       gnames = [self.gname(gid) for gid in applications]
@@ -278,7 +278,7 @@ class humanagent(agent):
     # Wait for user to reply with list of applications
     accept_id = receive_message(self.client)
     
-    self.logratings(step='accept')
+    self.logratings(step='acceptvote')
 
     naids = list(naids); newpays = list(newpays)
     naids.append(-1); newpays.append(self.nowpay)   # Add the "accept no one" option
@@ -353,7 +353,7 @@ class humanagent(agent):
     # Wait for user to reply with list of applications
     choice_id = receive_message(self.client)
     
-    self.logratings(step='consider')
+    self.logratings(step='join')
     
     if choice_id == -1:
       # Player does not want to switch groups.
