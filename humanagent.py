@@ -184,9 +184,9 @@ class humanagent(agent):
     if gmembers is not None:
       rtgs = [[self.current_ratings.get(aid) for aid in g if aid in self.current_ratings] for g in gmembers if len(g)]
       grtgs = [[self.global_ratings.get(aid) for aid in g if aid in self.global_ratings] for g in gmembers if len(g)]
-      myrtgs = [-1 if not len(rats) else sum(rats)/len(rats) for rats in rtgs]
+      myrtgs = [-1 if not len(rats) else float(sum(rats))/len(rats) for rats in rtgs]
       if self.cfg.show_global_ratings:
-        globalrtgs = [-1 if not len(grats) else sum(grats)/len(grats) for grats in grtgs]
+        globalrtgs = [-1 if not len(grats) else float(sum(grats))/len(grats) for grats in grtgs]
       else:
         globalrtgs = [-1 for rats in rtgs]
       minrtgs = [-1 if not len(rats) else min(rats) for rats in rtgs]
