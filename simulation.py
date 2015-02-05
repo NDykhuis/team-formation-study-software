@@ -174,6 +174,10 @@ class simulation:
   
     self.cfg._dblog.log_ultimatum(giver_id, receiver_id, amount, result, stime, etime)
   
+  def logteamstatus(self, eventtype, groups):
+    cfg = self.cfg
+    gdata = [(g.id, [a.id for a in g.agents], g.nowpay) for g in groups if len(g.agents)]
+    cfg._dblog.log_teamstatus(cfg.simnum, cfg.iternum, eventtype, gdata):
   
   def run(self, endtime=0):
     cfg = self.cfg
@@ -231,6 +235,7 @@ class simulation:
       self.cfg.iternum = iternum
       
       ### PARALLEL - apply
+      self.log_teamstatus('apply', groups)
       if cfg._threaded_sim:
         mythreads = []
         for a in random.sample(agents, n):
@@ -249,11 +254,13 @@ class simulation:
       
       ### PARALLELIZE
       if cfg.groups_can_merge:
+        self.log_teamstatus('groupapply', groups)
         for g in random.sample(groups, n):
           if len(g.agents) > 1: # or len(g.applications):
             g.propose()
       
       ### PARALLEL - acceptvote
+      self.log_teamstatus('acceptvote', groups)
       if cfg._threaded_sim:
         mythreads = []
         for g in random.sample(groups, n):
@@ -275,11 +282,13 @@ class simulation:
       
       ### SERIAL - group merge
       if cfg.groups_can_merge:
+        self.log_teamstatus('groupmerge', groups)
         for g in random.sample(groups, n):
           if len(g.agents): # or len(g.applications):
             g.considermerge()
       
       ### SERIAL - join
+      self.log_teamstatus('join', groups)
       for a in random.sample(agents, n):
         if len(a.acceptances):
           a.consider()
@@ -287,6 +296,7 @@ class simulation:
       ### SERIAL - expel agents
       expelee = None
       if cfg.expel_agents:
+        self.log_teamstatus('expel', groups)
         # Theoretically, there should always be enough empty groups for everyone
         emptygroups = [g for g in groups if not len(g.agents)]
         for g in random.sample(groups, n):
@@ -297,6 +307,7 @@ class simulation:
               expelee.switchgroup(newgroup)
 
       ### PARALLEL - postprocess_iter
+      self.log_teamstatus('enditer', groups)
       if cfg._threaded_sim:
         mythreads = []
         for a in random.sample(agents, n):
@@ -450,6 +461,8 @@ class simulation:
     # Log time spent in public goods
     # Total sim time is logged in tfsummary/tfdata
     cfg._dblog.log_simtime(cfg.simnumber, -1, tpubstart, trunend)
+
+    self.log_teamstatus('simend', groups)
   
     #del self.cfg.iternum
     self.cfg.iternum = -1
@@ -473,6 +486,8 @@ class simulation:
     for g in groups:
       if len(g.agents):
         g.update()
+    
+    self.log_teamstatus('pubgood', groups)
     
     ## Acquire public goods contributions
     pgdict = {}     # Stores agent contribution choices
