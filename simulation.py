@@ -174,10 +174,10 @@ class simulation:
   
     self.cfg._dblog.log_ultimatum(giver_id, receiver_id, amount, result, stime, etime)
   
-  def logteamstatus(self, eventtype, groups):
+  def log_teamstatus(self, eventtype, groups):
     cfg = self.cfg
     gdata = [(g.id, [a.id for a in g.agents], g.nowpay) for g in groups if len(g.agents)]
-    cfg._dblog.log_teamstatus(cfg.simnum, cfg.iternum, eventtype, gdata)
+    cfg._dblog.log_teamstatus(cfg.simnumber, cfg.iternum, eventtype, gdata)
   
   def run(self, endtime=0):
     cfg = self.cfg

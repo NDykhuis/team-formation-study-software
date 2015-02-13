@@ -229,7 +229,7 @@ class humanagent(agent):
     gids, gsizes, newpays, gmembers = zip(*gdata)
 
     self.logratings()
-    self.logratingstatus('apply', gids+[-1], gmembers+[[a.id for a in self.group.agents]])
+    self.logratingstatus('apply', gids+(-1, ), gmembers+([a.id for a in self.group.agents],))
 
     # Send all data to GUI and blocking receive
     send_message(self.client, ('propose', gdata) )
@@ -345,7 +345,7 @@ class humanagent(agent):
     gids, gsizes, gpays, gmembers = zip(*gdata)
     
     self.logratings()
-    self.logratingstatus('join', gids+[-1], gmembers+[[a.id for a in self.group.agents]])
+    self.logratingstatus('join', gids+(-1, ), gmembers+([a.id for a in self.group.agents], ))
     
     # Send all data to GUI and blocking receive
     send_message(self.client, ('consider', gdata) )
