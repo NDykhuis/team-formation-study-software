@@ -35,7 +35,7 @@ COLORS16 = [
   "#fe8420",
   "#00fefe",
   "#910022",
-  "#827800",
+  "#827848",#"#827800", # was too close to 008000
   "#8f00c7",
   "#0086fe",
   "#fe68fe",
@@ -86,3 +86,44 @@ COLORS12 = [
 "#ffff99",
 "#b15928"
 ]
+
+testcolors = COLORS16
+if __name__=='__main__':
+  import Tkinter as tk
+  import math
+  root = tk.Tk()
+  m = tk.Frame(root, background='#000000')
+  m.grid(column=0, row=0, sticky="NSEW")
+  m.columnconfigure(0, weight=1)
+  m.rowconfigure(0, weight=1)
+  cols = math.ceil(math.sqrt(len(testcolors)))
+  r = 0
+  c = 0
+  labels = []
+  locs = []
+  for i,color in enumerate(testcolors):
+    #l = tk.Frame(m, background=color, width=64, height=64)
+    l = tk.Label(m, background=color, width=12, height=4, text='')
+    l.bind("<Enter>", lambda e, bnum=i: textchange(bnum, True))
+    l.bind("<Leave>", lambda e, bnum=i: textchange(bnum, False))
+    labels.append(l)
+    l.grid(row=r, column=c)
+    locs.append((r,c))
+    c += 1
+    if c >= cols:
+      c = 0; r += 1
+    
+  def rearrange():
+    random.shuffle(locs)
+    for lab, loc in zip(labels, locs):
+      lab.grid_forget()
+      lab.grid(column=loc[1], row=loc[0])
+    
+  def textchange(i, active):
+    text = (str((i,testcolors[i])) if active else '')
+    labels[i].config(text=text)
+    
+  reset = tk.Button(m, text='Shuffle', command=rearrange)
+  reset.grid(row=r+1, column=0)
+                    
+  root.mainloop()
