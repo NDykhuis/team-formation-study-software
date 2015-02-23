@@ -1484,8 +1484,9 @@ class TFGui(object):
   
   def m_updateglobalratings(self, event):
     rdata = self.getdata(event) # dictionary of aid,rating pairs
-    for aid, rating in rdata.iteritems():
-      self.update_global_rating(int(aid), rating)
+    if not self.cfgdict['hide_publicgoods']:
+      for aid, rating in rdata.iteritems():
+        self.update_global_rating(int(aid), rating)
     self.backend.sendqueue.put('done')
   
   def m_updatehistory(self, event):
@@ -1902,9 +1903,11 @@ class TFGui(object):
     
     #self.update_neighbors(xxx) # This is done by the human_agent
     
-    print zip(neighbors, contribs)
-    neighbors, contribs = zip(*sorted(zip(neighbors, contribs), key=operator.itemgetter(1), reverse=True))
-    print zip(neighbors, contribs)
+    #print zip(neighbors, contribs)
+    if not self.cfgdict['hide_publicgoods']:
+      # Only sort if we're actually showing contributions
+      neighbors, contribs = zip(*sorted(zip(neighbors, contribs), key=operator.itemgetter(1), reverse=True))
+    #print zip(neighbors, contribs)
     
     self.mwidgets['pgwidgets']['content'].grid_remove()
     
