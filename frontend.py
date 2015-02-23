@@ -121,8 +121,8 @@ class TFGui(object):
       self.anames = ['Agent '+str(i) for i in range(configuration.n)]
     else:
       # Icky hardcoding
-      self.anames = ['Cat', 'Dog', 'Bear', 'Bird', 'Cow', 'Elephant', 'Fish', 'Frog', 'Gorilla', 'Lion', 'Monkey', 'Bee', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Sheep', 'Donkey']
-    
+      self.anames = ['Cat', 'Dog', 'Bear', 'Monkey', 'Cow', 'Elephant', 'Gorilla', 'Fish', 'Sheep', 'Frog', 'Bird', 'Lion', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Bee', 'Donkey']
+      
     self.initTk()
     if serverIP is not None:
       self.backend = TFNetBack(serverIP, self)
