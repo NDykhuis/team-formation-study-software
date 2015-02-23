@@ -8,10 +8,10 @@ PROTOCOL = 99
 ##   If it is not set, the default options in the configuration class will be used
 ##   PROTOCOL 0:  (non-social)
 ##     video, no ultimatum, play lottery, and disable ratings
-##     35 minutes; 5 minutes margin
+##     75 minutes; 5 minutes margin
 ##   PROTOCOL 1:  (social)
 ##     video, no ultimatum, play publicgoods and do ratings
-##     35 minutes; 5 minutes margin
+##     75 minutes; 5 minutes margin
 ##   PROTOCOL 98:  (testing video)
 ##     video, no ultimatum, play pubgoods and do ratings
 ##     10 minutes; 3 minutes margin
@@ -605,7 +605,7 @@ if PROTOCOL == 0:
   configuration.hide_publicgoods = True
   configuration.do_ratings = True
   configuration.delay_sim_agents = True
-  configuration._time_limit = 45
+  configuration._time_limit = 75
   configuration._margin_time = 5
 elif PROTOCOL == 1:
   configuration._do_video = True
@@ -615,7 +615,7 @@ elif PROTOCOL == 1:
   configuration.hide_publicgoods = False
   configuration.do_ratings = True
   configuration.delay_sim_agents = True
-  configuration._time_limit = 45
+  configuration._time_limit = 75
   configuration._margin_time = 5
 elif PROTOCOL == 98:
   configuration._do_video = True
