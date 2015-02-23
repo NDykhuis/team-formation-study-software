@@ -174,10 +174,10 @@ class simulation:
   
     self.cfg._dblog.log_ultimatum(giver_id, receiver_id, amount, result, stime, etime)
   
-  def log_teamstatus(self, eventtype, groups):
+  def log_teamstatus(self, eventtype, groups, activeagent=-1):
     cfg = self.cfg
     gdata = [(g.id, [a.id for a in g.agents], g.nowpay) for g in groups if len(g.agents)]
-    cfg._dblog.log_teamstatus(cfg.simnumber, cfg.iternum, eventtype, gdata)
+    cfg._dblog.log_teamstatus(cfg.simnumber, cfg.iternum, eventtype, gdata, activeagent)
   
   def run(self, endtime=0):
     cfg = self.cfg
@@ -291,6 +291,8 @@ class simulation:
       self.log_teamstatus('join', groups)
       for a in random.sample(agents, n):
         if len(a.acceptances):
+          if a.type=='human':
+            self.log_teamstatus('join', groups, activeagent=a.id)
           a.consider()
       
       ### SERIAL - expel agents
@@ -301,6 +303,7 @@ class simulation:
         emptygroups = [g for g in groups if not len(g.agents)]
         for g in random.sample(groups, n):
           if len(g.agents) > 1:
+            self.log_teamstatus('expel', groups, activeagent=g.id)
             expelees = g.expel_agent()
             for expelee in expelees:
               newgroup = emptygroups.pop()

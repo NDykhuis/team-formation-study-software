@@ -99,6 +99,7 @@ class db_logger(object):
         (rowid integer primary key asc,
          timestamp real, sessionid integer,
          eventtype text, simnum integer, internum integer,
+         activeagent integer,
          agentid integer, teamid integer,
          currentpay real)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS ratingstatus
@@ -354,16 +355,16 @@ class db_logger(object):
         
     self.tfevent_insert( (None, timestamp, self.sessionid, userid, simnum, iternum, 'pubgood', sframe, eframe, stime, etime) )
     
-  def log_teamstatus(self, simnum, iternum, eventtype, gdata):
+  def log_teamstatus(self, simnum, iternum, eventtype, gdata, activeagent=-1):
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
     for gid, gmembers, gpay in gdata:
       for aid in gmembers:
-        inserts.append( (None, timestamp, self.sessionid, eventtype, simnum, iternum, aid, gid, gpay) )
+        inserts.append( (None, timestamp, self.sessionid, eventtype, simnum, iternum, activeagent, aid, gid, gpay) )
     
     conn = sqlite3.connect(self.dbfile)
-    conn.executemany('INSERT INTO teamstatus VALUES (?,?,?,?,?,?,?,?,?)', inserts)
+    conn.executemany('INSERT INTO teamstatus VALUES (?,?,?,?,?,?,?,?,?,?)', inserts)
     conn.commit()
     conn.close()
     
