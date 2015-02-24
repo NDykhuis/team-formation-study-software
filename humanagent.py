@@ -45,7 +45,6 @@ class humanagent(agent):
     
     send_message(self.client, ('setmyid', self.id))
     self.sendcfg()
-    
 
   def sendcfg(self):
     cfgdict = self.cfg.outputcfg(showhidden=True)
@@ -85,7 +84,7 @@ class humanagent(agent):
     send_message(self.client, ('instructions', 0))
     receive_message(self.client)
     #if self.cfg.do_ratings: self.showratings()
-    print "Instructions done for", self.id
+    self.logp(("Instructions done for", self.id))
 
   def initratings(self, neighbors):
     send_message(self.client, ('initratings', neighbors))
@@ -121,7 +120,7 @@ class humanagent(agent):
     self.logratings(step='exitsurvey')
     self.logratingstatus('final', range(self.cfg.n))    # Log ratings of everyone
     
-    print "Agent", self.id, "exit survey submitted"
+    self.logp(("Agent",self.id,"exit survey submitted"), 0)
 
   def startcapture(self):
     send_message(self.client, ('startcapture', 0))
@@ -178,7 +177,7 @@ class humanagent(agent):
     except AttributeError:
       print "PROBLEM!"
       print "ratings data is:", ratings
-    print "Agent", self.id, "ratings:", ratings
+    self.logp(("Agent", self.id, "ratings:", ratings))
 
   def logratingstatus(self, eventtype, otherids, gmembers=None):
     if gmembers is not None:
@@ -248,7 +247,7 @@ class humanagent(agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_apply(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, newpays, applications, sframe, eframe, stime, etime)
     
-    print "Agent", self.id, "proposes", applications
+    self.logp(("Agent",self.id,"proposes",applications))
   
     for gid in applications:
       g = idgroups[gid]
@@ -287,7 +286,7 @@ class humanagent(agent):
 
 
     if accept_id != -1:
-      print "Agent", self.id, "votes to accept", accept_id
+      self.logp(("Agent", self.id, "votes to accept", accept_id))
 
     if accept_id != -1:
       #self.messages.append('You voted to accept agent '+str(accept_id)+' into the group')
@@ -321,7 +320,7 @@ class humanagent(agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_expel(self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, newpays, expel_id, sframe, eframe, stime, etime)
 
-    print "Agent", self.id, "votes to expel", expel_id
+    self.logp(("Agent", self.id, "votes to expel", expel_id))
 
     if expel_id == -1:
       # No member should leave the team
@@ -368,7 +367,7 @@ class humanagent(agent):
     self.cfg._dblog.log_join(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, gpays, choice_id, sframe, eframe, stime, etime)
     
     if choice_id != -1:
-      print "Agent", self.id, "joins", choice_id
+      self.logp(("Agent", self.id, "joins", choice_id))
     
     self.acceptances = []
     
@@ -402,7 +401,7 @@ class humanagent(agent):
       send_message(self.client, ('turndone', '\n'.join(self.messages)) )
       receive_message(self.client)
     else:
-      print "No new messages for human player"
+      self.log("No new messages for human player",6)
     
     #if self.cfg.do_ratings:
     #  self.logratings(step='postprocess_iter')
@@ -463,7 +462,7 @@ class humanagent(agent):
     contrib = receive_message(self.client)
     self.logratings(step='publicgoods')
     
-    print "Agent", self.id, "contribs", contrib, "/", int(self.nowpay)
+    self.logp(("Agent", self.id, "contribs", contrib, "/", int(self.nowpay)))
     
     #return contrib
     pgdict[self] = (contrib, int(self.nowpay)-contrib)

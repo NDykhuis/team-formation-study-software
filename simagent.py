@@ -122,8 +122,7 @@ class simagent(agent, ultagent):
       newskills = g.withskills(self)
       if self.cfg.bias:
         alist = [a.id for a in g.agents]+[self.id]
-        if self.cfg._verbose > 5:
-          print "agent", self.id, "in group", self.group.id, "proposing to", g.id
+        self.logp(("agent", self.id, "in group", self.group.id, "proposing to", g.id), 6)
         #if task(newskills)*np.mean([self.bias.get(n, 1.0) for n in alist])/(len(alist)+1) >= self.nowpay:
         if task(newskills)/(len(alist)+1)*self.biasavg(alist) >= self.nowpay:
           g.takeapplication(self)
@@ -165,8 +164,8 @@ class simagent(agent, ultagent):
 
     bestagent = self.cfg.utility_tiebreaker(utility)
   
-    if bestagent is not None and self.cfg._verbose > 5:
-        print "Agent", self.id, "voting for agent", bestagent.id
+    if bestagent is not None:
+        self.logp(("Agent", self.id, "voting for agent", bestagent.id), 6)
 
     if self.cfg.agent_memory and bestagent is not None:
       # Increment counter of number of times we've voted for this agent
@@ -195,8 +194,7 @@ class simagent(agent, ultagent):
   
     if bestgroup is not None:
       self.switchgroup(bestgroup)
-      if self.cfg._verbose > 5:
-        print "Agent", self.id, "switching to", bestgroup.id, "  Utility:", [u[:-1]+(u[-1].id,) for u in utility]
+      self.logp(("Agent", self.id, "switching to", bestgroup.id, "  Utility:", [u[:-1]+(u[-1].id,) for u in utility]),6)
       
     self.acceptances = []
   
@@ -260,7 +258,7 @@ class simagent(agent, ultagent):
     self.leftovers = self.maxweight - sum(dat['weight'] for dat in G[self.id].itervalues())
     
     if not len(nbrs):
-      print "ERROR: node",self.id,"has no neighbors!"
+      self.logp(("ERROR: node",self.id,"has no neighbors!"), -1)
       #return
     
     if globalpay is not None:
@@ -323,7 +321,7 @@ class simagent(agent, ultagent):
       
       self.leftovers += moveweight
       
-      print self.id, 'removes', movenbrs
+      self.logp((self.id, 'removes', movenbrs))
       
     if self.leftovers >= 1.0:
       # move it to a random person in the network
@@ -331,7 +329,7 @@ class simagent(agent, ultagent):
       G.add_edge( self.id, newnbr, weight=self.leftovers )
       self.leftovers = 0
       
-      print self.id, 'connects to', newnbr, "(maxweight", self.maxweight, ")"
+      self.logp((self.id, 'connects to', newnbr, "(maxweight", self.maxweight, ")"))
       ## ISSUE: no one will "listen to" this neighbor because they don't have enough of a connection to them!
     
     #self.neighbors()

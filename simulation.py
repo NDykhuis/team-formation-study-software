@@ -26,6 +26,10 @@ class simulation:
   def __init__(self):
     pass
 
+  def log(self, message, level=5):
+    if level <= configuration._verbose:
+      print str(message)
+
   def setup(self, graph, config):
     self.cfg = config
     self.G = graph.copy()
@@ -76,7 +80,6 @@ class simulation:
     
     human_nodes = [h.id for h in humans]
     halfjobs = self.G.edges(human_nodes)
-    print halfjobs
     jobs = halfjobs + [(v,u) for u,v in halfjobs]
     random.shuffle(jobs)
     
@@ -88,8 +91,8 @@ class simulation:
     #self.ready = threading.Event()
     threads = []
     self.cv.acquire()
-    print 'cv acquired'
-    print "Jobs to start:", jobs
+    self.log('cv acquired', 8)
+    self.log("Jobs to start: "+str(jobs))
     while len(jobs):
       ## WAIT for notification
       #self.semlock.acquire()
@@ -103,13 +106,13 @@ class simulation:
           # IN NEW THREAD:
           t = threading.Thread(target=self.ultimatum_thread, args=(u,v))
           t.daemon = True
-          print 'starting thread between',u,'and',v
+          self.log('starting thread between '+str(u)+' and '+str(v))
           threads.append(t)
           t.start()
         else:
           newjobs.append( (u,v) )  # This seems stupid, but at least we don't modify jobs while looping
       if len(jobs) != len(newjobs):
-        print "Jobs remaining:", newjobs
+        self.log("Jobs remaining: "+str(newjobs))
       jobs = newjobs
       #print 'waiting on notify'
       self.cv.wait(5.0)
@@ -119,7 +122,7 @@ class simulation:
     self.cv.release()
     
     ## Need to wait until all threads are done!!
-    print "Waiting until all games are done."
+    self.log("Waiting until all games are done.")
     active_threads = True
     while active_threads:
       active_threads = False
@@ -131,10 +134,10 @@ class simulation:
       h.u_review()
        
   def ultimatum_thread(self, giver_id, receiver_id):
-    print "Running", self.cfg.ultimatum_niter,"ultimatums between", (giver_id, receiver_id)
+    self.log("Running "+str(self.cfg.ultimatum_niter)+" ultimatums between "+str( (giver_id, receiver_id) ))
     for i in range(self.cfg.ultimatum_niter):
       self.ultimatum(giver_id, receiver_id)
-    print (giver_id, receiver_id),'ULTIMATUMS DONE'
+    self.log(str((giver_id, receiver_id))+' ULTIMATUMS DONE')
     #print (giver_id, receiver_id),'acquiring cv'
     self.cv.acquire()
     self.free[giver_id] = True
@@ -161,11 +164,11 @@ class simulation:
     c2.wait_offer(c1.id)
     amount = c1.ask_for_offer(c2.id)
     
-    print c2.id,"now deciding"
+    self.log(str(c2.id)+" now deciding")
     c1.wait_decide(c2.id)
-    print "decide_offer"
+    self.log("decide_offer")
     result = c2.decide_offer(c1.id, amount)
-    print c2.id, "accepts?", result
+    self.log(str(c2.id)+" accepts? "+str(result))
     
     c1.show_conclusion_u(c2.id, amount, result, 0)
     c2.show_conclusion_u(c1.id, amount, result, 1)
@@ -184,6 +187,7 @@ class simulation:
     n = cfg.n
     agents = self.agents
     groups = self.groups
+    log = self.log
     
     lastteams = [0]*n
     iters = 0
@@ -225,7 +229,7 @@ class simulation:
     for a in self.humans:
       cfg._dblog.log_topo(cfg.simnumber, a.id, [nbr.id for nbr in a.nbrs])
     
-    print "Beginning run!"
+    log("Beginning run!")
     trunstart = time.time()
     
     try:
@@ -360,29 +364,28 @@ class simulation:
       
       # Check if anything has changed
       teams = [a.group.id for a in agents]
-      print lastteams
-      print teams
+      log(lastteams)
+      log(teams)
       
       # Additional debug info for the experimenter
       for g in groups:
         if len(g.agents):
-          print "Group {}: {}".format(g.id, sorted([a.id for a in g.agents]))
+          log("Group {}: {}".format(g.id, sorted([a.id for a in g.agents])), 6)
       
       if teams == lastteams:
         deaditers += 1
-        print "DEADITERS:", deaditers
+        log("DEADITERS: "+str(deaditers))
       else:
         deaditers = 0
       
-      if cfg._verbose > 2:
-        print "Iteration", iternum, "complete in", round(tend-tstart, 2), "seconds"
+      log("Iteration "+str(iternum)+" complete in "+str(round(tend-tstart, 2))+" seconds",3)
       
       cfg._dblog.log_simtime(cfg.simnumber, iternum, tstart, tend)
       
       
       ## TERMINATE SIM CONDITIONS
       if deaditers > cfg.deaditers: # or iternum > cfg.nsteps:
-        print "ENDING SIM: REACHED CONVERGENCE"# OR OUT OF STEPS"
+        log("ENDING SIM: REACHED CONVERGENCE")# OR OUT OF STEPS"
         enditer = iternum
         break
       else:
@@ -390,7 +393,7 @@ class simulation:
         iters += 1
       
       if endtime and time.time() > endtime and iternum > 2:
-        print "ENDING SIM: OUT OF TIME"
+        log("ENDING SIM: OUT OF TIME")
         enditer = iternum
         break
         
@@ -398,12 +401,12 @@ class simulation:
         time.sleep(cfg.delaytime)
      
      else:
-       print "ENDING SIM: OUT OF STEPS"
+       log("ENDING SIM: OUT OF STEPS")
        enditer = iternum
         
     except KeyboardInterrupt:
-      print "Simulation early termination due to user interrupt!"
-      print "Summarizing results up to this point"
+      log("Simulation early termination due to user interrupt!",-1)
+      log("Summarizing results up to this point",-1)
       time.sleep(1)
     
     ## END MAIN SIMULATION LOOP
@@ -435,7 +438,8 @@ class simulation:
         
         for g in groups:
           g.postprocess()
-    elif self.humans:
+    #elif self.humans:
+    else:   # Run even when no humans
       self.publicgoods()
     
     
@@ -551,7 +555,7 @@ class simulation:
     ## Give statistics and rating data to the agents
     #self.pgsummary = {a.id:(float(pgdict[a][0])/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
     self.pgsummary = {a.id:(pgdict[a][0],(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
-    print "pgsummary:", self.pgsummary
+    self.log("pgsummary: "+str(self.pgsummary))
     
   
   def reset(self, Gdone=None):

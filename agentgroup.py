@@ -18,6 +18,15 @@ class actor(object):
     # Reset simulation-specific parameters, such as group, pay, etc.
     pass
 
+  def log(self, message, level=5):
+    if level <= configuration._verbose:
+      print str(message)
+  
+  def logp(self, messagetuple, level=5):
+    if level <= configuration._verbose:
+      print ' '.join(str(s) for s in messagetuple)
+
+
 class ultagent(object):
   ## ULTIMATUM FUNCTIONS
   def ultimatum_init(self, distribution='normal', p1=5, p2=1, delaymean=5, delaysd=2):
