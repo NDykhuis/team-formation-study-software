@@ -21,22 +21,15 @@ from db_logger import *
 from simulation import *
 from configuration import *
 
-dblog = db_logger('simlog.db')
-configuration._dblog = dblog
-
-LOG_DB = True
-DEBUG = 0
-ERROR = 5
-def log(text, level=DEBUG):
-  print text
-  # write text to file
-  if LOG_DB:
-    dblog.log_gen(text)
 
 
   
 if __name__ == '__main__':
   alt_options = ['single', 'auto']
+  
+  dblog = db_logger('simlog.db')
+  configuration._dblog = dblog
+  dblog.start_batch_insert_thread()
   
   DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
   KEEP_GRAPH = True
