@@ -20,6 +20,7 @@ class db_logger(object):
     # Threaded producer-consumer code
     self.insthread = None
     self.autoins = False
+    self.forcecommit = False
     self.insqueue = Queue.Queue()
 
   # Team formation:
@@ -193,7 +194,6 @@ class db_logger(object):
     timestamp = time.time()
     
     outdata = tuple([None, timestamp, self.sessionid]+list(data))
-         
     
     self.queue_insert('tfsummary', outdata)
         
@@ -430,7 +430,7 @@ class db_logger(object):
   def queue_insert(self, instable, instuple, many=False):
     self.insqueue.put( (instable, instuple, many) ) 
   
-  def batch_inserts(self):
+  def batch_inserts(self, forcecommit=True):
     conn=sqlite3.connect(self.dbfile)
     while not self.insqueue.empty():
       try:
@@ -438,32 +438,44 @@ class db_logger(object):
       except Queue.Empty:
         break
       else:
-        nqs = len(instuple)-1
-        if many:
-          conn.executemany('INSERT INTO '+instable+' VALUES (?'+',?'*nqs+')', instuple)
-        else:
-          conn.execute('INSERT INTO '+instable+' VALUES (?'+',?'*nqs+')', instuple)
-    conn.commit()
-    
-  def batch_insert_thread(self):
-    print "Database insert thread started"
-    commits = False
-    conn=sqlite3.connect(self.dbfile)
-    while self.autoins:
-      try:
-        instable, instuple, many = self.insqueue.get(block=True, timeout=1.0)
         if not many:
           nqs = len(instuple)-1
           conn.execute('INSERT INTO '+instable+' VALUES (?'+',?'*nqs+')', instuple)
         elif len(instuple):     # Ensure at least one insert exists
           nqs = len(instuple[0])-1
           conn.executemany('INSERT INTO '+instable+' VALUES (?'+',?'*nqs+')', instuple)
-        commits = True
-      except Queue.Empty:
-        if commits:
+        self.insqueue.task_done()
+            
+    if forcecommit:
+      conn.commit()
+    
+  def batch_insert_thread(self):
+    print "Database insert thread started"
+    commits = False
+    conn=sqlite3.connect(self.dbfile)
+    waiting = 0
+    while self.autoins:
+      try:
+        instable, instuple, many = self.insqueue.get(block=True, timeout=2.0)
+        if not many:
+          nqs = len(instuple)-1
+          conn.execute('INSERT INTO '+instable+' VALUES (?'+',?'*nqs+')', instuple)
+        elif len(instuple):     # Ensure at least one insert exists
+          nqs = len(instuple[0])-1
+          conn.executemany('INSERT INTO '+instable+' VALUES (?'+',?'*nqs+')', instuple)
+        self.insqueue.task_done()
+        
+        if self.forcecommit:
           print "DB commit!"
           conn.commit()
+        else:
+          commits = True
+      except Queue.Empty:
+        if commits:
+          conn.commit()
           commits = False
+        waiting = 0
+      self.forcecommit = False
     conn.close()
     print "Database insert thread ended"
     
@@ -482,3 +494,6 @@ class db_logger(object):
     if self.insthread:
       self.autoins = False
       self.insthread.join()
+
+  def flush_inserts(self):
+    self.insqueue.join()

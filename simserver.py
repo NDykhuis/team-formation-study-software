@@ -165,19 +165,22 @@ if __name__ == '__main__':
       sim.reset()   # Reset after the intro sim
       
       i = 1
+      lastflush = time.time()
       while True:   # Run sims ~forever~
         #sim.setup(G, cfg)   # This resets the graph, but we want to just reset the teams
         #sim.setup(Gdone, cfg) #?
         #or is there some other way to reset teams without resetting the graph?
-        cfg.printself()
+        if cfg._verbose > 3:
+          cfg.printself()
         
         sim.run(endtime = starttime+cfg._time_limit*60)
         Gdone = sim.export()
         
         ann = analyzer()
         ann.load(Gdone, cfg)
-        ann.groupsummary()
-        ann.summary()
+        if cfg._verbose > 3:
+          ann.groupsummary()
+          ann.summary()
         ann.dumpsummarydb(dblog)
         if outfile: 
           ann.dumpsummary(outfile)
@@ -196,8 +199,17 @@ if __name__ == '__main__':
         
         tnow = time.time()
         elapsed = (tnow - starttime)/60
-        print "Elapsed time:", round(elapsed,2)
+        #if cfg._verbose > 3:
+        #  print "Elapsed time:", round(elapsed,2)
         
+        if tnow - lastflush > 5.0:
+          print "Database flush!"
+          dblog.flush_inserts()
+          lastflush = tnow
+        
+        if cfg._verbose > 0:
+          print "Sim", cfg.simnumber, "done in", elapsed, "min"
+      
         # if near time limit - quit
         if time.time() > starttime + (cfg._time_limit-cfg._margin_time)*60:
           print "OUT OF TIME!"
@@ -206,7 +218,7 @@ if __name__ == '__main__':
         agent.agentid=0
         sim.reset()
         cfg.simnumber += 1
-      
+        
         
       if configuration._do_video:
         for a in sim.humans:

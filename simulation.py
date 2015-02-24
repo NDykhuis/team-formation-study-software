@@ -481,7 +481,7 @@ class simulation:
     
     cfg._dblog.log_conclusion(groups, self.cfg.simnumber)
     #cfg._dblog.log_simtime(cfg.simnumber, -1, trunstart, trunend)
-    
+    cfg._dblog.forcecommit = True   # Ensure that commits are made, especially when running with no humans.
     
   def publicgoods(self):
     cfg = self.cfg
