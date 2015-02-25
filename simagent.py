@@ -352,10 +352,10 @@ class simagent(agent, ultagent):
       if len(othercontribs):
         avgcontrib = sum(othercontribs)/len(othercontribs)
         mypctcontrib = avgcontrib + ((random.random()-0.5)*self.cfg.conditional_variance)
+        mypctcontrib = min(max(mypctcontrib,0),1)   # Keep in 0,1 range
       else:
         mypctcontrib = random.random()
       contrib = int(round(mypctcontrib*nowpayint))
-      
     else:
       clow, chigh = self.cfg.pg_contribrange[self.disposition]
       contrib = random.randint(int(clow*nowpayint), int(chigh*nowpayint))
@@ -386,7 +386,7 @@ class simagent(agent, ultagent):
 
   def getratings(self):
     ratings = {}
-    clow, chigh = self.cfg.pg_contribrange[self.disposition]
+    #clow, chigh = self.cfg.pg_contribrange[self.disposition]
     for aid, pctcontrib in self.pgmem.iteritems():
       #rating = min(max(int(pctcontrib/chigh*4.0+1),1),5)   # Fancy version
       #rating = int(pctcontrib*4.0+1)                       # Simple version

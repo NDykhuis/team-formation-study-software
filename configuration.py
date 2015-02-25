@@ -655,9 +655,11 @@ elif PROTOCOL == 100:
   configuration._margin_time = 0
   configuration.delay_sim_agents = False
   configuration._threaded_sim = False
-  configuration.reset_graph_iters = 10
+  configuration.reset_graph_iters = 20
   configuration._log_teamstatus = False
   configuration.percent_conditional = 0.5
+  configuration.nsteps = 30
+  configuration.n = 18
 
 class multiconfig(configuration):
   reps = 1  # Number of reps for each configuration
