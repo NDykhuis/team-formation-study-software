@@ -571,6 +571,10 @@ class simulation:
     self.pgsummary = {a.id:(pgdict[a][0],(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
     self.log("pgsummary: "+str(self.pgsummary))
     
+    #pgtuple = (agentid, groupid, contrib, keep, pay)
+    pgtuples = [(a.id, a.group.id, pgdict.get(a,(-1,-1))[0], pgdict.get(a,(-1,-1))[1], a.nowpay) for a in self.agents]
+    self.cfg._dblog.log_all_pubgoods(self.cfg.simnumber, pgtuples)
+    
   
   def reset(self, Gdone=None):
     if Gdone is None:

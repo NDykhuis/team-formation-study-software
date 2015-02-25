@@ -331,9 +331,19 @@ class db_logger(object):
     # newpay = othercontrib
     # maxpay = amount group earned
     
-    self.queue_insert('pglog', (None, timestamp, self.sessionid, simnum, userid, gid, usercontrib, keep, pay))
+    #self.queue_insert('pglog', (None, timestamp, self.sessionid, simnum, userid, gid, usercontrib, keep, pay))
     
     self.tfevent_insert( (None, timestamp, self.sessionid, userid, simnum, iternum, 'pubgood', sframe, eframe, stime, etime) )
+    
+  def log_all_pubgoods(self, simnum, pgtuples): 
+    #pgtuple = (agentid, groupid, contrib, keep, pay)
+    if self.NO_LOGGING: return
+    timestamp = time.time()
+    inserts = []
+    for agentid, groupid, contrib, keep, pay in pgtuples:
+      inserts.append( (None, timestamp, self.sessionid, simnum, agentid, groupid, contrib, keep, pay) )
+    self.queue_insert('pglog', inserts, many=True)
+    
     
   def log_teamstatus(self, simnum, iternum, eventtype, gdata, activeagent=-1):
     if self.NO_LOGGING: return
