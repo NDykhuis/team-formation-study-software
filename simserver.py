@@ -167,10 +167,18 @@ if __name__ == '__main__':
       i = 1
       lastflush = time.time()
       while True:   # Run sims ~forever~
-        if cfg.reset_graph_iters and not i % cfg.reset_graph_iters:
+        if cfg.reset_graph_iters and cfg.simnumber and not cfg.simnumber % cfg.reset_graph_iters:
+          # Reset agents, graph, everything.
           # Only for automated simulations
+          print "RESET!"
           cfg.simnumber = 0
-          sim.setup(G, cfg)
+          #for a in sim.agents: # Done by sim.reset
+          #  a.reset()
+          gm.setup()
+          #sim.setup(gm.G, cfg)  # This re-inits agent dispositions...
+          sim.reset(gm.G)
+          for a in sim.agents:  # Not done by any other reset
+            a.pgmem = {}
           
         #sim.setup(Gdone, cfg) #?
         #or is there some other way to reset teams without resetting the graph?
