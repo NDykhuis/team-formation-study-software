@@ -179,8 +179,9 @@ class simulation:
   
   def log_teamstatus(self, eventtype, groups, activeagent=-1):
     cfg = self.cfg
-    gdata = [(g.id, [a.id for a in g.agents], g.nowpay) for g in groups if len(g.agents)]
-    cfg._dblog.log_teamstatus(cfg.simnumber, cfg.iternum, eventtype, gdata, activeagent)
+    if cfg._log_teamstatus:
+      gdata = [(g.id, [a.id for a in g.agents], g.nowpay) for g in groups if len(g.agents)]
+      cfg._dblog.log_teamstatus(cfg.simnumber, cfg.iternum, eventtype, gdata, activeagent)
   
   def run(self, endtime=0):
     cfg = self.cfg

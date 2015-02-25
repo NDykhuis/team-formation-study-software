@@ -18,6 +18,8 @@ PROTOCOL = 99
 ##   PROTOCOL 99:  (testing short)
 ##     no video, no ultimatum, play pubgoods and do ratings
 ##     1 minute; 3 minutes margin
+##   PROTOCOL 100:  (automated)
+##     10 minutes of sim agents only simulation; 10 rounds each.
 
 class configuration(object):
   
@@ -46,6 +48,7 @@ class configuration(object):
     'fair':(0.5, 0.8),
     'random':(0.0, 1.0)
   }
+  conditional_variance = 0.1
   
   show_other_team_members = True
   
@@ -78,7 +81,9 @@ class configuration(object):
   _time_limit = 30    # hard time limit in minutes; sim will be cut off after the current iteration when this time expires
   _margin_time = 3    # start the last sim no later than this many minutes before end
 
-
+  ## Params for automated simulation
+  reset_graph_iters = 0     # Reset the graph after n iterations (0 is keep forever)
+  _log_teamstatus = True
 
   ## DISPLAY PARAMETERS
   _display_every_step = False
@@ -87,7 +92,7 @@ class configuration(object):
   _draw_graph = False            # Controls graphical output
   _pause_graph = False
   _draw_graph_after_sim = False
-  _verbose = 4                   # Controls print output (integer 0-n)
+  _verbose = 1                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  
   #_output_by = "agent"
@@ -637,8 +642,19 @@ elif PROTOCOL == 99:
   configuration._time_limit = 10
   configuration._margin_time = 3
   configuration.delay_sim_agents = False
-
-
+elif PROTOCOL == 100:
+  configuration._do_video = False
+  configuration._do_intro_sim = False
+  configuration._do_ultimatum = False
+  configuration.do_publicgoods = True
+  configuration.hide_publicgoods = False
+  configuration.do_ratings = True
+  configuration._time_limit = 10
+  configuration._margin_time = 0
+  configuration.delay_sim_agents = False
+  configuration._threaded_sim = False
+  configuration.reset_graph_iters = 10
+  configuration._log_teamstatus = False
 
 
 class multiconfig(configuration):
