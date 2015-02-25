@@ -343,10 +343,23 @@ class simagent(agent, ultagent):
     
     self.tf_delay('publicgoods')
     
-    clow, chigh = self.cfg.pg_contribrange[self.disposition]
-    contrib = random.randint(int(clow*nowpayint), int(chigh*nowpayint))
-    #return contrib
+    if self.disposition == 'conditional':
+      #othercontribs = self.pgmem.values()  # This would include all the other agents...
+      othercontribs = [self.pgmem[a.id] for a in self.group.agents if a.id in self.pgmem]
+      if len(othercontribs):
+        avgcontrib = sum(othercontribs)/len(othercontribs)
+        mypctcontrib = avgcontrib + random.random()*self.cfg.conditional_variance
+      else:
+        mypctcontrib = random.random()
+      contrib = int(round(mypctcontrib*nowpayint))
+      
+    else:
+      clow, chigh = self.cfg.pg_contribrange[self.disposition]
+      contrib = random.randint(int(clow*nowpayint), int(chigh*nowpayint))
+      #return contrib
+    
     pgdict[self] = (contrib, nowpayint-contrib)
+    
   
   def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
     self.pgpay = privatepay+potpay
