@@ -150,7 +150,10 @@ class simagent(agent, ultagent):
     if self.cfg.social_sim_agents:
       #pay, memory, random, agent
       nowgsize = self.group.gsize
-      clow, chigh = self.cfg.pg_contribrange[self.disposition]
+      if self.disposition == 'conditional':
+        clow = self.pgmem.get(self.id, 0.5)+((random.random()-0.5)*self.cfg.conditional_variance)
+      else:
+        clow, chigh = self.cfg.pg_contribrange[self.disposition]
       utility = [(task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay, self.pgmem.get(a.id, 1.0)-clow, random.random(), a) for a in self.group.applications]
     else:
       utility = self.cfg.utility_group(self.group)
@@ -345,10 +348,10 @@ class simagent(agent, ultagent):
     
     if self.disposition == 'conditional':
       #othercontribs = self.pgmem.values()  # This would include all the other agents...
-      othercontribs = [self.pgmem[a.id] for a in self.group.agents if a.id in self.pgmem]
+      othercontribs = [self.pgmem[a.id] for a in self.group.agents if a.id in self.pgmem and a.id != self.id]
       if len(othercontribs):
         avgcontrib = sum(othercontribs)/len(othercontribs)
-        mypctcontrib = avgcontrib + random.random()*self.cfg.conditional_variance
+        mypctcontrib = avgcontrib + ((random.random()-0.5)*self.cfg.conditional_variance)
       else:
         mypctcontrib = random.random()
       contrib = int(round(mypctcontrib*nowpayint))

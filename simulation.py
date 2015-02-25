@@ -56,7 +56,7 @@ class simulation:
       ncond = int(pc*len(sims))
       csims = sims[0:ncond]
       for a in csims:
-        s.disposition = 'conditional'
+        a.disposition = 'conditional'
       osims = sims[ncond:]
       dstart = 0
       for i,s in enumerate(osims):

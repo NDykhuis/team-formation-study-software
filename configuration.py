@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 import copy
 
-PROTOCOL = 99
+PROTOCOL = 100
 ##   Setting this PROTOCOL flag will set several configuration options at once, for ease of experimentation
 ##   If it is not set, the default options in the configuration class will be used
 ##   PROTOCOL 0:  (non-social)
