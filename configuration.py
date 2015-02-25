@@ -81,9 +81,11 @@ class configuration(object):
   _time_limit = 30    # hard time limit in minutes; sim will be cut off after the current iteration when this time expires
   _margin_time = 3    # start the last sim no later than this many minutes before end
 
+
   ## Params for automated simulation
   reset_graph_iters = 0     # Reset the graph after n iterations (0 is keep forever)
   _log_teamstatus = True
+  percent_conditional = 0
 
   ## DISPLAY PARAMETERS
   _display_every_step = False
@@ -655,7 +657,7 @@ elif PROTOCOL == 100:
   configuration._threaded_sim = False
   configuration.reset_graph_iters = 10
   configuration._log_teamstatus = False
-
+  configuration.percent_conditional = 0.5
 
 class multiconfig(configuration):
   reps = 1  # Number of reps for each configuration

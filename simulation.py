@@ -49,20 +49,33 @@ class simulation:
     
     # Divide up sims between nice, mean, fair, and random
     # For now, do this randomly?
-    dispositions = ['nice', 'mean', 'fair', 'random']
-    dstart = random.randint(0,3)
-    for i,s in enumerate(sims):
-      #disposition = random.choice(dispositions)            # Randomly assign dispostions
-      disposition = dispositions[(i+dstart) % len(dispositions)]     # Assign dispositions in order, repeating
-      if disposition == 'nice':
-        s.ultimatum_init('normal',7,1)
-      elif disposition == 'mean':
-        s.ultimatum_init('normal',3,1)
-      elif disposition == 'fair':
-        s.ultimatum_init('normal',5,1)
-      elif disposition == 'random':
-        s.ultimatum_init('uniform',1,9)
-      s.disposition = disposition
+    if self.cfg.percent_conditional:
+      pc = self.cfg.percent_conditional
+      dispositions = ['nice', 'mean', 'fair', 'random']
+      random.shuffle(sims)
+      ncond = int(pc*len(sims))
+      csims = sims[0:ncond]
+      for a in csims:
+        s.disposition = 'conditional'
+      osims = sims[ncond:]
+      dstart = 0
+      for i,s in enumerate(osims):
+        s.disposition = dispositions[(i+dstart) % len(dispositions)]
+    else:
+      dispositions = ['nice', 'mean', 'fair', 'random']
+      dstart = random.randint(0,3)
+      for i,s in enumerate(sims):
+        #disposition = random.choice(dispositions)            # Randomly assign dispostions
+        disposition = dispositions[(i+dstart) % len(dispositions)]     # Assign dispositions in order, repeating
+        if disposition == 'nice':
+          s.ultimatum_init('normal',7,1)
+        elif disposition == 'mean':
+          s.ultimatum_init('normal',3,1)
+        elif disposition == 'fair':
+          s.ultimatum_init('normal',5,1)
+        elif disposition == 'random':
+          s.ultimatum_init('uniform',1,9)
+        s.disposition = disposition
     
   
   def run_ultimatum(self):
