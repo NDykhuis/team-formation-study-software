@@ -51,7 +51,7 @@ class simulation:
     # For now, do this randomly?
     if self.cfg.percent_conditional:
       pc = self.cfg.percent_conditional
-      dispositions = ['nice', 'mean', 'fair', 'random']
+      dispositions = ['nice', 'mean'] #, 'fair', 'random']
       random.shuffle(sims)
       ncond = int(pc*len(sims))
       csims = sims[0:ncond]

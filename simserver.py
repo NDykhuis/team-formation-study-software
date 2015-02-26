@@ -31,7 +31,7 @@ if __name__ == '__main__':
   configuration._dblog = dblog
   dblog.start_batch_insert_thread()
   
-  DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
+  DYNAMIC = False   # Temporary; should be replaced with command-line or configuration.py option
   KEEP_GRAPH = True
   
   if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
@@ -79,7 +79,7 @@ if __name__ == '__main__':
       std.connections= 6
       std.prob_rewire = 0
       std.graph_type = 'complete_graph' #'connected_watts_strogatz_graph'
-      std.nskills = 5
+      std.nskills = 4
       std.strategy = 'random'
       std.ndumb = 0
     
@@ -170,15 +170,17 @@ if __name__ == '__main__':
         if cfg.reset_graph_iters and cfg.simnumber and not cfg.simnumber % cfg.reset_graph_iters:
           # Reset agents, graph, everything.
           # Only for automated simulations
-          print "RESET!"
           cfg.simnumber = 0
           #for a in sim.agents: # Done by sim.reset
           #  a.reset()
           gm.setup()
-          #sim.setup(gm.G, cfg)  # This re-inits agent dispositions...
-          sim.reset(gm.G)
+          sim.setup(gm.G, cfg)  # This re-inits agent dispositions...
+          #sim.reset(gm.G)
           for a in sim.agents:  # Not done by any other reset
             a.pgmem = {}
+          dblog.sessionid += 1  # Dangerous, but should be ok for these sims.
+          atypes = sorted([(a.id,'human' if a.type == 'human' else a.disposition) for a in sim.agents])
+          dblog.log_agentconfig(atypes)
           
         #sim.setup(Gdone, cfg) #?
         #or is there some other way to reset teams without resetting the graph?

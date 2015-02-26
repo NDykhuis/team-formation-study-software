@@ -659,7 +659,7 @@ elif PROTOCOL == 100:
   configuration._log_teamstatus = False
   configuration.percent_conditional = 0.5
   configuration.nsteps = 30
-  configuration.n = 18
+  configuration.n = 19
 
 class multiconfig(configuration):
   reps = 1  # Number of reps for each configuration
