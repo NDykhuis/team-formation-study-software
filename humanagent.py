@@ -41,7 +41,6 @@ class humanagent(agent):
       self.anames = ['Cat', 'Dog', 'Bear', 'Monkey', 'Cow', 'Elephant', 'Gorilla', 'Fish', 'Sheep', 'Frog', 'Bird', 'Lion', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Bee', 'Donkey']
     
     self.current_ratings = {}
-    self.global_ratings = {}
     
     send_message(self.client, ('setmyid', self.id))
     self.sendcfg()

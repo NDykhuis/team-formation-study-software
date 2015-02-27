@@ -114,6 +114,8 @@ class agent(actor):
     self.dumb = False
     self.type = 'sim'
     
+    self.global_ratings = {}
+    
   def randskills(self):
     nskills = len(self.skills)
     lev = random.randint(1,min(nskills,self.cfg.maxskills))

@@ -154,7 +154,10 @@ class simagent(agent, ultagent):
         clow = self.pgmem.get(self.id, 0.5)+((random.random()-0.5)*self.cfg.conditional_variance)
       else:
         clow, chigh = self.cfg.pg_contribrange[self.disposition]
-      utility = [(task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay, self.pgmem.get(a.id, 1.0)-clow, random.random(), a) for a in self.group.applications]
+      utility = [(task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay, 
+                  self.pgmem.get(a.id, 1.0)-clow, 
+                  self.global_ratings.get(a.id, 0), 
+                  random.random(), a) for a in self.group.applications]
     else:
       utility = self.cfg.utility_group(self.group)
 
@@ -399,4 +402,5 @@ class simagent(agent, ultagent):
         ratings[aid] = rating
     return ratings
   
-  
+  def updateratings(self, ratings):
+    self.global_ratings = ratings
