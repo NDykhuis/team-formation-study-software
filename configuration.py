@@ -8,10 +8,10 @@ PROTOCOL = 1
 ##   If it is not set, the default options in the configuration class will be used
 ##   PROTOCOL 0:  (non-social)
 ##     video, no ultimatum, play lottery, and disable ratings
-##     75 minutes; 5 minutes margin
+##     70 minutes; 5 minutes margin
 ##   PROTOCOL 1:  (social)
 ##     video, no ultimatum, play publicgoods and do ratings
-##     75 minutes; 5 minutes margin
+##     70 minutes; 5 minutes margin
 ##   PROTOCOL 98:  (testing video)
 ##     video, no ultimatum, play pubgoods and do ratings
 ##     10 minutes; 3 minutes margin
@@ -94,7 +94,7 @@ class configuration(object):
   _draw_graph = False            # Controls graphical output
   _pause_graph = False
   _draw_graph_after_sim = False
-  _verbose = 1                   # Controls print output (integer 0-n)
+  _verbose = 5                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  
   #_output_by = "agent"
@@ -612,7 +612,7 @@ if PROTOCOL == 0:
   configuration.hide_publicgoods = True
   configuration.do_ratings = True
   configuration.delay_sim_agents = True
-  configuration._time_limit = 75
+  configuration._time_limit = 70
   configuration._margin_time = 5
 elif PROTOCOL == 1:
   configuration._do_video = True
@@ -622,7 +622,7 @@ elif PROTOCOL == 1:
   configuration.hide_publicgoods = False
   configuration.do_ratings = True
   configuration.delay_sim_agents = True
-  configuration._time_limit = 75
+  configuration._time_limit = 70
   configuration._margin_time = 5
 elif PROTOCOL == 98:
   configuration._do_video = True
