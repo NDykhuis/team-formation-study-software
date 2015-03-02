@@ -155,8 +155,9 @@ class simagent(agent, ultagent):
       else:
         clow, chigh = self.cfg.pg_contribrange[self.disposition]
       utility = [(task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay, 
-                  self.pgmem.get(a.id, 1.0)-clow, 
-                  self.global_ratings.get(a.id, 0), 
+                  self.pgmem.get(a.id, (self.global_ratings.get(a.id, 1)-1)/4.0)-clow,   # If no memory, use scaled global rating
+                  #self.pgmem.get(a.id, self.cfg.default_assumed_contrib)-clow, 
+                  #self.global_ratings.get(a.id, 0), 
                   random.random(), a) for a in self.group.applications]
     else:
       utility = self.cfg.utility_group(self.group)
