@@ -31,7 +31,7 @@ if __name__ == '__main__':
   configuration._dblog = dblog
   dblog.start_batch_insert_thread()
   
-  DYNAMIC = False   # Temporary; should be replaced with command-line or configuration.py option
+  DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
   KEEP_GRAPH = True
   
   if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
@@ -222,7 +222,7 @@ if __name__ == '__main__':
           lastflush = tnow
         
         if cfg._verbose > 0:
-          print "Sim", cfg.simnumber, "done in", elapsed, "min"
+          print "Sim", cfg.simnumber, "done;", elapsed, "min elapsed"
       
         # if near time limit - quit
         if time.time() > starttime + (cfg._time_limit-cfg._margin_time)*60:

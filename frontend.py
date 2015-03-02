@@ -384,8 +384,9 @@ class TFGui(object):
       "How did you decide which teams to apply to?",
       "How did you decide which applications to accept?",
       "How did you decide whether to join another team or not?",
-      "Were some of the participants nicer than others, or did everyone behave about the same?",
-      "If you noticed any differences, which participants were the nicest? Which were not?",
+      "Were some of the participants better teammates than others, or did everyone behave about the same?",
+      "If you noticed any differences, which participants were the best teammates? Which were not?",
+      "Did you assign many ratings to the other participants? If so, how did you decide what ratings to give?",
       "Was anything confusing to you about the experiment?",
       "Do you have any other feedback on the experiment?\n(Things you liked, didn't like, found helpful, thought were weird, etc.)"
     ]

@@ -476,7 +476,6 @@ class db_logger(object):
         self.insqueue.task_done()
         
         if self.forcecommit:
-          print "DB commit!"
           conn.commit()
         else:
           commits = True
