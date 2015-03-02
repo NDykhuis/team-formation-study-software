@@ -56,7 +56,8 @@ class vidcapthread(threading.Thread):
             self.outfile.write('{frame:08d}\t{time:.16f}\n'.format(frame=self.frame, time=self.nowtime))
           
           if self.preview:
-            cv2.imshow('frame',frame)
+            cv2.imshow('preview',frame)
+            cv2.moveWindow('preview', 0,0)
             self.windowsup = True
           elif self.windowsup:
             cv2.destroyAllWindows()
