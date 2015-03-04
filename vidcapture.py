@@ -5,6 +5,7 @@ import os
 
 try:
   import cv2
+  import cv
 except ImportError:
   print "Error importing OpenCV - are the libraries installed?"
 
@@ -57,7 +58,7 @@ class vidcapthread(threading.Thread):
           
           if self.preview:
             cv2.imshow('preview',frame)
-            cv2.moveWindow('preview', 0,0)
+            cv.MoveWindow('preview', 0,0)
             self.windowsup = True
           elif self.windowsup:
             cv2.destroyAllWindows()
