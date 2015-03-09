@@ -3,13 +3,16 @@ import numpy as np
 import networkx as nx
 import copy
 
-PROTOCOL = 1
+PROTOCOL = 2
 ##   Setting this PROTOCOL flag will set several configuration options at once, for ease of experimentation
 ##   If it is not set, the default options in the configuration class will be used
 ##   PROTOCOL 0:  (non-social)
 ##     video, no ultimatum, play lottery, and disable ratings
 ##     70 minutes; 5 minutes margin
-##   PROTOCOL 1:  (social)
+##   PROTOCOL 1:  (social, global ratings)
+##     video, no ultimatum, play publicgoods and do ratings
+##     70 minutes; 5 minutes margin
+##   PROTOCOL 2:  (social, private ratings)
 ##     video, no ultimatum, play publicgoods and do ratings
 ##     70 minutes; 5 minutes margin
 ##   PROTOCOL 98:  (testing video)
@@ -620,6 +623,18 @@ elif PROTOCOL == 1:
   configuration._do_ultimatum = False
   configuration.do_publicgoods = True
   configuration.hide_publicgoods = False
+  configuration.show_global_ratings = True
+  configuration.do_ratings = True
+  configuration.delay_sim_agents = True
+  configuration._time_limit = 70
+  configuration._margin_time = 5
+elif PROTOCOL == 2:
+  configuration._do_video = True
+  configuration._do_intro_sim = True
+  configuration._do_ultimatum = False
+  configuration.do_publicgoods = True
+  configuration.hide_publicgoods = False
+  configuration.show_global_ratings = False
   configuration.do_ratings = True
   configuration.delay_sim_agents = True
   configuration._time_limit = 70
