@@ -1906,7 +1906,7 @@ class TFGui(object):
     submitbutton = self.mwidgets['pgwidgets']['submit']
     self.setState(submitbutton, tk.DISABLED)
     submitbutton.config(text='Waiting...')
-    self.remove_reminder(self.submitbutton)
+    self.remove_reminder(submitbutton)
     
     offer = int(self.mwidgets['pgwidgets']['offerspin'].get())
     self.backend.sendqueue.put(offer)
