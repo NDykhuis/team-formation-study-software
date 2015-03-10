@@ -83,7 +83,9 @@ class configuration(object):
 
   _time_limit = 30    # hard time limit in minutes; sim will be cut off after the current iteration when this time expires
   _margin_time = 3    # start the last sim no later than this many minutes before end
-
+  
+  _decision_reminder = 45     # Highlight the submit button after this many seconds
+  
 
   ## Params for automated simulation
   reset_graph_iters = 0     # Reset the graph after n iterations (0 is keep forever)

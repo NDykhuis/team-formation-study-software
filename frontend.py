@@ -196,6 +196,8 @@ class TFGui(object):
     self.publicgoods_instructions = self.make_publicgoods_instructions()
     #self.publicgoodsscreen = self.make_publicgoodsscreen() # not necessary; part of mainscreen
     
+    self.reminder = 0
+    
     self.activescreen = self.introscreen
     self.show_screen(self.introscreen)
     
@@ -417,6 +419,7 @@ class TFGui(object):
   
   def m_setconfig(self, event):
     self.cfgdict = self.getdata(event)
+    self.remindertime = self.cfgdict['_decision_reminder']
     self.backend.sendqueue.put('send_done')
   
   def m_initratings(self, event):
@@ -1131,6 +1134,7 @@ class TFGui(object):
       self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_propose)
     
     self.submit.grid(row=grow, column=gcol, sticky='ew', columnspan=2)
+    self.add_reminder(self.submit)
     
     self.sb = sb
     
@@ -1190,6 +1194,7 @@ class TFGui(object):
     tk.Radiobutton(sb, text='None\nEarn: '+self.mwidgets['nowpay']['text'], font=self.fontsm, variable=self.choice, value=-1, indicatoron=0).grid(row=r, column=c, sticky='ew')
     self.submit = tk.Button(sb, text='Submit', font=self.fontmid, command=self.submit_accept)
     self.submit.grid(row=MAXROWS+1, column=0, columnspan=c+1, sticky='ew')
+    self.add_reminder(self.submit)
     
     self.sb = sb
     
@@ -1594,6 +1599,7 @@ class TFGui(object):
       self.infobutton.destroy()
     self.infobutton = tk.Button(self.instructions, text='OK', font=self.fontmed, command=self.submit_information_blocking)
     self.infobutton.grid(row=2, column=0)
+    self.add_reminder(self.infobutton)
     # Update anything else that needs to change based on the current configuration
     self.update_sidebar_size()
     
@@ -1605,6 +1611,7 @@ class TFGui(object):
     if self.infobutton:
       self.infobutton.destroy()
     self.infobutton = tk.Button(self.publicgoods_instructions, text='OK', font=self.fontmed, command=self.submit_information_blocking)
+    self.add_reminder(self.infobutton)
     self.infobutton.grid(row=2, column=0)
 
   
@@ -1807,6 +1814,7 @@ class TFGui(object):
     #self.infobutton = tk.Button(self.mainscreen, text='OK', command=self.submit_information_blocking_disappear, font=self.fontmed)
     #self.infobutton.grid(row=2, column=2)
     self.infobutton = tk.Button(self.mwidgets['infobar'], text='OK', command=self.submit_information_blocking_disappear, font=self.fontmed)
+    self.add_reminder(self.infobutton)
     self.infobutton.grid(row=0, column=2)
     #self.root.after(5000, self.submit_information)
     
@@ -1822,6 +1830,7 @@ class TFGui(object):
     #self.infobutton = tk.Button(self.mainscreen, text='OK', command=self.submit_postprocess, font=self.fontmed)
     #self.infobutton.grid(row=2, column=2)
     self.infobutton = tk.Button(self.mwidgets['infobar'], text='OK', command=self.submit_postprocess, font=self.fontmed)
+    self.add_reminder(self.infobutton)
     self.infobutton.grid(row=0, column=2)
     self.markstart()
     
@@ -1879,6 +1888,8 @@ class TFGui(object):
     
     self.canvas.grid_remove()
     
+    self.add_reminder(pgw['submit'])
+    
     self.markstart()
   
   
@@ -1895,6 +1906,7 @@ class TFGui(object):
     submitbutton = self.mwidgets['pgwidgets']['submit']
     self.setState(submitbutton, tk.DISABLED)
     submitbutton.config(text='Waiting...')
+    self.remove_reminder(self.submitbutton)
     
     offer = int(self.mwidgets['pgwidgets']['offerspin'].get())
     self.backend.sendqueue.put(offer)
@@ -1937,22 +1949,39 @@ class TFGui(object):
     self.show_screen(self.endscreen)
     self.backend.sendqueue.put('done')  
   
+  def submit_reminder(self, widget):
+    widget.configure(bg='red')
+    
+  def submit_resetcolor(self, widget):
+    widget.configure(bg=self.bgdefault)
+  
+  def add_reminder(self, widget):
+    if self.remindertime:
+      self.reminder = widget.after(self.remindertime*1000, self.submit_reminder, widget)
+    
+  def remove_reminder(self, widget):
+    widget.after_cancel(self.reminder)  # We expect to have only one reminder active at a time.
+    widget.configure(bg=self.bgdefault)
+  
   def submit_information(self):
     print "SUBMIT INFORMATION"
     self.setState(self.infobutton, tk.DISABLED)
     self.infobutton.grid_remove()
+    self.remove_reminder(self.infobutton)
     self.backend.sendqueue.put('done')
   
   def submit_information_blocking(self):
     self.setState(self.infobutton, tk.DISABLED)
     #self.infobutton.grid_remove()
     self.infobutton.config(text='Waiting...')
+    self.remove_reminder(self.infobutton)
     self.backend.sendqueue.put('send_done')
   
   def submit_information_blocking_disappear(self):
     print "SUBMIT INFORMATION BLOCKING"
     self.infobutton.grid_remove()
     #self.infobutton.config(text='Waiting...')
+    self.remove_reminder(self.infobutton)
     self.backend.sendqueue.put('send_done')
     
   def submit_propose(self):
@@ -1963,6 +1992,7 @@ class TFGui(object):
     #self.submit['state'] = tk.DISABLED
     self.setState(self.sb, tk.DISABLED)
     self.submit.config(text='Waiting...')
+    self.remove_reminder(self.submit)
     self.backend.sendqueue.put(applications)
   
   def submit_accept(self):
@@ -1972,11 +2002,13 @@ class TFGui(object):
     #self.submit['state'] = tk.DISABLED
     self.setState(self.sb, tk.DISABLED)
     self.submit.config(text='Waiting...')
+    self.remove_reminder(self.submit)
     self.backend.sendqueue.put(self.choice.get())
     
   def submit_postprocess(self):
     self.markend()
     self.infobutton.grid_remove()
+    self.remove_reminder(self.infobutton)
     self.backend.sendqueue.put('send_done')
     
     if self.sb:
