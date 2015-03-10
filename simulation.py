@@ -196,6 +196,11 @@ class simulation:
       gdata = [(g.id, [a.id for a in g.agents], g.nowpay) for g in groups if len(g.agents)]
       cfg._dblog.log_teamstatus(cfg.simnumber, cfg.iternum, eventtype, gdata, activeagent)
   
+  def joinall(self, mythreads):
+    for i,t in enumerate(mythreads):
+      self.log("Waiting for "+str(i))
+      t.join()
+  
   def run(self, endtime=0):
     cfg = self.cfg
     n = cfg.n
@@ -223,8 +228,7 @@ class simulation:
         t = threading.Thread(target=a.instructions)
         mythreads.append(t)
         t.start()
-      for t in mythreads:
-        t.join()
+      self.joinall(mythreads)
     elif self.humans:
       for a in self.humans:
         a.instructions()
@@ -264,8 +268,7 @@ class simulation:
             t.start()
           else:
             a.propose()
-        for t in mythreads:
-          t.join()
+        self.joinall(mythreads)
       else:
         for a in random.sample(agents, n):
           a.propose()
@@ -291,8 +294,7 @@ class simulation:
               t.start()
             else:
               g.consider()
-        for t in mythreads:
-          t.join()
+        self.joinall(mythreads)
       else:
         for g in random.sample(groups, n):
           if len(g.agents): # or len(g.applications):
@@ -311,6 +313,7 @@ class simulation:
         if len(a.acceptances):
           if a.type=='human':
             self.log_teamstatus('join', groups, activeagent=a.id)
+          log("Waiting for "+str(a.id))
           a.consider()
       
       ### SERIAL - expel agents
@@ -339,8 +342,7 @@ class simulation:
             t.start()
           else:
             a.postprocess_iter()
-        for t in mythreads:
-          t.join()
+        self.joinall(mythreads)
       else:
         for a in random.sample(agents, n):
           a.postprocess_iter()
@@ -527,8 +529,7 @@ class simulation:
           #contrib, keep = a.publicgoods()
           a.publicgoods(pgdict)
         #pgdict[a] = (contrib, keep)    # This will get added by the publicgoods threads
-      for t in mythreads:
-        t.join()
+      self.joinall(mythreads)
     else:
       for a in self.agents:
         if len(a.group.agents) == 1: 
@@ -563,8 +564,7 @@ class simulation:
           a.publicgoods_postprocess(startpay, keep, contrib, privatepay, sharedpay, teampays)
         a.nowpay = privatepay + sharedpay  ## TEST
     if cfg._threaded_sim:
-      for t in mythreads:
-        t.join()
+      self.joinall(mythreads)
         
     ## Give statistics and rating data to the agents
     #self.pgsummary = {a.id:(float(pgdict[a][0])/(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
