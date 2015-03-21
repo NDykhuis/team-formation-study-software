@@ -22,6 +22,10 @@ from simulation import *
 from configuration import *
 
 
+def heartbeat_thread():
+  while True:
+    time.sleep(60)
+    print ".",
 
   
 if __name__ == '__main__':
@@ -52,6 +56,12 @@ if __name__ == '__main__':
                      configuration.show_other_team_members, configuration.keep_teams,
                      DYNAMIC, KEEP_GRAPH,
                      configuration.show_global_ratings, configuration.show_nhistory)
+    
+    # Start the heartbeat
+    if configuration._verbose > 4:
+      hthread = threading.Thread(target=heartbeat_thread)
+      hthread.daemon = True
+      hthread.start()
     
     # Start the timer
     starttime = time.time()
@@ -331,7 +341,6 @@ if __name__ == '__main__':
     
     dblog.log_sessionend()
     k=raw_input('END OF EXPERIMENT. Press Enter to terminate server.')
-  
       
   elif sys.argv[1] == 'single':    # Run a single ... exit survey?
     cfg = configuration()
