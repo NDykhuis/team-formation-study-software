@@ -15,6 +15,9 @@ PROTOCOL = 2
 ##   PROTOCOL 2:  (social, private ratings)
 ##     video, no ultimatum, play publicgoods and do ratings
 ##     70 minutes; 5 minutes margin
+##   PROTOCOL 3:  (social, public ratings, alternate pubgoods multiplier)
+##     video, no ultimatum, play publicgoods and do ratings
+##     70 minutes; 5 minutes margin
 ##   PROTOCOL 98:  (testing video)
 ##     video, no ultimatum, play pubgoods and do ratings
 ##     10 minutes; 3 minutes margin
@@ -52,6 +55,10 @@ class configuration(object):
     'random':(0.0, 1.0)
   }
   conditional_variance = 0.1
+  alt_pubgoods = False   # Use alternative version of pubgoods
+  def pubgoods_calc(self, contribs, ratings):
+    # This should calculate the multiplier for pubgoods
+    return 0
   
   show_other_team_members = True
   
@@ -641,6 +648,18 @@ elif PROTOCOL == 2:
   configuration.delay_sim_agents = True
   configuration._time_limit = 70
   configuration._margin_time = 5
+elif PROTOCOL == 3:
+  configuration._do_video = True
+  configuration._do_intro_sim = True
+  configuration._do_ultimatum = False
+  configuration.do_publicgoods = True
+  configuration.hide_publicgoods = False
+  configuration.show_global_ratings = True
+  configuration.do_ratings = True
+  configuration.delay_sim_agents = True
+  configuration._time_limit = 70
+  configuration._margin_time = 5
+  configuration.alt_pubgoods = True
 elif PROTOCOL == 98:
   configuration._do_video = True
   configuration._do_intro_sim = True

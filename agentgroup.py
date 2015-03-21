@@ -206,7 +206,7 @@ class agent(actor):
     ### IMPLEMENT IN CHILDREN ###
     pass
   
-  def publicgoods(self, pgdict):
+  def publicgoods(self, pgdict, potmult):
     pass
   
   def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):

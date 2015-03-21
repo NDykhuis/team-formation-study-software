@@ -118,6 +118,7 @@ if __name__ == '__main__':
       for a in sim.humans:
         a.initratings(range(configuration.n))
         a.showratings()
+      std.lastratings = {}
   
     ## RUN ULTIMATUM HERE
     if std._do_ultimatum:

@@ -957,12 +957,12 @@ class TFGui(object):
     self.widgetrefs.extend([cframe, c1, c2, c3])
     return cframe
     
-  def update_pubgoods_instruction_text(self):
+  def update_pubgoods_instruction_text(self, potmult):
     titletext = 'Teamwork stage' if not self.cfgdict['hide_publicgoods'] else 'Bonus stage'
     self.pubgoods_title_text.config(text=titletext)
     
     if not self.cfgdict['hide_publicgoods']:
-      longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(self.cfgdict['pubgoods_mult'])+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
+      longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(potmult)+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
     else:
       longtext = "Your team has been entered into a lottery. You may contribute as much of your pay as you would like to the lottery. The amount you contribute determines the amount you are eligible to win."
     
@@ -1604,8 +1604,8 @@ class TFGui(object):
     self.update_sidebar_size()
     
   def m_publicgoods_instructions(self, event):
-    self.getdata(event)
-    self.update_pubgoods_instruction_text()
+    potmult = self.getdata(event)
+    self.update_pubgoods_instruction_text(potmult)
     self.show_screen(self.publicgoods_instructions)
     #self.infobutton.grid()
     if self.infobutton:

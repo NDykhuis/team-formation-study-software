@@ -476,7 +476,9 @@ class simulation:
     if cfg.show_global_ratings:
       for a in self.agents:
         a.updateratings(ratings)
-        
+    
+    cfg.lastratings = ratings
+    
     cfg._dblog.log_globalratings(cfg.simnumber, iternum, ratings, etime=time.time())
         
     trunend = time.time()
@@ -499,6 +501,13 @@ class simulation:
     #cfg._dblog.log_simtime(cfg.simnumber, -1, trunstart, trunend)
     cfg._dblog.forcecommit = True   # Ensure that commits are made, especially when running with no humans.
     
+
+  def calc_potmult(self, group, cfg):
+    if cfg.alt_pubgoods:
+      return cfg.pubgoods_calc([pgdict[a][0] for a in group.agents], [cfg.lastratings[a.id] for a in group.agents])
+    else:
+      return (1.0+cfg.pubgoods_mult*0.01)
+      
   def publicgoods(self):
     cfg = self.cfg
     n = cfg.n
@@ -522,12 +531,14 @@ class simulation:
           mythreads.append(t)
           t.start()
         elif a.slow:
-          t = threading.Thread(target=a.publicgoods, args=(pgdict,))
+          potmult = self.calc_potmult(a.group, cfg)
+          t = threading.Thread(target=a.publicgoods, args=(pgdict, potmult))
           mythreads.append(t)
           t.start()
         else:
+          potmult = self.calc_potmult(a.group, cfg)
           #contrib, keep = a.publicgoods()
-          a.publicgoods(pgdict)
+          a.publicgoods(pgdict, potmult)
         #pgdict[a] = (contrib, keep)    # This will get added by the publicgoods threads
       self.joinall(mythreads)
     else:
@@ -537,7 +548,8 @@ class simulation:
         #contrib, keep = a.publicgoods()
         #pgdict[a] = (contrib, keep)    # This will get added by the publicgoods threads
         else:
-          a.publicgoods(pgdict)
+          potmult = self.calc_potmult(a.group, cfg)
+          a.publicgoods(pgdict, potmult)
     
     ## Distribute money back to agents
     mythreads = []
@@ -548,7 +560,7 @@ class simulation:
         continue
       teampays = {a.id:pgdict[a] for a in g.agents}
       potsize = sum(c for c,k in teampays.values())
-      potmult = (1.0+cfg.pubgoods_mult*0.01)
+      potmult = self.calc_potmult(g, cfg)
       sharedpay = potsize*potmult/float(len(g.agents))
       for a in g.agents:
         contrib, keep = pgdict[a]
@@ -575,7 +587,6 @@ class simulation:
     pgtuples = [(a.id, a.group.id, pgdict.get(a,(-1,-1))[0], pgdict.get(a,(-1,-1))[1], a.nowpay) for a in self.agents]
     self.cfg._dblog.log_all_pubgoods(self.cfg.simnumber, pgtuples)
     
-  
   def reset(self, Gdone=None):
     if Gdone is None:
       self.G = self.export()  # Reset G with the new agent values

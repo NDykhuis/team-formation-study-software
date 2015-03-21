@@ -438,11 +438,11 @@ class humanagent(agent):
     self.messages = []
   
   ## PUBLIC GOODS FUNCTIONS:
-  def publicgoods(self, pgdict):
+  def publicgoods(self, pgdict, potmult):
     self.update()
     
     if self.cfg.do_ratings: self.hideratings()
-    send_message(self.client, ('publicgoods_instructions', 0))
+    send_message(self.client, ('publicgoods_instructions', potmult))
     receive_message(self.client)
     if self.cfg.do_ratings: self.showratings()
     

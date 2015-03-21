@@ -36,7 +36,7 @@ class dumbagent(agent, ultagent):
   def postprocess(self, globalpay=None):
     pass
 
-  def publicgoods(self, pgdict):
+  def publicgoods(self, pgdict, potmult):
     self.update()
     nowpayint = int(self.nowpay)
     #return random.randint(0, int(self.nowpay))
@@ -344,7 +344,7 @@ class simagent(agent, ultagent):
     ##   Should we make this a digraph? Or is there some other way to fix this?
     
 
-  def publicgoods(self,pgdict):
+  def publicgoods(self,pgdict, potmult):
     self.update()
     nowpayint = int(self.nowpay)
     
