@@ -43,7 +43,7 @@ class dumbagent(agent, ultagent):
     contrib = random.randint(0, nowpayint)
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, newpay, teampays):
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
     self.pgpay = newpay
 
 
