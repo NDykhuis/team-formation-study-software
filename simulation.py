@@ -502,9 +502,12 @@ class simulation:
     cfg._dblog.forcecommit = True   # Ensure that commits are made, especially when running with no humans.
     
 
-  def calc_potmult(self, group, cfg):
+  def calc_potmult(self, group, cfg, pgdict=None):
     if cfg.alt_pubgoods:
-      return cfg.pubgoods_calc([pgdict[a][0] for a in group.agents], [cfg.lastratings[a.id] for a in group.agents])
+      if pgdict:
+        return cfg.pubgoods_calc([pgdict[a][0] for a in group.agents], [cfg.lastratings[a.id] for a in group.agents])
+      else:
+        return 0    ## TEMPORARY
     else:
       return (1.0+cfg.pubgoods_mult*0.01)
       
@@ -560,7 +563,7 @@ class simulation:
         continue
       teampays = {a.id:pgdict[a] for a in g.agents}
       potsize = sum(c for c,k in teampays.values())
-      potmult = self.calc_potmult(g, cfg)
+      potmult = self.calc_potmult(g, cfg, pgdict)
       sharedpay = potsize*potmult/float(len(g.agents))
       for a in g.agents:
         contrib, keep = pgdict[a]
