@@ -33,6 +33,9 @@ class configuration(object):
   nhumans = 0      # Number of humans (set by simserver based on how many frontends connect)
   ndumb = 0        # Number of random agents (rather than rational)
   
+  simhumans = True # Use experimental data to simulate human subjects
+  simhuman_file = 'userdatatable.csv'
+  
   exchange_rate = 10.0   # Divide sim-dollars by this to get real dollars
   
   _do_video = False

@@ -57,6 +57,10 @@ if __name__ == '__main__':
                      DYNAMIC, KEEP_GRAPH,
                      configuration.show_global_ratings, configuration.show_nhistory)
     
+    # Load in sim human data, if requested
+    if configuration.simhumans:
+      configuration.hdata = humandata(configuration.simhuman_file)
+
     # Start the heartbeat
     if configuration._verbose > 4:
       hthread = threading.Thread(target=heartbeat_thread)

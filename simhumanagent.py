@@ -109,7 +109,10 @@ class humandata(object):
   def gen_agent(self, cfg, uuid=None):
     # Create a simhumanagent from one of the rows of the data file
     # If uuid is None, pick a row randomly
-    pass
+    if uuid:
+      return simhumanagent(cfg, self.datadict[uuid])
+    else:
+      return simhumanagent(cfg, random.choice(self.datadict.keys()))
 
 
 
@@ -365,9 +368,6 @@ class simhumanagent(agent):
     waittime = random.triangular(q1, q3, med)
     time.sleep(waittime)
     
-    #if self.cfg._agent_delays[stage] and (self.id < self.cfg.delay_n_sims or not self.cfg.delay_n_sims):
-    #  time.sleep(max(random.gauss(self.cfg._agent_delays[stage], self.cfg._agent_delay_dev[stage]), 0.25))
-
   
 if __name__=='__main__':
   import sys
