@@ -54,7 +54,7 @@ class simulation:
     return True
   
   def init_ultimatum(self):
-    sims = [a for a in self.agents if not a.type == 'human']
+    sims = [a for a in self.agents if not a.type == 'human' and not a.type == 'simhuman']
     
     # Divide up sims between nice, mean, fair, and random
     # For now, do this randomly?
@@ -650,7 +650,10 @@ class simulation:
     dumbnodes = scramblenodes[0:ndumb]
     simnodes = scramblenodes[ndumb:]
     
-    return [DumbAgent(cfg,adat=dat) for nid, dat in dumbnodes] + [SimAgent(cfg,adat=dat) for nid,dat in simnodes]
+    if cfg.simhumans:
+      return [DumbAgent(cfg,adat=dat) for nid, dat in dumbnodes] + [cfg.hdata.gen_agent(cfg) for nid,dat in simnodes]
+    else:
+      return [DumbAgent(cfg,adat=dat) for nid, dat in dumbnodes] + [SimAgent(cfg,adat=dat) for nid,dat in simnodes]
     
   def initagents(self):
     cfg = self.cfg
