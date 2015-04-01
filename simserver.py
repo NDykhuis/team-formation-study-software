@@ -33,6 +33,7 @@ from clientwaiter import ClientWaiter
 from db_logger import DBLogger
 from simulation import simulation
 from configuration import Configuration, MultiConfig
+from simhumanagent import *
 
 
 def heartbeat_thread():
