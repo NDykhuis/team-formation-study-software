@@ -60,6 +60,7 @@ class humandata(object):
       if row[step+'_pastcontrib_aic']: # is not NA
         sdat['pastcontrib'] = {'intercept':row[step+'_pastcontrib_intercept'],'slope':row[step+'_pastcontrib_slope'], 'slope_pay':row[step+'_pastcontrib_slope_pay']}
       sdat['time_q1'] = row[step+'_time_q1']
+      sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
       
       step = 'acceptvote'
@@ -72,6 +73,7 @@ class humandata(object):
       if row[step+'_pastcontrib_aic']: # is not NA
         sdat['pastcontrib'] = {'intercept':row[step+'_pastcontrib_intercept'],'slope':row[step+'_pastcontrib_slope'], 'slope_pay':row[step+'_pastcontrib_slope_pay']}
       sdat['time_q1'] = row[step+'_time_q1']
+      sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
       
       step = 'join'
@@ -82,6 +84,7 @@ class humandata(object):
       if row[step+'_globalrtg_aic']: # is not NA
         sdat['globalrtg'] = {'intercept':row[step+'_globalrtg_intercept'],'slope':row[step+'_globalrtg_slope'], 'slope_pay':row[step+'_globalrtg_slope_pay']}
       sdat['time_q1'] = row[step+'_time_q1']
+      sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
       
       step = 'pubgood'
@@ -98,6 +101,7 @@ class humandata(object):
       sdat['rating_props'] = [row[step+'_pct'+str(i)] for i in range(1,6)]
       sdat['cum_rating_props'] = [sum(sdat['rating_props'][0:i]) for i in range(1,6)]
       sdat['time_q1'] = row[step+'_time_q1']
+      sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
       
     #print dat
@@ -118,6 +122,9 @@ class simhumanagent(agent):
   def __init__(self, cfg, probdata, adat=None, skills=None, aid=None):
     super(simhumanagent, self).__init__(cfg, adat, skills, aid)
     # get info from the humandata class to init probabilities
+    
+    self.type = 'simhuman'
+    self.uuid = probdata['uuid']
     
     self.probdata = probdata
     
@@ -349,9 +356,17 @@ class simhumanagent(agent):
     pass
 
   def tf_delay(self, stage):
-    #print "tf_delay", self.id
-    if self.cfg._agent_delays[stage] and (self.id < self.cfg.delay_n_sims or not self.cfg.delay_n_sims):
-      time.sleep(max(random.gauss(self.cfg._agent_delays[stage], self.cfg._agent_delay_dev[stage]), 0.25))
+    q1 = self.probdata[stage]['time_q1']
+    med = self.probdata[stage]['time_med']
+    q3 = self.probdata[stage]['time_q3']
+    
+    # This will be biased towards the central values, but that is ok
+    # We don't want outliers here, especially on the high end
+    waittime = random.triangular(q1, q3, med)
+    time.sleep(waittime)
+    
+    #if self.cfg._agent_delays[stage] and (self.id < self.cfg.delay_n_sims or not self.cfg.delay_n_sims):
+    #  time.sleep(max(random.gauss(self.cfg._agent_delays[stage], self.cfg._agent_delay_dev[stage]), 0.25))
 
   
 if __name__=='__main__':
