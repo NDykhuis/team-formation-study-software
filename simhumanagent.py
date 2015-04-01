@@ -90,8 +90,8 @@ class humandata(object):
       step = 'pubgood'
       sdat = udat[step] = {}
       sdat['avgcontrib'] = row[step+'_avgcontrib']
-      if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:
-        sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row['_contrib_globalrtg_slope']}
+      #if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:     # CURRENTLY BROKEN
+      #  sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row['_contrib_globalrtg_slope']}
       if abs(row[step+'_contrib_pastcontrib_r2']) > 0.2:
         sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row['_contrib_pastcontrib_slope']}
       if abs(row[step+'_rating_contrib_r2']) > 0.2:
@@ -159,8 +159,8 @@ class simhumanagent(agent):
     
     self.tf_delay('propose')
     
-    paylm = self.probdata['apply']['deltapay']
-    contriblm = self.probdata['apply']['pastcontrib']
+    paylm = self.probdata['apply'].get('deltapay', None)
+    contriblm = self.probdata['apply'].get('pastcontrib', None)
     
     ## There's really no reason to use the nohist probability
     
@@ -168,13 +168,15 @@ class simhumanagent(agent):
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
       pastcontribs = [self.contrib_avg[a.id] for a in g.agents if a.id in self.contrib_avg]
       
-      if len(pastcontribs):
+      if contriblm and len(pastcontribs):
         # If there's contrib history, use the more detailed glm
         pastavg = sum(pastcontribs)/len(pastcontribs)
         papply = logoddstoprob(contriblm['intercept']+pastcontrib*contriblm['slope']+deltapay*contriblm['slope_pay'])
-      else:
+      elif paylm:
         # Otherwise, just figure on the difference in pay
         papply = logoddstoprob(paylm['intercept']+deltapay*paylm['slope'])
+      else:
+        papply = self.probdata['apply']['apply_nohist']     # Should never be used
     
       if random.random() < papply:
         g.takeapplication(self)
@@ -196,21 +198,23 @@ class simhumanagent(agent):
     
     # glms: deltapay, globalrtg, pastcontrib
     # AIC is in all but one case improving in that order
-    paylm = self.probdata['acceptvote']['deltapay']
-    ratelm = self.probdata['acceptvote']['globalrtg']
-    contriblm = self.probdata['acceptvote']['pastcontrib']
+    paylm = self.probdata['acceptvote'].get('deltapay', None)
+    ratelm = self.probdata['acceptvote'].get('globalrtg', None)
+    contriblm = self.probdata['acceptvote'].get('pastcontrib', None)
     
     accepts = {}
     for a in applicants:
       deltapay = task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay
-      if a.id in self.contrib_avg:
+      if contriblm and a.id in self.contrib_avg:
         pastcontrib = self.contrib_avg[a.id]
         paccept = logoddstoprob(contriblm['intercept']+pastcontrib*contriblm['slope']+deltapay*contriblm['slope_pay'])
-      elif a.id in self.global_ratings:
+      elif ratelm and a.id in self.global_ratings:
         globalrtg = self.global_ratings[a.id]
         paccept = logoddstoprob(ratelm['intercept']+globalrtg*ratelm['slope']+deltapay*ratelm['slope_pay'])
-      else:
+      elif paylm:
         paccept = logoddstoprob(paylm['intercept']+deltapay*paylm['slope'])
+      else:
+        paccept = self.probdata['acceptvote']['acceptvote_nohist']
       
       if random.random() < paccept:
         accepts[a]= paccept
@@ -235,19 +239,21 @@ class simhumanagent(agent):
     
     self.tf_delay('join')
     
-    paylm = self.probdata['join']['deltapay']
-    ratelm = self.probdata['join']['globalrtg']
+    paylm = self.probdata['join'].get('deltapay', None)
+    ratelm = self.probdata['join'].get('globalrtg', None)
     
     joins = {}
     for g in self.acceptances:
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
       globalrtgs = [self.global_ratings[a.id] for a in g.agents if a.id in self.global_ratings]
       
-      if len(globalrtgs):
+      if ratelm and len(globalrtgs):
         globalrtg = sum(globalrtgs)/len(globalrtgs)
         pjoin = logoddstoprob(ratelm['intercept']+globalrtg*ratelm['slope']+deltapay*ratelm['slope_pay'])
-      else:
+      elif paylm:
         pjoin = logoddstoprob(paylm['intercept']+deltapay*paylm['slope'])
+      else:
+        pjoin = self.probdata['join']['join_nohist']
     
       if random.random() < pjoin:
         joins[g] = pjoin
@@ -271,8 +277,11 @@ class simhumanagent(agent):
   def publicgoods(self, pgdict, potmult):
     self.update()
     nowpayint = int(self.nowpay)
-    #return random.randint(0, int(self.nowpay))
-    contrib = random.randint(0, nowpayint)
+    
+    
+    contrib = random.randint(0, nowpayint)  ## TEMPORARY
+    
+    
     pgdict[self] = (contrib, nowpayint-contrib)
   
   def publicgoods_postprocess(self, newpay, teampays):
