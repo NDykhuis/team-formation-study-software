@@ -20,6 +20,7 @@ from simagent import *
 from db_logger import *
 from simulation import *
 from configuration import *
+from simhumanagent import *
 
 
 def heartbeat_thread():

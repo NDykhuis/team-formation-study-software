@@ -618,7 +618,7 @@ class simulation:
     simnodes = scramblenodes[ndumb:]
     
     if cfg.simhumans:
-      return [dumbagent(cfg,adat=dat) for nid, dat in dumbnodes] + [cfg.hdata.gen_agent(cfg) for nid,dat in simnodes]
+      return [dumbagent(cfg,adat=dat) for nid, dat in dumbnodes] + [cfg.hdata.gen_agent(cfg,adat=dat) for nid,dat in simnodes]
     else:
       return [dumbagent(cfg,adat=dat) for nid, dat in dumbnodes] + [simagent(cfg,adat=dat) for nid,dat in simnodes]
     
