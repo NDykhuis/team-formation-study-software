@@ -504,6 +504,7 @@ flattime <- function(df,var,suffix) {
   utflat
 }
 utime_q1 <- flattime(utiming2, 'time_q1', 'time_q1')
+utime_med <- flattime(utiming2, 'time_med', 'time_med')
 utime_q3 <- flattime(utiming2, 'time_q3', 'time_q3')
 
 # List of things to merge
@@ -533,6 +534,7 @@ uppgratfreq,
 uppgratnull,
 
 utime_q1,
+utime_med,
 utime_q3
 )
 
