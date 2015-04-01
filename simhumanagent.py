@@ -9,6 +9,7 @@ from utils import *
 import datetime
 import operator
 import json
+import math
 
 import numpy as np  # for genfromtxt and random.choice
 
@@ -46,11 +47,12 @@ class humandata(object):
   def read_data(self, filename):
     self.datadict = dat = {}
     
-    filedata = np.genfromtxt('userdatatable.csv', delimiter=',', names=True, dtype=None)
+    filedata = np.genfromtxt('userdatatable.csv', delimiter=',', names=True, dtype=None, missing_values='NA')
     
     for row in filedata:
       udat = dat[row['uuid']] = {}
       udat['condition'] = row['condition']
+      udat['uuid'] = row['uuid']
       
       step = 'apply'
       sdat = udat[step] = {}
@@ -93,7 +95,7 @@ class humandata(object):
       #if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:     # CURRENTLY BROKEN
       #  sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row['_contrib_globalrtg_slope']}
       if abs(row[step+'_contrib_pastcontrib_r2']) > 0.2:
-        sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row['_contrib_pastcontrib_slope']}
+        sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row[step+'_contrib_pastcontrib_slope']}
       if abs(row[step+'_rating_contrib_r2']) > 0.2:
         sdat['rating_contrib'] = {'intercept':row[step+'_rating_contrib_intercept'], 'slope':row[step+'_rating_contrib_slope'], 'stderr':row[step+'_rating_contrib_stderr']}
       sdat['ratings_per_round'] = row[step+'_ratings_per_round']
@@ -106,13 +108,13 @@ class humandata(object):
       
     #print dat
       
-  def gen_agent(self, cfg, uuid=None):
+  def gen_agent(self, cfg, adat=None, uuid=None):
     # Create a simhumanagent from one of the rows of the data file
     # If uuid is None, pick a row randomly
     if uuid:
-      return simhumanagent(cfg, self.datadict[uuid])
+      return simhumanagent(cfg, self.datadict[uuid], adat)
     else:
-      return simhumanagent(cfg, random.choice(self.datadict.keys()))
+      return simhumanagent(cfg, self.datadict[random.choice(self.datadict.keys())], adat)
 
 
 
@@ -127,7 +129,7 @@ class simhumanagent(agent):
     # get info from the humandata class to init probabilities
     
     self.type = 'simhuman'
-    self.uuid = probdata['uuid']
+    self.disposition = probdata['uuid']
     
     self.probdata = probdata
     
@@ -141,7 +143,7 @@ class simhumanagent(agent):
       self.tf_delay=self.tf_delay_null
       
     # if pubgoods rating r2 is bad, assign to 'rate_random' or 'rate_contrib'
-    if abs(row[step+'_rating_contrib_r2']) > 0.2:
+    if 'rating_contrib' in probdata['pubgood']:
       self.rate_pubgood = self.rate_contrib
     else:
       self.rate_pubgood = self.rate_random
@@ -165,6 +167,7 @@ class simhumanagent(agent):
     ## There's really no reason to use the nohist probability
     
     for g in nbrgroups:
+      newskills = g.withskills(self)
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
       pastcontribs = [self.contrib_avg[a.id] for a in g.agents if a.id in self.contrib_avg]
       
@@ -244,6 +247,7 @@ class simhumanagent(agent):
     
     joins = {}
     for g in self.acceptances:
+      newskills = g.withskills(self)
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
       globalrtgs = [self.global_ratings[a.id] for a in g.agents if a.id in self.global_ratings]
       
@@ -260,7 +264,7 @@ class simhumanagent(agent):
     
     if len(joins) == 1:
       self.switchgroup(joins.keys()[0])
-    else:
+    elif len(joins) > 1:
       agents = joins.keys()
       probs = np.array(joins.values())
       probs /= probs.sum()
@@ -284,8 +288,8 @@ class simhumanagent(agent):
     
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, newpay, teampays):
-    self.pgpay = newpay
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+    self.pgpay = privatepay+potpay
     
     teammateids = [n.id for n in self.group.agents]
     pctcontribs = [teampays[n][0]/sum(teampays[n]) for n in teammateids]
@@ -352,7 +356,7 @@ class simhumanagent(agent):
       rdict[nid] = rating
     return rdict  
   
-  def gen_rating(self, cumprobs):
+  def gen_rating(self, cumprobs):   # This could be replaced by np.random.choice(vals, p=probs)
     rpick = random.random()   
     for i,prop in enumerate(cumprobs):
       if rpick < prop: return i + 1
@@ -382,3 +386,5 @@ if __name__=='__main__':
   import sys
   datafile = sys.argv[1]
   h = humandata(datafile)
+  c = configuration()
+  a = h.gen_agent(c)
