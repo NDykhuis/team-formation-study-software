@@ -962,7 +962,7 @@ class TFGui(object):
     self.pubgoods_title_text.config(text=titletext)
     
     if not self.cfgdict['hide_publicgoods']:
-      longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str(potmult)+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
+      longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. The pot will be increased by "+str((potmult-1)*100)+"% and split evenly among everyone on your team. Each team member's contribution will be shown publicly to the other members of the team.\n"
     else:
       longtext = "Your team has been entered into a lottery. You may contribute as much of your pay as you would like to the lottery. The amount you contribute determines the amount you are eligible to win."
     
