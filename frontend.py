@@ -986,7 +986,7 @@ class TFGui(object):
     if not self.cfgdict['hide_publicgoods']:
       longtext = "Now, you can work together as a team to earn additional pay. Each team member may contribute as much of their potential pay as they like to a shared pot. "
       if not self.cfgdict['alt_pubgoods']:
-        longtext += "The pot will be increased by "+str(potmult)+"% and split evenly among everyone on your team. "
+        longtext += "The pot will be increased by "+str(self.proptopct(potmult))+"% and split evenly among everyone on your team. "
       else:
         minpot = self.proptopct(self.cfgdict['ap_min_multiplier'])
         maxpot = self.proptopct(self.cfgdict['ap_max_multiplier'])
