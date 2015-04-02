@@ -92,14 +92,16 @@ class humandata(object):
       step = 'pubgood'
       sdat = udat[step] = {}
       sdat['avgcontrib'] = row[step+'_avgcontrib']
+      sdat['sdcontrib'] = row[step+'_sdcontrib']
       #if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:     # CURRENTLY BROKEN
       #  sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row['_contrib_globalrtg_slope']}
       if abs(row[step+'_contrib_pastcontrib_r2']) > 0.2:
-        sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row[step+'_contrib_pastcontrib_slope']}
+        sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row[step+'_contrib_pastcontrib_slope'], 'stderr':row[step+'_contrib_pastcontrib_stderr']}
       if abs(row[step+'_rating_contrib_r2']) > 0.2:
         sdat['rating_contrib'] = {'intercept':row[step+'_rating_contrib_intercept'], 'slope':row[step+'_rating_contrib_slope'], 'stderr':row[step+'_rating_contrib_stderr']}
       sdat['ratings_per_round'] = row[step+'_ratings_per_round']
       sdat['ratings_per_round_sd'] = row[step+'_ratings_per_round_sd']
+      sdat['prop_rounds_nrats_0'] = row[step+'_prop_rounds_nrats_0']
       sdat['rating_props'] = [row[step+'_pct'+str(i)] for i in range(1,6)]
       sdat['cum_rating_props'] = [sum(sdat['rating_props'][0:i]) for i in range(1,6)]
       sdat['time_q1'] = row[step+'_time_q1']
@@ -119,8 +121,11 @@ class humandata(object):
 
 
 def logoddstoprob(logodds):
-  odds = math.exp(logodds)
-  return odds/(1+odds)
+  try:
+    odds = math.exp(logodds)
+    return odds/(1+odds)
+  except OverflowError:
+    return 1.0
 
 class simhumanagent(agent):
   # Currently mostly copied from dumbagent
@@ -147,6 +152,8 @@ class simhumanagent(agent):
       self.rate_pubgood = self.rate_contrib
     else:
       self.rate_pubgood = self.rate_random
+      
+    self.my_ratings = {}
   
   def propose(self):
     self.update()
@@ -174,7 +181,7 @@ class simhumanagent(agent):
       if contriblm and len(pastcontribs):
         # If there's contrib history, use the more detailed glm
         pastavg = sum(pastcontribs)/len(pastcontribs)
-        papply = logoddstoprob(contriblm['intercept']+pastcontrib*contriblm['slope']+deltapay*contriblm['slope_pay'])
+        papply = logoddstoprob(contriblm['intercept']+pastavg*contriblm['slope']+deltapay*contriblm['slope_pay'])
       elif paylm:
         # Otherwise, just figure on the difference in pay
         papply = logoddstoprob(paylm['intercept']+deltapay*paylm['slope'])
@@ -182,6 +189,7 @@ class simhumanagent(agent):
         papply = self.probdata['apply']['apply_nohist']     # Should never be used
     
       if random.random() < papply:
+        print self.disposition, 'applies', g.id
         g.takeapplication(self)
     
   def acceptvote(self, applicants):
@@ -222,6 +230,7 @@ class simhumanagent(agent):
       if random.random() < paccept:
         accepts[a]= paccept
     
+    print self.disposition, 'accepts', len(accepts),len(applicants), accepts
     if not len(accepts):    
       return None
     elif len(accepts) == 1:
@@ -282,9 +291,20 @@ class simhumanagent(agent):
     self.update()
     nowpayint = int(self.nowpay)
     
+    teammates = [a for a in self.group.agents if a != self]
+    pastcontribs = [self.contrib_avg[a.id] for a in teammates if a.id in self.contrib_avg]
+    contriblm = self.probdata['pubgood'].get('contrib_pastcontrib', None)
+    if len(pastcontribs) and contriblm:
+      pastavg = sum(pastcontribs)/len(pastcontribs)
+      pctcontrib = contriblm['intercept'] + pastavg*contriblm['slope']
+      pctcontrib += random.normalvariate(0, contriblm['stderr'])
+    #elif globalrating:
+    #  Implement once this is working in the R code
+    else:
+      pctcontrib = self.probdata['pubgood']['avgcontrib']+random.normalvariate(0, self.probdata['pubgood']['sdcontrib'])
+    pctcontrib = min(max(pctcontrib, 0.0), 1.0)
     
-    contrib = random.randint(0, nowpayint)  ## TEMPORARY
-    
+    contrib = int(round(nowpayint * pctcontrib))
     
     pgdict[self] = (contrib, nowpayint-contrib)
   
@@ -309,7 +329,9 @@ class simhumanagent(agent):
     #    sdat['rating_contrib'] = {'intercept':row[step+'_rating_contrib_intercept'], 'slope':row['_rating_contrib_slope']}
     #  sdat['ratings_per_round'] = row[step+'_ratings_per_round']
     ratings = self.rate_pubgood(teammateids, pctcontribs)
-     
+    
+    self.my_ratings.update(ratings)
+    
      
   def gen_num_ratings(self):
     pgdata = self.probdata['pubgood']
@@ -324,7 +346,7 @@ class simhumanagent(agent):
       if nratsd:
         # Decide how many ratings to actually give, based on mean and sd
         # This is a very handwavy approximation of the very right-skewed ratings-per-round distribution
-        nowrats = round(abs(random.normalvariate(nrats,nratsd)))
+        nowrats = int(round(abs(random.normalvariate(nrats,nratsd))))
       else:
         nowrats = int(nrats)    # if there is no sd, all nrats must be the same, and therefore, must be an integer
       return nowrats
@@ -353,6 +375,7 @@ class simhumanagent(agent):
       rawrtg = intercept + slope*contrib        # Calc rating from linear model
       rawrtg += random.normalvariate(0, stderr) # Add noise
       rating = int(round(rawrtg))
+      rating = max(min(rating, 5), 1)           # Constrain to valid range
       rdict[nid] = rating
     return rdict  
   
@@ -367,6 +390,9 @@ class simhumanagent(agent):
     
   def updateratings(self, ratings):
     self.global_ratings = ratings
+  
+  def getratings(self):
+    return self.my_ratings
   
   def tf_delay_null(self, stage):
     pass
