@@ -22,6 +22,7 @@ bincontribs <- function(data) {
 namean <- function(x){mean(x, na.rm=TRUE)}
 tryna <- function(expr) {tryCatch(expr, error=function(err) NA)}
 
+logoddstoprob <- function(logodds) { exp(logodds)/(1+exp(logodds)) }
 
 
 # DATA FILE HERE
@@ -251,12 +252,6 @@ uapplycontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply') %>%
 # summary(glm(chosen~pastmeancontribknown+(deltapay), data=subset(applyX, uuid=='02.0'), family=binomial))
 # summary(glm(chosen~pastmeancontribknown+(deltapay), data=subset(applyX, uuid=='03.0'), family=binomial))
 
-logoddstoprob <- function(logodds) { exp(logodds)/(1+exp(logodds)) }
-userdatatable %>% mutate(pnh=round(apply_nohist,2),
-                         p0=round(logoddstoprob(apply_deltapay_intercept),2), 
-                         pn5=round(logoddstoprob(apply_deltapay_intercept-5*apply_deltapay_slope),2),
-                         pp5=round(logoddstoprob(apply_deltapay_intercept+5*apply_deltapay_slope),2)) %>%
-                  select(uuid, pnh, p0, pn5, pp5)
 
 median(uapplydeltapay$applypay_aic)
 median(uapplyglo$applyglo_aic)        ## really doesn't add much from just deltapay
@@ -423,7 +418,7 @@ round(prop.table(table(test1$uuid,test1$nrats), 1),2)[,'0']
 
 # Several ways to calculate a contribution
 
-ucontribavgs <- pgl %>% group_by(uuid) %>% summarize(pubgood_avgcontrib=mean(pctcontrib))
+ucontribavgs <- pgl %>% group_by(uuid) %>% summarize(pubgood_avgcontrib=namean(pctcontrib), pubgood_sdcontrib=sd(pctcontrib, na.rm=T))
 
 ggplot(adduuid(tflrpge), aes(globalmean, pctcontrib, group=uuid)) + geom_point() + geom_smooth(method='lm', se=F)
 ggplot(adduuid(tflrpge), aes(meanmeancontrib, pctcontrib, group=uuid)) + geom_point() + geom_smooth(method='lm', se=F)
@@ -431,6 +426,7 @@ ummccontrib <- adduuid(tflrpge) %>% group_by(uuid) %>%
   do(mmccontriblm=tryna(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit))) %>%
   mutate(pubgood_contrib_pastcontrib_intercept=tryna(summary(mmccontriblm)$coeff[1]), 
          pubgood_contrib_pastcontrib_slope=tryna(summary(mmccontriblm)$coeff[2]), 
+         pubgood_contrib_pastcontrib_stderr=tryna(summary(mmccontriblm)$sigma), 
          pubgood_contrib_pastcontrib_r2=tryna(summary(mmccontriblm)$adj.r.squared)) %>%
   select(-mmccontriblm) # -mmccontriblm
 
@@ -541,5 +537,23 @@ utime_q3
 userdatatable <- Reduce(function(x, y) merge(x, y, all=TRUE), alltables)
 write.csv(userdatatable, 'userdatatable.csv', row.names=F)
 names(userdatatable)
-## Last thing to do: get a good, sensible naming convention so it's not a pain when I import this back into Python
-## There are 53 columns here, after all
+
+
+# Tests:
+userdatatable %>% mutate(pnh=round(apply_nohist,2),
+                         pn5=round(logoddstoprob(apply_deltapay_intercept-5*apply_deltapay_slope),2),
+                         p0=round(logoddstoprob(apply_deltapay_intercept),2), 
+                         pp5=round(logoddstoprob(apply_deltapay_intercept+5*apply_deltapay_slope),2)) %>%
+                  select(uuid, pnh, pn5, p0, pp5)
+
+userdatatable %>% mutate(pnh=round(acceptvote_nohist,2),
+                         pn5=round(logoddstoprob(acceptvote_deltapay_intercept-5*acceptvote_deltapay_slope),2),
+                         p0=round(logoddstoprob(acceptvote_deltapay_intercept),2), 
+                         pp5=round(logoddstoprob(acceptvote_deltapay_intercept+5*acceptvote_deltapay_slope),2)) %>%
+                  select(uuid, pnh, pn5, p0, pp5)
+
+userdatatable %>% mutate(pnh=round(join_nohist,2),
+                         pn5=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope),2),
+                         p0=round(logoddstoprob(join_deltapay_intercept),2), 
+                         pp5=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope),2)) %>%
+                  select(uuid, pnh, pn5, p0, pp5)
