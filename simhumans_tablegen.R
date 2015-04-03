@@ -210,8 +210,10 @@ tflnohist <- tflrc %>% group_by(uuid) %>%
   filter(globalrtg==-1 | is.na(globalrtg), is.na(pastmeancontribknown)) 
 
 uapplynohist <- tflnohist %>% filter(eventtype=='apply') %>% summarize(apply_nohist=namean(chosen))
-uacceptnohist <- tflnohist %>% filter(eventtype=='acceptvote') %>% summarize(acceptvote_nohist=namean(chosen))
-ujoinnohist <- tflnohist %>% filter(eventtype=='join') %>% summarize(join_nohist=namean(chosen))
+uacceptnohist <- tflnohist %>% filter(eventtype=='acceptvote', otherid != -1) %>% summarize(acceptvote_nohist=namean(chosen))
+unoaccept <- tflnohist %>% filter(eventtype=='acceptvote', otherid == -1, currentpay < maxpay) %>% summarize(acceptvote_noaccept=namean(chosen))
+ustayaccept <- tflnohist %>% filter(eventtype=='acceptvote', otherid == -1, currentpay == maxpay) %>% summarize(acceptvote_stayaccept=namean(chosen))
+ujoinnohist <- tflnohist %>% filter(eventtype=='join' & otherid != -1) %>% summarize(join_nohist=namean(chosen))
 
 ggplot(subset(tflrc, eventtype=='apply' & is.na(pastmeancontribknown)), aes(x=chosen, y=globalrtg, group=uuid)) + facet_grid(~ismax)+geom_point() + geom_smooth(method='lm', se=F) # This looks not that relevant
 
@@ -268,6 +270,16 @@ uacceptdeltapay <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote') 
          acceptvote_deltapay_aic=tryna(summary(acceptpaylm)$aic)) %>%
   select(-acceptpaylm)
 
+uacceptdeltapay2 <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote') %>% 
+  mutate(noaccept=otherid==-1) %>%
+  do(acceptpaylm=tryna(glm(chosen~deltapay+noaccept, data=., na.action=na.omit, family=binomial))) %>%
+  mutate(acceptvote_deltapay_intercept=tryna(summary(acceptpaylm)$coeff[1]), 
+         acceptvote_deltapay_slope=tryna(summary(acceptpaylm)$coeff[2]),
+         acceptvote_deltapay_slope_noaccept=tryna(summary(acceptpaylm)$coeff[3]), 
+         acceptvote_deltapay_aic=tryna(summary(acceptpaylm)$aic)) %>%
+  select(-acceptpaylm)
+# A modest improvement over not including the noaccept column, but not much
+  
 uacceptglo <- tflrc %>% group_by(uuid) %>% filter(is.na(pastmeancontribknown), eventtype=='acceptvote') %>% 
   do(acceptglolm=tryna(glm(chosen~globalrtg+deltapay, data=., na.action=na.omit, family=binomial))) %>%
   mutate(acceptvote_globalrtg_intercept=tryna(summary(acceptglolm)$coeff[1]), 
@@ -298,8 +310,6 @@ median(uacceptdeltapay$acceptpay_aic)
 median(uacceptglo$acceptglo_aic)
 median(uacceptcontrib$acceptcontrib_aic)
 #median(uacceptglocontrib$acceptgcontrib_aic)  ## This doesn't add much; in fact, it's worse
-  
-  
   
   
 ujoindeltapay <- tflrc %>% group_by(uuid) %>% filter(eventtype=='join') %>% 
@@ -345,8 +355,8 @@ ujoinglo <- tflrc %>% group_by(uuid) %>% filter(is.na(pastmeancontribknown), eve
 #          joingcontrib_aic=tryna(summary(joingcontlm)$aic)) %>%
 #   select(-joingcontlm)
 
-median(ujoindeltapay$joinpay_aic)
-median(ujoinglo$joinglo_aic)
+median(ujoindeltapay$join_deltapay_aic)
+median(ujoinglo$join_globalrtg_aic)
 #median(ujoincontrib$joincontrib_aic)
 #median(ujoinglocontrib$joingcontrib_aic)
 ## TODO: FIX THIS UP SO THIS WORKS WITH JOIN!
@@ -512,6 +522,8 @@ uapplydeltapay,
 uapplycontrib,
 
 uacceptnohist,
+unoaccept,
+ustayaccept,
 uacceptdeltapay,
 uacceptglo,
 uacceptcontrib,
@@ -557,3 +569,12 @@ userdatatable %>% mutate(pnh=round(join_nohist,2),
                          p0=round(logoddstoprob(join_deltapay_intercept),2), 
                          pp5=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope),2)) %>%
                   select(uuid, pnh, pn5, p0, pp5)
+
+userdatatable %>% mutate(pnh=round(join_nohist,2),
+                         pn5=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope),2),
+                         p0=round(logoddstoprob(join_deltapay_intercept),2), 
+                         pp5=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope),2),
+                         pn5s=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope+join_deltapay_stay),2),
+                         p0s=round(logoddstoprob(join_deltapay_intercept+join_deltapay_stay),2), 
+                         pp5s=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope+join_deltapay_stay),2)) %>%
+                  select(uuid, pnh, pn5, pn5s, p0, p0s, pp5, pp5s)
