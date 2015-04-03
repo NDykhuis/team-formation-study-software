@@ -44,15 +44,19 @@ class humandata(object):
   def __init__(self, datafile):
     self.read_data(datafile)
   
+  def qstrip(self, text):
+    return text.strip('"')
+  
   def read_data(self, filename):
     self.datadict = dat = {}
     
     filedata = np.genfromtxt('userdatatable.csv', delimiter=',', names=True, dtype=None, missing_values='NA')
     
     for row in filedata:
-      udat = dat[row['uuid']] = {}
-      udat['condition'] = row['condition']
-      udat['uuid'] = row['uuid']
+      uuid = self.qstrip(row['uuid'])
+      udat = dat[uuid] = {}
+      udat['condition'] = self.qstrip(row['condition'])
+      udat['uuid'] = uuid
       
       step = 'apply'
       sdat = udat[step] = {}
@@ -68,6 +72,8 @@ class humandata(object):
       step = 'acceptvote'
       sdat = udat[step] = {}
       sdat['nohist'] = row[step+'_nohist']
+      sdat['noaccept'] = row[step+'_noaccept']
+      sdat['stayaccept'] = row[step+'_stayaccept']
       if row[step+'_deltapay_aic']: # is not NA
         sdat['deltapay'] = {'intercept':row[step+'_deltapay_intercept'],'slope':row[step+'_deltapay_slope']}
       if row[step+'_globalrtg_aic']: # is not NA
@@ -82,9 +88,9 @@ class humandata(object):
       sdat = udat[step] = {}
       sdat['nohist'] = row[step+'_nohist']
       if row[step+'_deltapay_aic']: # is not NA
-        sdat['deltapay'] = {'intercept':row[step+'_deltapay_intercept'],'slope':row[step+'_deltapay_slope']}
+        sdat['deltapay'] = {'intercept':row[step+'_deltapay_intercept'], 'slope_stay':row[step+'_deltapay_stay'], 'slope':row[step+'_deltapay_slope']}
       if row[step+'_globalrtg_aic']: # is not NA
-        sdat['globalrtg'] = {'intercept':row[step+'_globalrtg_intercept'],'slope':row[step+'_globalrtg_slope'], 'slope_pay':row[step+'_globalrtg_slope_pay']}
+        sdat['globalrtg'] = {'intercept':row[step+'_globalrtg_intercept'], 'slope_stay':row[step+'_deltapay_stay'], 'slope':row[step+'_globalrtg_slope'], 'slope_pay':row[step+'_globalrtg_slope_pay']}
       sdat['time_q1'] = row[step+'_time_q1']
       sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
@@ -109,6 +115,9 @@ class humandata(object):
       sdat['time_q3'] = row[step+'_time_q3']
       
     #print dat
+    
+    self.datapublic = [dat[u] for u in dat if dat[u]['condition']=='public']
+    self.dataprivate = [dat[u] for u in dat if dat[u]['condition']=='private']
       
   def gen_agent(self, cfg, adat=None, uuid=None):
     # Create a simhumanagent from one of the rows of the data file
@@ -116,7 +125,11 @@ class humandata(object):
     if uuid:
       return simhumanagent(cfg, self.datadict[uuid], adat)
     else:
-      return simhumanagent(cfg, self.datadict[random.choice(self.datadict.keys())], adat)
+      #return simhumanagent(cfg, self.datadict[random.choice(self.datadict.keys())], adat)
+      if cfg.show_global_ratings:
+        return simhumanagent(cfg, random.choice(self.datapublic), adat)
+      else:
+        return simhumanagent(cfg, random.choice(self.dataprivate), adat)
 
 
 
@@ -189,7 +202,6 @@ class simhumanagent(agent):
         papply = self.probdata['apply']['apply_nohist']     # Should never be used
     
       if random.random() < papply:
-        print self.disposition, 'applies', g.id
         g.takeapplication(self)
     
   def acceptvote(self, applicants):
@@ -214,8 +226,10 @@ class simhumanagent(agent):
     contriblm = self.probdata['acceptvote'].get('pastcontrib', None)
     
     accepts = {}
+    maxdeltapay = 0
     for a in applicants:
       deltapay = task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay
+      maxdeltapay = max(maxdeltapay, deltapay)
       if contriblm and a.id in self.contrib_avg:
         pastcontrib = self.contrib_avg[a.id]
         paccept = logoddstoprob(contriblm['intercept']+pastcontrib*contriblm['slope']+deltapay*contriblm['slope_pay'])
@@ -227,19 +241,24 @@ class simhumanagent(agent):
       else:
         paccept = self.probdata['acceptvote']['acceptvote_nohist']
       
-      if random.random() < paccept:
-        accepts[a]= paccept
+      accepts[a]= paccept
     
-    print self.disposition, 'accepts', len(accepts),len(applicants), accepts
-    if not len(accepts):    
-      return None
-    elif len(accepts) == 1:
-      return accepts.keys()[0]
+    if maxdeltapay:
+      accepts[None] = self.probdata['acceptvote']['noaccept']
     else:
-      agents = accepts.keys()
-      probs = np.array(accepts.values())
+      accepts[None] = self.probdata['acceptvote']['stayaccept']
+      
+    #print self.id, self.disposition, "accepts", accepts
+      
+    agents = accepts.keys()
+    probs = np.array(accepts.values())
+    if probs.sum():
       probs /= probs.sum()
       return np.random.choice(agents, p=probs)
+    else:
+      print "ZERO PROBS IN ACCEPT"
+      print self.id, self.disposition, "accepts", accepts
+      return None
     
   def consider(self):
     task=self.cfg.task
@@ -255,29 +274,37 @@ class simhumanagent(agent):
     ratelm = self.probdata['join'].get('globalrtg', None)
     
     joins = {}
+    self.acceptances.append(self.group)
     for g in self.acceptances:
       newskills = g.withskills(self)
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
       globalrtgs = [self.global_ratings[a.id] for a in g.agents if a.id in self.global_ratings]
       
+      # because staygroup is always zero, I don't think we need to include that term?
+      # Unless we're doing some sort of softmax?
       if ratelm and len(globalrtgs):
         globalrtg = sum(globalrtgs)/len(globalrtgs)
-        pjoin = logoddstoprob(ratelm['intercept']+globalrtg*ratelm['slope']+deltapay*ratelm['slope_pay'])
+        pjoin = logoddstoprob(ratelm['intercept']+ globalrtg*ratelm['slope']+ deltapay*ratelm['slope_pay']+ (g==self.group)*ratelm['slope_stay'])
       elif paylm:
-        pjoin = logoddstoprob(paylm['intercept']+deltapay*paylm['slope'])
+        pjoin = logoddstoprob(paylm['intercept']+ deltapay*paylm['slope']+ (g==self.group)*ratelm['slope_stay'])
       else:
-        pjoin = self.probdata['join']['join_nohist']
+        # Should not be used - should always be using paylm as the fallback
+        pjoin = self.probdata['join']['join_nohist']    ## DOES NOT account for switch/stay!
     
-      if random.random() < pjoin:
-        joins[g] = pjoin
+      joins[g] = pjoin
     
-    if len(joins) == 1:
-      self.switchgroup(joins.keys()[0])
-    elif len(joins) > 1:
-      agents = joins.keys()
-      probs = np.array(joins.values())
+    #print self.id, self.disposition, "joins", joins
+    
+    agents = joins.keys()
+    probs = np.array(joins.values())
+    if probs.sum():
       probs /= probs.sum()
-      self.switchgroup(np.random.choice(agents, p=probs))
+      bestgroup = np.random.choice(agents, p=probs)
+      if bestgroup != self.group:
+        self.switchgroup(bestgroup)
+    else:
+      print "ZERO PROBS IN JOIN"
+      print self.id, self.disposition, "joins", joins
     
     self.acceptances = []
   
@@ -325,10 +352,9 @@ class simhumanagent(agent):
         self.contrib_history[nid] = [pctcontrib]
     
     # Assign ratings
-    #if abs(row[step+'_rating_contrib_r2']) > 0.2:
-    #    sdat['rating_contrib'] = {'intercept':row[step+'_rating_contrib_intercept'], 'slope':row['_rating_contrib_slope']}
-    #  sdat['ratings_per_round'] = row[step+'_ratings_per_round']
     ratings = self.rate_pubgood(teammateids, pctcontribs)
+    if len(ratings):
+      print self.id, self.disposition, 'rates', ratings
     
     self.my_ratings.update(ratings)
     
