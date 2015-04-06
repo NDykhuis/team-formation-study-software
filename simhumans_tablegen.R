@@ -468,9 +468,10 @@ ummccontrib <- adduuid(tflrpge) %>% group_by(uuid) %>%
 #   mutate(athing=ratcontriblm$coeff[1])
 
 ## I can't get that to work via dplyr, so here goes manual.
-getcoeff1 <- function(x) {x$coeff[1]}
-getcoeff2 <- function(x) {x$coeff[2]}
-getr2 <- function(x) {summary(x)$adj.r.squared}
+getcoeff1 <- function(x) {tryna(x$coeff[1])}
+getcoeff2 <- function(x) {tryna(x$coeff[2])}
+getr2 <- function(x) {tryna(summary(x)$adj.r.squared)}
+getstderr <- function(x) {tryna(summary(x)$sigma)}
 
 ugratcontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
   do(ratcontriblm=tryna(lm(pctcontrib~globalmean, data=., na.action=na.omit))) %>%
@@ -479,6 +480,7 @@ ugratcontrib <- adduuid(tflrpge) %>% group_by(uuid) %>%
 ugratcontrib$pubgood_contrib_globalrtg_intercept <- sapply(ugratcontrib$ratcontriblm, getcoeff1)
 ugratcontrib$pubgood_contrib_globalrtg_slope <- sapply(ugratcontrib$ratcontriblm, getcoeff2)
 ugratcontrib$pubgood_contrib_globalrtg_r2 <- sapply(ugratcontrib$ratcontriblm, getr2)
+ugratcontrib$pubgood_contrib_globalrtg_stderr <- sapply(ugratcontrib$ratcontriblm, getstderr)
 ugratcontrib <- select(ugratcontrib, -ratcontriblm, -lmlen)
 
 # umyratcontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
