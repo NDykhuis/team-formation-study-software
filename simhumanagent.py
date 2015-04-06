@@ -99,10 +99,10 @@ class humandata(object):
       sdat = udat[step] = {}
       sdat['avgcontrib'] = row[step+'_avgcontrib']
       sdat['sdcontrib'] = row[step+'_sdcontrib']
-      #if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:     # CURRENTLY BROKEN
-      #  sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row['_contrib_globalrtg_slope']}
+      if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:
+        sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row['_contrib_globalrtg_slope'], 'stderr':row[step+'_contrib_globalrtg_stderr'], 'r2':row[step+'_contrib_globalrtg_r2']}
       if abs(row[step+'_contrib_pastcontrib_r2']) > 0.2:
-        sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row[step+'_contrib_pastcontrib_slope'], 'stderr':row[step+'_contrib_pastcontrib_stderr']}
+        sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row[step+'_contrib_pastcontrib_slope'], 'stderr':row[step+'_contrib_pastcontrib_stderr'], 'r2':row[step+'_contrib_pastcontrib_r2']}
       if abs(row[step+'_rating_contrib_r2']) > 0.2:
         sdat['rating_contrib'] = {'intercept':row[step+'_rating_contrib_intercept'], 'slope':row[step+'_rating_contrib_slope'], 'stderr':row[step+'_rating_contrib_stderr']}
       sdat['ratings_per_round'] = row[step+'_ratings_per_round']
@@ -320,13 +320,21 @@ class simhumanagent(agent):
     
     teammates = [a for a in self.group.agents if a != self]
     pastcontribs = [self.contrib_avg[a.id] for a in teammates if a.id in self.contrib_avg]
+    glorats = [self.global_ratings[a.id] for a in teammates if a.id in self.global_ratings]
     contriblm = self.probdata['pubgood'].get('contrib_pastcontrib', None)
-    if len(pastcontribs) and contriblm:
+    ratelm = self.probdata['pubgood'].get('contrib_globalrtg', None)
+    contribr2 = abs(contriblm['r2']) if contriblm else 0
+    rater2 = abs(ratelm['r2']) if ratelm else 0
+    
+    # Use the best model for which we have data.
+    if len(glorats) and ratelm and (not len(pastcontribs) or rater2 > contribr2):
+      rateavg = sum(glorats)/len(glorats)
+      pctcontrib = ratelm['intercept'] + rateave*ratelm['slope']
+      pctcontrib += random.normalvariate(0, ratelm['stderr'])
+    elif len(pastcontribs) and contriblm and (not len(glorats) or contribr2 > rater2):
       pastavg = sum(pastcontribs)/len(pastcontribs)
       pctcontrib = contriblm['intercept'] + pastavg*contriblm['slope']
       pctcontrib += random.normalvariate(0, contriblm['stderr'])
-    #elif globalrating:
-    #  Implement once this is working in the R code
     else:
       pctcontrib = self.probdata['pubgood']['avgcontrib']+random.normalvariate(0, self.probdata['pubgood']['sdcontrib'])
     pctcontrib = min(max(pctcontrib, 0.0), 1.0)
