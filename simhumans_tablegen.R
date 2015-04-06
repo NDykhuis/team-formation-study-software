@@ -4,6 +4,8 @@ library(reshape2)
 library(dplyr)
 library(lattice)
 
+# source('simhumans_tablegen.R', echo=TRUE)
+
 ## UTILITY FUNCTIONS
 
 # Fix R console width (number of columns)
@@ -26,7 +28,7 @@ logoddstoprob <- function(logodds) { exp(logodds)/(1+exp(logodds)) }
 
 
 # DATA FILE HERE
-dbfile = 'simlog_EXPR1_03-13-15.db' 
+dbfile = 'simlog_EXPR1_03-31-15.db' 
 expr_condition = 'compare'          ## private or public
 
 dbfileprefix = substr(dbfile, 1, nchar(dbfile)-3)
@@ -217,14 +219,14 @@ ujoinnohist <- tflnohist %>% filter(eventtype=='join' & otherid != -1) %>% summa
 
 ggplot(subset(tflrc, eventtype=='apply' & is.na(pastmeancontribknown)), aes(x=chosen, y=globalrtg, group=uuid)) + facet_grid(~ismax)+geom_point() + geom_smooth(method='lm', se=F) # This looks not that relevant
 
-uapplydeltapay <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply') %>% 
+uapplydeltapay <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply', globalrtg==-1, is.na(pastmeancontribknown)) %>% 
   do(applypaylm=tryna(glm(chosen~deltapay, data=., na.action=na.omit, family=binomial))) %>%
   mutate(apply_deltapay_intercept=tryna(summary(applypaylm)$coeff[1]), 
          apply_deltapay_slope=tryna(summary(applypaylm)$coeff[2]), 
          apply_deltapay_aic=tryna(summary(applypaylm)$aic)) %>%
   select(-applypaylm)
 
-uapplyglo <- tflrc %>% group_by(uuid) %>% filter(is.na(pastmeancontribknown), eventtype=='apply') %>% 
+uapplyglo <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply', is.na(pastmeancontribknown)) %>% 
   do(applyglolm=tryna(glm(chosen~globalrtg+deltapay, data=., na.action=na.omit, family=binomial))) %>%
   mutate(apply_globalrtg_intercept=tryna(summary(applyglolm)$coeff[1]), 
          apply_globalrtg_slope=tryna(summary(applyglolm)$coeff[2]),
@@ -263,14 +265,14 @@ median(uapplycontrib$applycontrib_aic)
 # Acceptvote and join will be trickier, because we need a utility function to rank options, rather than considering them independently
 # We could, however, perhaps, just train glm(s), and pick the option with the highest probability
   
-uacceptdeltapay <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote') %>% 
+uacceptdeltapay <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote', is.na(pastmeancontribknown), globalrtg==-1) %>% 
   do(acceptpaylm=tryna(glm(chosen~deltapay, data=., na.action=na.omit, family=binomial))) %>%
   mutate(acceptvote_deltapay_intercept=tryna(summary(acceptpaylm)$coeff[1]), 
          acceptvote_deltapay_slope=tryna(summary(acceptpaylm)$coeff[2]), 
          acceptvote_deltapay_aic=tryna(summary(acceptpaylm)$aic)) %>%
   select(-acceptpaylm)
 
-uacceptdeltapay2 <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote') %>% 
+uacceptdeltapay2 <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote', is.na(pastmeancontribknown), globalrtg==-1) %>% 
   mutate(noaccept=otherid==-1) %>%
   do(acceptpaylm=tryna(glm(chosen~deltapay+noaccept, data=., na.action=na.omit, family=binomial))) %>%
   mutate(acceptvote_deltapay_intercept=tryna(summary(acceptpaylm)$coeff[1]), 
@@ -280,7 +282,7 @@ uacceptdeltapay2 <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote')
   select(-acceptpaylm)
 # A modest improvement over not including the noaccept column, but not much
   
-uacceptglo <- tflrc %>% group_by(uuid) %>% filter(is.na(pastmeancontribknown), eventtype=='acceptvote') %>% 
+uacceptglo <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote', is.na(pastmeancontribknown)) %>% 
   do(acceptglolm=tryna(glm(chosen~globalrtg+deltapay, data=., na.action=na.omit, family=binomial))) %>%
   mutate(acceptvote_globalrtg_intercept=tryna(summary(acceptglolm)$coeff[1]), 
          acceptvote_globalrtg_slope=tryna(summary(acceptglolm)$coeff[2]),
@@ -321,7 +323,7 @@ ujoindeltapay <- tflrc %>% group_by(uuid) %>% filter(eventtype=='join') %>%
          join_deltapay_aic=tryna(summary(joinpaylm)$aic)) %>%
   select(-joinpaylm)
 
-ujoinglo <- tflrc %>% group_by(uuid) %>% filter(is.na(pastmeancontribknown), eventtype=='join') %>% 
+ujoinglo <- tflrc %>% group_by(uuid) %>% filter(eventtype=='join', is.na(pastmeancontribknown)) %>% 
   mutate(staygroup=otherid==-1) %>%
   do(joinglolm=tryna(glm(chosen~staygroup+globalrtg+deltapay, data=., na.action=na.omit, family=binomial))) %>%
   mutate(join_globalrtg_intercept=tryna(summary(joinglolm)$coeff[1]), 
@@ -387,7 +389,7 @@ uppgrat <- pgratings2 %>% group_by(uuid.x) %>%
 # Calculate the proportion of each kind of rating that someone gives
 #table(rating)
 # Use this as the null if r2 is bad
-uppgratnull <- pgratings2 %>% group_by(uuid=uuid.x) %>%
+uppgratnull <- rtg %>% group_by(uuid=uuid) %>%
   summarize(
     pubgood_pct1=mean(rating==1),
     pubgood_pct2=mean(rating==2),
@@ -456,8 +458,28 @@ ummccontrib <- adduuid(tflrpge) %>% group_by(uuid) %>%
 #   do(ratcontriblm=tryna(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit))) %>%
 #   mutate(lmlen=length(ratcontriblm)) %>%
 #   filter(lmlen > 1) %>%
-#   mutate(athing=summary(ratcontriblm)$coeff[1])
-## ERROR: $ operator is invalid for atomic vectors
+#   mutate(athing=ratcontriblm$coeff[1])
+# ## ERROR: $ operator is invalid for atomic vectors
+# 
+# adduuid(tflrpge) %>% group_by(uuid) %>% 
+#   do(ratcontriblm=tryna(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit))) %>%
+#   mutate(lmlen=length(ratcontriblm)) %>%
+#   filter(lmlen > 1) %>%
+#   mutate(athing=ratcontriblm$coeff[1])
+
+## I can't get that to work via dplyr, so here goes manual.
+getcoeff1 <- function(x) {x$coeff[1]}
+getcoeff2 <- function(x) {x$coeff[2]}
+getr2 <- function(x) {summary(x)$adj.r.squared}
+
+ugratcontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
+  do(ratcontriblm=tryna(lm(pctcontrib~globalmean, data=., na.action=na.omit))) %>%
+  mutate(lmlen=length(ratcontriblm)) %>%
+  filter(lmlen > 1)
+ugratcontrib$pubgood_contrib_globalrtg_intercept <- sapply(ugratcontrib$ratcontriblm, getcoeff1)
+ugratcontrib$pubgood_contrib_globalrtg_slope <- sapply(ugratcontrib$ratcontriblm, getcoeff2)
+ugratcontrib$pubgood_contrib_globalrtg_r2 <- sapply(ugratcontrib$ratcontriblm, getr2)
+ugratcontrib <- select(ugratcontrib, -ratcontriblm, -lmlen)
 
 # umyratcontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
 #   do(myratcontriblm=tryna(lm(pctcontrib~mymean, data=., na.action=na.omit))) %>%
@@ -533,7 +555,7 @@ ujoindeltapay,
 ujoinglo,
 
 ummccontrib,
-#ugratcontrib,  ## THIS NEEDS TO BE FIXED!
+ugratcontrib,
 #umyratcontrib,
 ucontribavgs,
 
