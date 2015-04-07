@@ -100,7 +100,7 @@ class humandata(object):
       sdat['avgcontrib'] = row[step+'_avgcontrib']
       sdat['sdcontrib'] = row[step+'_sdcontrib']
       if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:
-        sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row['_contrib_globalrtg_slope'], 'stderr':row[step+'_contrib_globalrtg_stderr'], 'r2':row[step+'_contrib_globalrtg_r2']}
+        sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row[step+'_contrib_globalrtg_slope'], 'stderr':row[step+'_contrib_globalrtg_stderr'], 'r2':row[step+'_contrib_globalrtg_r2']}
       if abs(row[step+'_contrib_pastcontrib_r2']) > 0.2:
         sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row[step+'_contrib_pastcontrib_slope'], 'stderr':row[step+'_contrib_pastcontrib_stderr'], 'r2':row[step+'_contrib_pastcontrib_r2']}
       if abs(row[step+'_rating_contrib_r2']) > 0.2:
@@ -329,7 +329,7 @@ class simhumanagent(agent):
     # Use the best model for which we have data.
     if len(glorats) and ratelm and (not len(pastcontribs) or rater2 > contribr2):
       rateavg = sum(glorats)/len(glorats)
-      pctcontrib = ratelm['intercept'] + rateave*ratelm['slope']
+      pctcontrib = ratelm['intercept'] + rateavg*ratelm['slope']
       pctcontrib += random.normalvariate(0, ratelm['stderr'])
     elif len(pastcontribs) and contriblm and (not len(glorats) or contribr2 > rater2):
       pastavg = sum(pastcontribs)/len(pastcontribs)
