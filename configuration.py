@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 import copy
 
-PROTOCOL = 2
+PROTOCOL = 99
 ##   Setting this PROTOCOL flag will set several configuration options at once, for ease of experimentation
 ##   If it is not set, the default options in the configuration class will be used
 ##   PROTOCOL 0:  (non-social)
@@ -57,7 +57,7 @@ class configuration(object):
   conditional_variance = 0.1
   
   # Alternative pubgoods parameters
-  alt_pubgoods = False   # Use alternative version of pubgoods
+  alt_pubgoods = True   # Use alternative version of pubgoods
   ap_min_multiplier = 1.10
   ap_max_multiplier = 2.00
   ap_rating_intercept = 0.25
