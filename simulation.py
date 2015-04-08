@@ -505,9 +505,13 @@ class simulation:
   def calc_potmult(self, group, cfg, pgdict=None):
     if cfg.alt_pubgoods:
       if pgdict:
+        # Given contribs and ratings, return the actual multiplier
         return cfg.pubgoods_calc([pgdict[a][0] for a in group.agents], [cfg.lastratings[a.id] for a in group.agents if a.id in cfg.lastratings])
       else:
-        return 0    ## TEMPORARY
+        # Given only the ratings, return the range of possible multipliers
+        mult_low = cfg.pubgoods_calc([0], [cfg.lastratings[a.id] for a in group.agents if a.id in cfg.lastratings])
+        mult_high = cfg.pubgoods_calc([1], [cfg.lastratings[a.id] for a in group.agents if a.id in cfg.lastratings])
+        return (mult_low, mult_high)
     else:
       return (1.0+cfg.pubgoods_mult*0.01)
       

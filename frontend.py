@@ -957,6 +957,9 @@ class TFGui(object):
     self.widgetrefs.extend([cframe, c1, c2, c3])
     return cframe
     
+  def proptopct(self, prop):
+    return int((prop-1)*100)
+    
   def update_pubgoods_instruction_text(self, potmult):
     titletext = 'Teamwork stage' if not self.cfgdict['hide_publicgoods'] else 'Bonus stage'
     self.pubgoods_title_text.config(text=titletext)
@@ -966,10 +969,14 @@ class TFGui(object):
       if not self.cfgdict['alt_pubgoods']:
         longtext += "The pot will be increased by "+str(potmult)+"% and split evenly among everyone on your team. "
       else:
-        minpot = int((self.cfgdict['ap_min_multiplier']-1)*100)
-        maxpot = int((self.cfgdict['ap_max_multiplier']-1)*100)
-        longtext += "The pot will be increased by an amount between {pmin}% and {pmax}% and split evenly among everyone on your team. ".format(pmin=minpot, pmax=maxpot)
-        longtext += "The multiplier will increase based on the ratings of the team members and the average amount the team contributes."
+        minpot = self.proptopct(self.cfgdict['ap_min_multiplier'])
+        maxpot = self.proptopct(self.cfgdict['ap_max_multiplier'])
+        longtext += "The pot will be increased by an amount between {pmin}% and {pmax}% and split evenly among everyone on your team.\n".format(pmin=minpot, pmax=maxpot)
+        longtext += "The multiplier will increase based on the ratings of the team members and the amount the team contributes. "
+        minreal, maxreal = potmult
+        minreal = self.proptopct(minreal)
+        maxreal = self.proptopct(maxreal)
+        longtext += "Given your team's ratings, the multiplier will be {0}% if no one contributes anything, and {1}% if everyone contributes everything.\n".format(minreal, maxreal)
       longtext += "Each team member's contribution will be shown publicly to the other members of the team.\n"
     else:
       longtext = "Your team has been entered into a lottery. You may contribute as much of your pay as you would like to the lottery. The amount you contribute determines the amount you are eligible to win."
