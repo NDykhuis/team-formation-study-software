@@ -471,8 +471,14 @@ class humanagent(agent):
     maxcontrib = startpay
     newpay = privatepay + potpay
     self.messages.append('You made '+CURR+str(round(startpay, 2))+' by working with this team.')
-    self.messages.append('You contributed '+CURR+str(contrib)+' to the pot and kept '+CURR+str(round(keep,2)))
     cdesc = 'the shared pot' if not configuration.hide_publicgoods else 'the lottery'
+    self.messages.append('You contributed '+CURR+str(contrib)+' to '+cdesc+' and kept '+CURR+str(round(keep,2)))
+    if self.cfg.alt_pubgoods and not configuration.hide_publicgoods:
+      ratings = [self.global_ratings[n.id] for n in self.group.agents if n.id in self.global_ratings]
+      contribs = [teampays[n.id][0]/float(startpay) for n in self.group.agents]
+      potmult = self.cfg.pubgoods_calc(contribs, ratings)
+      potmult = int((potmult-1)*100)
+      self.messages.append('The pot was increased by {0}%'.format(potmult))
     self.messages.append('You received '+CURR+str(round(potpay,2))+' from '+cdesc)
     self.messages.append('You earned '+CURR+str(round(newpay,2))+' this round.')
     #if self.cfg.do_ratings and self.group.gsize > 1:
