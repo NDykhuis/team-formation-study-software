@@ -590,9 +590,28 @@ class simulation:
     self.pgsummary = {a.id:(pgdict[a][0],(pgdict[a][0]+pgdict[a][1])) for a in self.agents if a in pgdict}
     self.log("pgsummary: "+str(self.pgsummary))
     
-    #pgtuple = (agentid, groupid, contrib, keep, pay)
-    pgtuples = [(a.id, a.group.id, pgdict.get(a,(-1,-1))[0], pgdict.get(a,(-1,-1))[1], a.nowpay) for a in self.agents]
-    self.cfg._dblog.log_all_pubgoods(self.cfg.simnumber, pgtuples)
+    if self.cfg.alt_pubgoods:
+      #pgtuple = (agentid, groupid, contrib, keep, pay, avgrating, avgcontrib, multiplier, sharedamount)
+      pgtuples = []
+      for a in self.agents:
+        contrib, keep = pgdict.get(a,(-1,-1))[0], pgdict.get(a,(-1,-1))[1]
+        basicdata = (a.id, a.group.id, contrib, keep, a.nowpay)
+        if a.group.gsize > 1:
+          ratings = [cfg.lastratings[tm.id] for tm in a.group.agents if tm.id in cfg.lastratings]
+          avgrating = sum(ratings)/len(ratings) if len(ratings) else -1
+          contribs = [pgdict.get(tm, (-1,-1))[0]/(contrib+keep) for tm in a.group.agents]
+          avgcontrib = sum(contribs)/len(contribs)
+          multiplier = cfg.pubgoods_calc(contribs, ratings)
+          sharedpay = sum(contribs)*multiplier/float(len(g.agents))
+        else:
+          # This agent was not on a team; did not play pub goods
+          avgrating = avgcontrib = multiplier = sharedpay = -1
+        pgtuples.append(  basicdata + (avgrating, avgcontrib, multiplier, sharedpay) )
+      self.cfg._dblog.log_all_pubgoods_extra(self.cfg.simnumber, pgtuples)
+    else:
+      #pgtuple = (agentid, groupid, contrib, keep, pay)
+      pgtuples = [(a.id, a.group.id, pgdict.get(a,(-1,-1))[0], pgdict.get(a,(-1,-1))[1], a.nowpay) for a in self.agents]
+      self.cfg._dblog.log_all_pubgoods(self.cfg.simnumber, pgtuples)
     
   def reset(self, Gdone=None):
     if Gdone is None:

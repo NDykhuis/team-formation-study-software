@@ -135,6 +135,13 @@ class db_logger(object):
          timestamp real, sessionid integer,
          simnum integer, userid integer, groupid integer,
          contrib real, keep real, pay real)''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS pglog_extra
+        (rowid integer primary key asc,
+         timestamp real, sessionid integer,
+         simnum integer, userid integer, groupid integer,
+         contrib real, keep real, pay real,
+         avgrating real, avgcontrib real, multiplier real,
+         sharedamount real)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS exitquestionids
         (qid integer primary key asc, qtext text)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS exitresponses
@@ -343,6 +350,18 @@ class db_logger(object):
     for agentid, groupid, contrib, keep, pay in pgtuples:
       inserts.append( (None, timestamp, self.sessionid, simnum, agentid, groupid, contrib, keep, pay) )
     self.queue_insert('pglog', inserts, many=True)
+    
+  def log_all_pubgoods_extra(self, simnum, pgtuples): 
+    #pgtuple = (agentid, groupid, contrib, keep, pay, avgrating, avgcontrib, multiplier, sharedamount)
+    if self.NO_LOGGING: return
+    timestamp = time.time()
+    inserts = []
+    exinserts = []
+    for agentid, groupid, contrib, keep, pay, avgrating, avgcontrib, multiplier, sharedamount in pgtuples:
+      inserts.append( (None, timestamp, self.sessionid, simnum, agentid, groupid, contrib, keep, pay) )
+      exinserts.append( (None, timestamp, self.sessionid, simnum, agentid, groupid, contrib, keep, pay, avgrating, avgcontrib, multiplier, sharedamount) )
+    self.queue_insert('pglog', inserts, many=True)
+    self.queue_insert('pglog_extra', exinserts, many=True)
     
     
   def log_teamstatus(self, simnum, iternum, eventtype, gdata, activeagent=-1):
