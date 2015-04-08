@@ -2,6 +2,7 @@ import random
 import numpy as np
 import networkx as nx
 import copy
+import math
 
 PROTOCOL = 99
 ##   Setting this PROTOCOL flag will set several configuration options at once, for ease of experimentation
