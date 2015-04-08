@@ -78,12 +78,12 @@ class configuration(object):
     # b1 and b2 are constants, s.t. b1 indicates the minimum value for the 
     # multiplier, and b2 + b1 indicates the maximum value for the multiplier.
     #
-    # The coefficient b3 is a linear function of the ratings (from 1 to 5):
+    # The coefficient b3 is a linear function of the ratings (from 0 to 4):
     #
     # b3(r,a) = a1 + a2*r;
     avg_pctcontrib = sum(pctcontribs)/len(pctcontribs)
     scale_pctcontrib = (avg_pctcontrib - 0.5)*3
-    avg_rating = sum(ratings)/len(ratings) if len(ratings) else 3
+    avg_rating = (sum(ratings)/len(ratings) if len(ratings) else 3) - 1
     rating_multiplier_term = self.ap_rating_intercept + self.ap_rating_slope * avg_rating
     multiplier = self.ap_min_multiplier + (self.ap_multiplier_range)/(1+math.exp(-rating_multiplier_term * avg_pctcontrib))
     return multiplier
