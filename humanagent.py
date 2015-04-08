@@ -457,7 +457,7 @@ class humanagent(agent):
     self.logratingstatus('pubgood', [n.id for n in self.group.agents if n != self])
     
     # Send current pay with the publicgoods message
-    send_message(self.client, ('publicgoods', int(self.nowpay)))
+    send_message(self.client, ('publicgoods', (int(self.nowpay), potmult)))
     contrib = receive_message(self.client)
     self.logratings(step='publicgoods')
     

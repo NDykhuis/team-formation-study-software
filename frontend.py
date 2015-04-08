@@ -1851,7 +1851,7 @@ class TFGui(object):
     
     
   def m_publicgoods(self, event):
-    nowpay = self.getdata(event)
+    nowpay, potmult = self.getdata(event)
     self.show_screen(self.mainscreen)
     self.mwidgets['title'].config(text='Teamwork', bg='white')
     
@@ -1898,17 +1898,12 @@ class TFGui(object):
       longtext = 'At this stage, choose how much of your potential pay you\nwould like to contribute to the shared pot and select "Submit"\n'
       if self.cfgdict['alt_pubgoods']:
         lastratings = self.cfgdict.get('lastratings', {})
-        
-        ## VERY HACK:
-        c = configuration()
-        mult_low = c.pubgoods_calc([0], [lastratings[a.id] for a in group.agents if a.id in lastratings])
-        mult_high = c.pubgoods_calc([1], [lastratings[a.id] for a in group.agents if a.id in lastratings])
-        
+        mult_low, mult_high = potmult
         minreal = self.proptopct(mult_low)
         maxreal = self.proptopct(mult_high)
-        longtext += "The pot will be increased by an amount between {0}% and {1}%, depending on everyone's contributions,\n and split evenly among everyone on your team.\n".format(minreal, maxreal)
+        longtext += "The pot will be increased by {0}% to {1}%, depending on contributions,\nand split evenly among everyone on your team.\n".format(minreal, maxreal)
       else:
-        longtext += 'The pot will be increased by '+str(self.cfgdict['pubgoods_mult'])+"% and split evenly among everyone on your team.\n"
+        longtext += "The pot will be increased by "+str(int((potmult-1)*100))+"% and split evenly among everyone on your team.\n"
       longtext += "Each team member's contribution will be shown publicly to the other members of the team."      
     else:
       longtext = "Choose how much of your pay you would like to enter in the lottery.\nThe amount you contribute determines the amount you are eligible to win."
