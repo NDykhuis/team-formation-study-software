@@ -506,7 +506,7 @@ class simulation:
     if cfg.alt_pubgoods:
       if pgdict:
         # Given contribs and ratings, return the actual multiplier
-        return cfg.pubgoods_calc([pgdict[a][0] for a in group.agents], [cfg.lastratings[a.id] for a in group.agents if a.id in cfg.lastratings])
+        return cfg.pubgoods_calc([pgdict[a][0]/float(a.nowpay) for a in group.agents], [cfg.lastratings[a.id] for a in group.agents if a.id in cfg.lastratings])
       else:
         # Given only the ratings, return the range of possible multipliers
         mult_low = cfg.pubgoods_calc([0], [cfg.lastratings[a.id] for a in group.agents if a.id in cfg.lastratings])
