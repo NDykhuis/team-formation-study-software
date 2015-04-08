@@ -602,7 +602,7 @@ class simulation:
           contribs = [pgdict.get(tm, (-1,-1))[0]/(contrib+keep) for tm in a.group.agents]
           avgcontrib = sum(contribs)/len(contribs)
           multiplier = cfg.pubgoods_calc(contribs, ratings)
-          sharedpay = sum(contribs)*multiplier/float(len(g.agents))
+          sharedpay = sum(contribs)*multiplier/float(len(a.group.agents))
         else:
           # This agent was not on a team; did not play pub goods
           avgrating = avgcontrib = multiplier = sharedpay = -1

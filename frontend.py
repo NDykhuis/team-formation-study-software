@@ -1896,7 +1896,7 @@ class TFGui(object):
 
     if not self.cfgdict['hide_publicgoods']:
       longtext = 'At this stage, choose how much of your potential pay you\nwould like to contribute to the shared pot and select "Submit"\n'
-      if self.cfgdict['alt_pubgoods']
+      if self.cfgdict['alt_pubgoods']:
         lastratings = self.cfgdict.get('lastratings', {})
         
         ## VERY HACK:
