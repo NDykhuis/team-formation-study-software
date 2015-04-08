@@ -85,7 +85,7 @@ class configuration(object):
     scale_pctcontrib = (avg_pctcontrib - 0.5)*3
     avg_rating = (sum(ratings)/len(ratings) if len(ratings) else 3) - 1
     rating_multiplier_term = self.ap_rating_intercept + self.ap_rating_slope * avg_rating
-    multiplier = self.ap_min_multiplier + (self.ap_multiplier_range)/(1+math.exp(-rating_multiplier_term * avg_pctcontrib))
+    multiplier = self.ap_min_multiplier + (self.ap_multiplier_range)/(1+math.exp(-rating_multiplier_term * scale_pctcontrib))
     return multiplier
   
   show_other_team_members = True
