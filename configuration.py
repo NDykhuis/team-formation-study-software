@@ -55,10 +55,35 @@ class configuration(object):
     'random':(0.0, 1.0)
   }
   conditional_variance = 0.1
+  
+  # Alternative pubgoods parameters
   alt_pubgoods = False   # Use alternative version of pubgoods
-  def pubgoods_calc(self, contribs, ratings):
-    # This should calculate the multiplier for pubgoods
-    return 0
+  ap_min_multiplier = 1.10
+  ap_max_multiplier = 2.00
+  ap_rating_intercept = 0.25
+  ap_rating_slope = 0.50
+  ap_multiplier_range = ap_max_multiplier-ap_min_multiplier
+  
+  def pubgoods_calc(self, pctcontribs, ratings):
+    ## Description
+    #
+    # The multiplier for the Public Good Game is given by the following
+    # functions:
+    #
+    # k(c,b) = b1 + b2/(1 + exp(-b3*c)),         [1]
+    #
+    # where "c" is percentage contribution, between 0.00 and 1.00; b1 and b2 are
+    # constants, s.t. b1 indicates the minimum value for the multiplier, and b2
+    # + b1 indicates the maximum value for the multiplier.
+    #
+    # The coefficient b3 is a linear function of the ratings (from 1 to 5):
+    #
+    # b3(r,a) = a1 + a2*r;
+    avg_pctcontrib = sum(pctcontribs)/len(pctcontribs)
+    avg_rating = sum(ratings)/len(ratings) if len(ratings) else 3
+    rating_multiplier_term = ap_rating_intercept + ap_rating_slope * avg_rating
+    multiplier = ap_min_multiplier + (ap_multiplier_range)/(1+math.exp(-rating_multiplier_term * avg_pctcontrib))
+    return multiplier
   
   show_other_team_members = True
   
