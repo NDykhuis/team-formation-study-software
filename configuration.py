@@ -81,8 +81,8 @@ class configuration(object):
     # b3(r,a) = a1 + a2*r;
     avg_pctcontrib = sum(pctcontribs)/len(pctcontribs)
     avg_rating = sum(ratings)/len(ratings) if len(ratings) else 3
-    rating_multiplier_term = ap_rating_intercept + ap_rating_slope * avg_rating
-    multiplier = ap_min_multiplier + (ap_multiplier_range)/(1+math.exp(-rating_multiplier_term * avg_pctcontrib))
+    rating_multiplier_term = self.ap_rating_intercept + self.ap_rating_slope * avg_rating
+    multiplier = self.ap_min_multiplier + (self.ap_multiplier_range)/(1+math.exp(-rating_multiplier_term * avg_pctcontrib))
     return multiplier
   
   show_other_team_members = True
