@@ -505,7 +505,7 @@ class simulation:
   def calc_potmult(self, group, cfg, pgdict=None):
     if cfg.alt_pubgoods:
       if pgdict:
-        return cfg.pubgoods_calc([pgdict[a][0] for a in group.agents], [cfg.lastratings[a.id] for a in group.agents])
+        return cfg.pubgoods_calc([pgdict[a][0] for a in group.agents], [cfg.lastratings[a.id] for a in group.agents if a.id in cfg.lastratings])
       else:
         return 0    ## TEMPORARY
     else:
