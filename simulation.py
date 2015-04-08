@@ -599,9 +599,10 @@ class simulation:
         if a.group.gsize > 1:
           ratings = [cfg.lastratings[tm.id] for tm in a.group.agents if tm.id in cfg.lastratings]
           avgrating = sum(ratings)/len(ratings) if len(ratings) else -1
-          contribs = [pgdict.get(tm, (-1,-1))[0]/(contrib+keep) for tm in a.group.agents]
-          avgcontrib = sum(contribs)/len(contribs)
-          multiplier = cfg.pubgoods_calc(contribs, ratings)
+          contribs = [pgdict[tm][0] for tm in a.group.agents]
+          pctcontribs [c/float(contrib+keep) for c in contribs]
+          avgcontrib = sum(pctcontribs)/len(pctcontribs)
+          multiplier = cfg.pubgoods_calc(pctcontribs, ratings)
           sharedpay = sum(contribs)*multiplier/float(len(a.group.agents))
         else:
           # This agent was not on a team; did not play pub goods
