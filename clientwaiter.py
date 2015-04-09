@@ -35,7 +35,7 @@ def log(text, level=0):
 ADDRESS = ''  # '' for anything
 
 
-class clientwaiter(object):
+class ClientWaiter(object):
   """Waits for connections from client computers running frontend.py.
   
   Waits for clients until server user presses ENTER. 

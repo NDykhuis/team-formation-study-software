@@ -67,7 +67,7 @@ if __name__ == '__main__':
     else:
       outfile = None
     
-    cw = clientwaiter()
+    cw = ClientWaiter()
     conns = cw.getclients()
 
     ## Log this session's configuration
@@ -367,7 +367,7 @@ if __name__ == '__main__':
   elif sys.argv[1] == 'single':    # Run a single ... exit survey?
     cfg = configuration()
     
-    cw = clientwaiter()
+    cw = ClientWaiter()
     conns = cw.getclients()
     cfg.nhumans = len(conns)
     cfg._conns = conns
