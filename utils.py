@@ -1,4 +1,11 @@
-import cPickle as pickle 
+#
+# utils.py - provides basic TCP send/receive functionality
+# 
+# Copyright (C) 2015  Nathan Dykhuis
+# with portions from
+# http://stupidpythonideas.blogspot.com/2013/05/sockets-are-byte-streams-not-message.html
+#
+
 import json
 import struct
 

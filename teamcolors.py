@@ -1,5 +1,27 @@
+#
+# teamcolors.py - provides sets of distinct colors
+# 
+# Copyright (C) 2015  Nathan Dykhuis
+# with colors from various online sources
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, see <http://www.gnu.org/licenses/>.
+#
+
+
 import random
 
+# Kenneth Kelly's 22 colors of maximum contrast
 COLORS22 = [    
     "#FFB300", #Vivid Yellow
     "#803E75", #Strong Purple
@@ -25,7 +47,9 @@ COLORS22 = [
     "#F13A13", #Vivid Reddish Orange
 ]
 #random.shuffle(COLORS22)
-    
+
+# From
+# http://prestopnik.com/warfish/colors/    
 COLORS16 = [
   #"#262626",
   "#0000bd",
@@ -60,6 +84,7 @@ COLORS9 = [
   "#999999"
 ]
 
+# Boynton's list of 11 colors
 COLORS11 = [
   '#0000FF',
   '#FF0000',
