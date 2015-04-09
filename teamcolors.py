@@ -17,7 +17,17 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
+"""
+This module provides sets of visually distinct colors, in HTML hex format.
 
+Five sets of colors are provided, for 9, 11, 12, 16, and 22 items.
+Color sets are named "COLORSxx" where xx is the number of colors, and
+are Python lists of HTML colors, of the form "#XXXXXX"
+
+When run on its own, this module creates a Tk window showing a set of
+colors. Clicking a button will rearrange the colors; mousing over
+shows the hex value of the color.
+"""
 
 import random
 
@@ -112,8 +122,16 @@ COLORS12 = [
 "#b15928"
 ]
 
-testcolors = COLORS16
-if __name__=='__main__':
+def colortest_app(testcolors):
+  """ Displays a set of colors to help assess visual distinctness
+  
+  User can mouse over colors to show hex string, or click a button
+  to rearrange the colors.
+  
+  Args:
+    testcolors: a list of colors in "#XXXXXX" format
+  """
+  
   import Tkinter as tk
   import math
   root = tk.Tk()
@@ -121,34 +139,48 @@ if __name__=='__main__':
   m.grid(column=0, row=0, sticky="NSEW")
   m.columnconfigure(0, weight=1)
   m.rowconfigure(0, weight=1)
+  
+  # Colors should be arranged roughly in a square;
+  # number of columns should be sqrt of number of colors
   cols = math.ceil(math.sqrt(len(testcolors)))
+  
   r = 0
   c = 0
-  labels = []
-  locs = []
-  for i,color in enumerate(testcolors):
+  labels = []   # List of color patch widgets
+  locs = []     # List of locations
+  for i, color in enumerate(testcolors):
+    # Create new widget to display color
     #l = tk.Frame(m, background=color, width=64, height=64)
     l = tk.Label(m, background=color, width=12, height=4, text='')
+    
+    # Bind handlers to show/hide text on mouseover
     l.bind("<Enter>", lambda e, bnum=i: textchange(bnum, True))
     l.bind("<Leave>", lambda e, bnum=i: textchange(bnum, False))
+    
     labels.append(l)
     l.grid(row=r, column=c)
-    locs.append((r,c))
+    locs.append((r, c))
     c += 1
     if c >= cols:
+      # move to the next row
       c = 0; r += 1
     
   def rearrange():
+    """Shuffles the color locations"""
     random.shuffle(locs)
     for lab, loc in zip(labels, locs):
       lab.grid_forget()
       lab.grid(column=loc[1], row=loc[0])
     
   def textchange(i, active):
-    text = (str((i,testcolors[i])) if active else '')
+    """Shows/hides hex string text"""
+    text = (str((i, testcolors[i])) if active else '')
     labels[i].config(text=text)
     
   reset = tk.Button(m, text='Shuffle', command=rearrange)
   reset.grid(row=r+1, column=0)
                     
   root.mainloop()
+
+if __name__ == '__main__':
+  colortest_app(COLORS16)
