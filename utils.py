@@ -37,12 +37,12 @@ def send_message(connection, message):
   
   if DEBUG_COMM:
     print "Sending", message
-  s = json.dumps(message)
-  if len(s) >= BUFFER_SIZE:
+  msg_string = json.dumps(message)
+  if len(msg_string) >= BUFFER_SIZE:
     raise IOError("Message too large to send!")
     #return False
-  connection.sendall(struct.pack('!I', len(s)))
-  connection.sendall(s)
+  connection.sendall(struct.pack('!I', len(msg_string)))
+  connection.sendall(msg_string)
   return True
 
 ## http://stupidpythonideas.blogspot.com/2013/05/sockets-are-byte-streams-not-message.html
@@ -82,17 +82,17 @@ def receive_message(connection):
   Raises:
     ValueError: could not load the object with JSON  
   """
-  s1 = recvall(connection, 4)
-  msg_len = struct.unpack('!I', s1)[0]
-  s2 = recvall(connection, msg_len)
+  msg_len_raw = recvall(connection, 4)
+  msg_len = struct.unpack('!I', msg_len_raw)[0]
+  msg_string = recvall(connection, msg_len)
   try:
-    data = json.loads(s2)
+    data = json.loads(msg_string)
   except ValueError:
-    print "JSON error on message:", s2
-    print "message length:", s1
+    print "JSON error on message:", msg_string
+    print "message length:", msg_len
     raise
   if DEBUG_COMM:
-    print "Received", s2
+    print "Received", msg_string
   return data
 
 def send_and_receive(connection, message):
