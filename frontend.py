@@ -1669,7 +1669,7 @@ class TFGui(object):
       #  sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
       self.vidfile = '../data/{date}_ses_{sessionid:02d}/user_{userid:02d}/cap_{sessionid:02d}-{userid:02d}'.format(
         sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
-      self.vidrec = vidcapture(self.vidfile)
+      self.vidrec = VidCapture(self.vidfile)
     else:
       self.vidrec = None
       self.sframe = self.stime = self.eframe = self.etime = -1

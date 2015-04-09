@@ -19,7 +19,7 @@
 
 """Simple OpenCV video capture module.
 
-Use the vidcapture class to start recording video in a new thread.
+Use the VidCapture class to start recording video in a new thread.
 Call "start", "stop", and "quit" to control video recording.
 Video will be dumped to an avi file, and frame timestamps to a txt file.
 """
@@ -39,7 +39,7 @@ FRAME_DELAY = 0.01
 IMG_WIDTH = 800
 IMG_HEIGHT = 600
 
-class vidcapthread(threading.Thread):
+class VidCapThread(threading.Thread):
   """OpenCV video capture thread.
   
   Private: should only be used within this module
@@ -148,7 +148,7 @@ class vidcapthread(threading.Thread):
 
 
 
-class vidcapture(object):
+class VidCapture(object):
   """OpenCV video capture class.
   
   Starts video recording in a separate thread, and controls it
@@ -158,7 +158,7 @@ class vidcapture(object):
   the captured video, and '_frametimes.txt' for frame timestamps
   """
   def __init__(self, filename):
-    self.vidcap = vidcapthread(filename)
+    self.vidcap = VidCapThread(filename)
     self.vidcap.daemon = True
     # Start the video capture thread, but don't start recording
     self.vidcap.start() 
@@ -199,7 +199,7 @@ class vidcapture(object):
   
 def testvidcapture():
   """Open video capture and test frame rate."""
-  vc = vidcapture('../testdata/testfile')
+  vc = VidCapture('../testdata/testfile')
   vc.start()
   print "Vid cap started"
   x = 0
