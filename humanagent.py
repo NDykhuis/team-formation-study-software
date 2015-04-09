@@ -33,25 +33,10 @@ class humanagent(agent):
   def __init__(self, cfg, connection, adat=None, skills=None, aid=None):
     super(humanagent, self).__init__(cfg, adat, skills, aid)
     
-    ## This part might have to be more global...
-    #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #self.socket = s
-    #s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    #s.bind((ADDRESS, SERVER_PORT))
-    #s.listen(1)
-    #connection, client_address = s.accept()
-    
     self.client = connection
     self.messages = []
     self.slow = True
     self.type = 'human'
-    
-    # this all needs to go in the frontend
-    #if cfg._do_video:
-    #  today = datetime.date.today()
-    #  self.vidfile = 'ses_{sessionid:02d}_user_{userid:02d}_{date}'.format(
-    #      sessionid=cfg._dblog.sessionid, userid=self.id, date=today.strftime('%Y/%m/%d'))
-    #  self.vidrec = vidcapture(self.vidfile)
     
     # THIS IS DUPLICATED FROM FRONTEND.PY - should move to configuration?
     self.gletters = [chr(ord('A')+i) for i in range(configuration.n)]
