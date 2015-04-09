@@ -6,6 +6,10 @@
 # http://stupidpythonideas.blogspot.com/2013/05/sockets-are-byte-streams-not-message.html
 #
 
+"""
+This module provides basic TCP send/receive functionality
+"""
+
 import json
 import struct
 
@@ -15,6 +19,22 @@ SERVER_PORT = 1234
 DEBUG_COMM = False
 
 def send_message(connection, message):
+  """Sends a message to a connection.
+  
+  First sends an int with length of the message, 
+  then sends the message in string format with JSON.
+  
+  Args:
+    connection: a socket connection object
+    message: any JSON-compatible object smaller than BUFFER_SIZE
+  
+  Returns:
+    True if successful
+  
+  Raises:
+    IOError if the message is too large to send
+  """
+  
   if DEBUG_COMM:
     print "Sending", message
   s = json.dumps(message)
@@ -27,6 +47,18 @@ def send_message(connection, message):
 
 ## http://stupidpythonideas.blogspot.com/2013/05/sockets-are-byte-streams-not-message.html
 def recvall(sock, count):
+  """Receive a specified number of bytes from a socket
+  
+  Not intended for use outside of this module
+  
+  Args:
+    sock: a socket
+    count: number of bytes to receive
+    
+  Returns:
+    None if receive fails
+    a buffer of size [count] if successful
+  """
   buf = b''
   while count:
     newbuf = sock.recv(count)
@@ -36,6 +68,20 @@ def recvall(sock, count):
   return buf
 
 def receive_message(connection):
+  """Receives a message from a connection
+  
+  First receives an int with length of the message,
+  then receives the message and unpacks it with JSON.
+  
+  Args:
+    connection: a socket connection object
+  
+  Returns:
+    a Python object received from the connection
+  
+  Raises:
+    ValueError: could not load the object with JSON  
+  """
   s1 = recvall(connection, 4)
   msg_len = struct.unpack('!I', s1)[0]
   s2 = recvall(connection, msg_len)
@@ -50,5 +96,11 @@ def receive_message(connection):
   return data
 
 def send_and_receive(connection, message):
+  """Convenience function to send a message, and receive a response.
+  
+  Calls:
+    send_message(connection, message)
+    return receive_message(connection)
+  """
   send_message(connection, message)
   return receive_message(connection)
