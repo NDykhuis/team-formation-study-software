@@ -22,20 +22,32 @@ import sqlite3
 import datetime
 import time
 import sys
-from configuration import configuration    # Try to use this as little as possible...
+
+# Try to use this as little as possible...
+from configuration import configuration
 
 import threading
 import Queue
 
 def r2(pay):
+  """ Shorthand for 'round to 2 decimals' """
   return round(pay, 2)
 
 class db_logger(object):
+  """Handles logging results to SQLite3 database
+  
+  Contains numerous methods for logging all aspects of team formation.
+  Uses a threaded batch insert system to reduce database commits 
+  and improve performance.
+  """
+  
   def __init__(self, dbfile):
     self.dbfile = dbfile
     self.setup()
     
     self.NO_LOGGING = False     # TEMP: Set to true to disable database output
+    
+    self.sessionid = None   # Init from database in self.setup()
     
     # Threaded producer-consumer code
     self.insthread = None
@@ -54,6 +66,7 @@ class db_logger(object):
   #     turn id, user id, group, current pay, new group pay, joined or not  (max group pay?)
   
   def setup(self):
+    """Setup database schema and get new sessionid"""
     # Types: NULL, INTEGER, REAL, TEXT, BLOB
     conn = sqlite3.connect(self.dbfile)
     conn.execute('''CREATE TABLE IF NOT EXISTS sessions 
@@ -192,31 +205,42 @@ class db_logger(object):
     timestamp = time.time()
     cursor = conn.cursor()
     cursor.execute('INSERT INTO sessions(starttime) VALUES (?)', (timestamp,))
-    self.sessionid = cursor.lastrowid   # Could also use the SQLite function last_insert_rowid()
+    self.sessionid = cursor.lastrowid
+    # Could also use the SQLite function last_insert_rowid()
     conn.commit()
     
     conn.close()
     
     
-  def log_config(self, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam, keepteams, dynamic, keepgraph, globalratings, nhistory):
+  def log_config(self, u_rounds, intro_sim, pubgoods, hide_pubgoods, 
+                 pubgoods_mult, ratings, timelimit, nhumans, showteam, 
+                 keepteams, dynamic, keepgraph, globalratings, nhistory):
+    """Log sim configuration to 'session_config' table"""
     if self.NO_LOGGING: return
     
-    self.queue_insert('session_config', (self.sessionid, u_rounds, intro_sim, pubgoods, hide_pubgoods, pubgoods_mult, ratings, timelimit, nhumans, showteam, keepteams, dynamic, keepgraph, globalratings, nhistory))
+    self.queue_insert('session_config', 
+                      (self.sessionid, u_rounds, intro_sim, pubgoods, 
+                       hide_pubgoods, pubgoods_mult, ratings, timelimit, 
+                       nhumans, showteam, keepteams, dynamic, keepgraph, 
+                       globalratings, nhistory))
         
   def log_sessionend(self):
+    """Log timestamp of session end to 'sessions' table"""
     endtime = time.time()
-    conn=sqlite3.connect(self.dbfile)
+    conn = sqlite3.connect(self.dbfile)
     conn.execute('UPDATE sessions SET endtime=? WHERE sessionid=?', (endtime, self.sessionid))
     conn.commit()
     conn.close()
         
   def log_gen(self, message):
+    """Log generic message to 'log' table"""
     if self.NO_LOGGING: return
     timestamp = time.time()
     
     self.queue_insert('log', (None, timestamp, self.sessionid, message))
         
   def log_summary(self, data):
+    """Log sim summary statistics to a single row in 'tfsummary' table"""
     if self.NO_LOGGING: return
     timestamp = time.time()
     
@@ -225,6 +249,7 @@ class db_logger(object):
     self.queue_insert('tfsummary', outdata)
         
   def log_summary_gen(self, simnum, data):
+    """Log all summary data values to separate rows in 'tfdata' table"""
     if self.NO_LOGGING: return
     timestamp = time.time()
     
@@ -243,6 +268,10 @@ class db_logger(object):
     self.queue_insert('tfdata', inserts, many=True)
         
   def log_agentconfig(self, agents):
+    """Log agent types/personalities to 'agent_config' table
+    
+    agents: list of (agent id, agent type) tuples
+    """
     if self.NO_LOGGING: return
     inserts = []
     for aid, atype in agents:
@@ -251,12 +280,22 @@ class db_logger(object):
     self.queue_insert('agent_config', inserts, many=True)
         
   def log_ultimatum(self, p1=0, p2=0, amount=0, accepted=0, stime=0, etime=0):
+    """Log results of ultimatum to 'ultimatum' table"""
     if self.NO_LOGGING: return
     timestamp = time.time()
     
     self.queue_insert('ultimatum', (None, timestamp, self.sessionid, p1, p2, amount, accepted, stime, etime))
     
   def tflog_insert(self, inserts):
+    """Log team formation event to 'tflog' table
+    
+    This method is generic and used by other log methods
+    to log the relevant data for each step of team formation
+    
+    inserts = (None, timestamp, sessionid, eventtype, 
+               simnum, iternum, userid, otherid, 
+               currentpay, newpay, maxpay, chosen)
+    """
     if self.NO_LOGGING: return
   
     # Create a column that counts how many other options had the same value
@@ -265,25 +304,38 @@ class db_logger(object):
     
     nsames = {} # (value, count) dictionary
     for ins in inserts:
-      nsames[ins[9]] = nsames.get(ins[9],0)+1
+      nsames[ins[9]] = nsames.get(ins[9], 0)+1
     
-    newinserts = [ins[0:11]+(nsames[ins[9]],ins[11]) for ins in inserts]   # splice in the nsame column (not elegant)
+    # splice in the nsame column (not elegant)
+    newinserts = [ins[0:11]+(nsames[ins[9]], ins[11]) for ins in inserts]
     
     self.queue_insert('tflog', newinserts, many=True)
       
   def tfevent_insert(self, data):
-    # data = (timestamp, session, userid, simnum, iternum, event, sframe, eframe, stime, etime)
+    """Log a team formation event to 'tfevent' table
+    
+    data = (None, timestamp, sessionid, userid, simnum, iternum, 
+            eventtype, startframe, endframe, starttime, endtime)
+    """
+    
     if self.NO_LOGGING: return
     
     self.queue_insert('tfevent', data)
       
-  def ultevent_insert(self, userid, otherid, eventtype, value, sframe, eframe, stime, etime):
+  def ultevent_insert(self, userid, otherid, eventtype, value, 
+                      sframe, eframe, stime, etime):
+    """Log an ultimatum event to 'ultevent' table"""
     if self.NO_LOGGING: return
     timestamp = time.time()
     
     self.queue_insert('ultevent', (None, timestamp, self.sessionid, userid, otherid, eventtype, value, sframe, eframe, stime, etime))
       
   def log_topo(self, simnum, aid, nbrids):
+    """Log graph topology info to 'neighborlist' and 'neighbors' tables
+    
+    aid: agent ID
+    nbrids: list of neighbor IDs
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     nbrids = sorted(nbrids)
@@ -296,7 +348,16 @@ class db_logger(object):
     self.queue_insert('neighborlist', (None, timestamp, self.sessionid, simnum, aid, nbridstring))
     self.queue_insert('neighbors', inserts, many=True)
       
-  def log_apply(self, simnum, iternum, aid, gids, currpay, newpays, applications, sframe=-1, eframe=-1, stime=-1, etime=-1):
+  def log_apply(self, simnum, iternum, aid, gids, 
+                currpay, newpays, applications, 
+                sframe=-1, eframe=-1, stime=-1, etime=-1):
+    """Log apply event to 'tflog' and 'tfevent' tables
+    
+    gids: list of groups to apply to
+    currpay: current pay amount
+    newpays: list of how much each new group pays
+    applications: list of which group IDs applied to
+    """
     timestamp = time.time()
     inserts = []
     maxpay = r2(max(newpays))
@@ -305,7 +366,16 @@ class db_logger(object):
     self.tflog_insert(inserts)
     self.tfevent_insert( (None, timestamp, self.sessionid, aid, simnum, iternum, 'apply', sframe, eframe, stime, etime) )
     
-  def log_accept(self, simnum, iternum, aid, naids, currpay, newpays, accepts, sframe=-1, eframe=-1, stime=-1, etime=-1):
+  def log_accept(self, simnum, iternum, aid, naids, 
+                 currpay, newpays, accepts, 
+                 sframe=-1, eframe=-1, stime=-1, etime=-1):
+    """Log acceptvote event to 'tflog' and 'tfevent' tables
+    
+    naids: list of applicant ids
+    currpay: current pay amount
+    newpays: list of how much each applicant would pay
+    accepts: ID of agent receiving accept vote
+    """
     timestamp = time.time()
     inserts = []
     maxpay = r2(max(newpays))
@@ -314,7 +384,16 @@ class db_logger(object):
     self.tflog_insert(inserts)
     self.tfevent_insert( (None, timestamp, self.sessionid, aid, simnum, iternum, 'acceptvote', sframe, eframe, stime, etime) )
     
-  def log_join(self, simnum, iternum, aid, gids, currpay, newpays, acceptance, sframe=-1, eframe=-1, stime=-1, etime=-1):
+  def log_join(self, simnum, iternum, aid, gids, 
+               currpay, newpays, acceptance, 
+               sframe=-1, eframe=-1, stime=-1, etime=-1):
+    """Log join event to 'tflog' and 'tfevent' tables
+    
+    gids: list of groups to join
+    currpay: current pay amount
+    newpays: list of how much each group would pay
+    acceptance: ID of group chosen to join
+    """
     timestamp = time.time()
     inserts = []
     maxpay = r2(max(newpays))
@@ -323,7 +402,16 @@ class db_logger(object):
     self.tflog_insert(inserts)
     self.tfevent_insert( (None, timestamp, self.sessionid, aid, simnum, iternum, 'join', sframe, eframe, stime, etime) )
     
-  def log_expel(self, simnum, iternum, aid, naids, currpay, newpays, expels, sframe=-1, eframe=-1, stime=-1, etime=-1):
+  def log_expel(self, simnum, iternum, aid, naids, 
+                currpay, newpays, expels, 
+                sframe=-1, eframe=-1, stime=-1, etime=-1):
+    """Log expelvote event to 'tflog' and 'tfevent' tables
+    
+    naids: list of team member ids
+    currpay: current pay amount
+    newpays: list of how much expelling each member would pay
+    accepts: ID of agent receiving expel vote
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -334,6 +422,10 @@ class db_logger(object):
     self.tfevent_insert( (None, timestamp, self.sessionid, aid, simnum, iternum, 'expelvote', sframe, eframe, stime, etime) )
   
   def log_conclusion(self, groups, simnum):
+    """Log final group id and pay to 'tfrounds' table
+    
+    groups: list of group objects
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -346,7 +438,19 @@ class db_logger(object):
     
     self.queue_insert('tfrounds', inserts, many=True)
     
-  def log_pubgoods(self, simnum, userid, gid, otherids, usercontrib, othercontribs, keep, pay, sframe=-1, eframe=-1, stime=-1, etime=-1):
+  def log_pubgoods(self, simnum, userid, gid, otherids, 
+                   usercontrib, othercontribs, keep, pay, 
+                   sframe=-1, eframe=-1, stime=-1, etime=-1):
+    """Log pubgoods data to 'tflog' and 'tfevent' tables
+    
+    gid: group ID (not used)
+    otherids: ids of team members
+    usercontrib: this agent's contribution (currentpay)
+    othercontribs: list of team member contributions (newpay)
+    keep: pay not contributed
+          --> amount agent started with goes in maxpay
+    pay: final pay  (not used, see log_all_pubgoods)
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     iternum = -1
@@ -363,7 +467,10 @@ class db_logger(object):
     self.tfevent_insert( (None, timestamp, self.sessionid, userid, simnum, iternum, 'pubgood', sframe, eframe, stime, etime) )
     
   def log_all_pubgoods(self, simnum, pgtuples): 
-    #pgtuple = (agentid, groupid, contrib, keep, pay)
+    """Log pubgoods data to 'pglog' table
+    
+    pgtuple = (agentid, groupid, contrib, keep, pay)
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -372,7 +479,10 @@ class db_logger(object):
     self.queue_insert('pglog', inserts, many=True)
     
   def log_all_pubgoods_extra(self, simnum, pgtuples): 
-    #pgtuple = (agentid, groupid, contrib, keep, pay, avgrating, avgcontrib, multiplier, sharedamount)
+    """Log extended pubgoods data to 'pglog' and 'pglog_extra' tables
+    
+    pgtuple = (agentid, groupid, contrib, keep, pay, avgrating, avgcontrib, multiplier, sharedamount)
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -385,6 +495,11 @@ class db_logger(object):
     
     
   def log_teamstatus(self, simnum, iternum, eventtype, gdata, activeagent=-1):
+    """Log team IDs of each agent to 'teamstatus' table
+    
+    gdata = (group ID, [group member IDs], group pay)
+    activeagent: the currently-deciding agent, used during 'join' step
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -394,16 +509,11 @@ class db_logger(object):
     
     self.queue_insert('teamstatus', inserts, many=True)
         
-  def log_ratings_OLD(self, simnum, userid, gid, otherids, ratings, sframe=-1, eframe=-1, stime=-1, etime=-1):
-    timestamp = time.time()
-    iternum = -1
-    inserts = []
-    for otherid, rating in zip(otherids, ratings):
-      inserts.append( (None, timestamp, self.sessionid, 'rating', simnum, iternum, userid, otherid, -1, rating, -1, -1) )   # A little hacky to shove this into tflog, but we'll leave it for now.
-    self.tflog_insert(inserts)
-    self.tfevent_insert( (None, timestamp, self.sessionid, userid, simnum, iternum, 'rating', sframe, eframe, stime, etime) )
-
   def log_ratings(self, logdata):
+    """Log each agent's ratings of the other agents to 'ratings' table
+    
+    logdata=(userid, otherid, rating, eframe, etime, simnum, iternum, step)
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     iternum = -1
@@ -414,6 +524,14 @@ class db_logger(object):
     self.queue_insert('ratings', inserts, many=True)
       
   def log_ratingstatus(self, simnum, iternum, eventtype, aid, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs):
+    """Log current ratings of agents or groups to 'ratingstatus' table
+    
+    otherids: IDs of other agents or groups
+    myrtgs: my rating of an agent, or my average rating of a group
+    globalrtgs: global rating of an agent, or average global rating of a group
+    minrtgs, maxrtgs: lowest and highest personal rating of group members
+                      (only used for groups)
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -423,6 +541,10 @@ class db_logger(object):
     self.queue_insert('ratingstatus', inserts, many=True)
       
   def log_globalratings(self, simnum, iternum, aidratingdict, eframe=-1, etime=-1):
+    """Log current global ratings of all agents
+    
+    aidratingdict = {agent id:rating}
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -432,12 +554,20 @@ class db_logger(object):
     self.queue_insert('globalratings', inserts, many=True)
       
   def log_introsurvey(self, aid, responses):
+    """Log intro survey responses to 'introresponses'
+    
+    responses = (gender, college, status)
+    """
     timestamp = time.time()
     gender, college, status = responses
     
     self.queue_insert('introresponses', (None, timestamp, self.sessionid, aid, gender, college, status))
     
   def get_qid(self, qtext, conn):
+    """Get exit survey question ID, given a question's text
+    
+    If question's text is not found, add it to 'exitquestionids' table
+    """
     q = conn.execute('SELECT qid FROM exitquestionids WHERE qtext = ?', (qtext,) )
     result = q.fetchone()
     if result is not None:
@@ -450,18 +580,25 @@ class db_logger(object):
         return result[0]
       else:
         raise KeyError("qtext not found in exitquestionids after creation!")
-        return None
 
   def log_exitsurvey(self, aid, responses):
+    """Log exit survey responses to 'exitresponses'
+    
+    responses = (question text, question response)
+    """
     timestamp = time.time()
-    conn=sqlite3.connect(self.dbfile) # KEEP
+    conn = sqlite3.connect(self.dbfile) # KEEP
     for qtext, qresponse in responses:
       qid = self.get_qid(qtext, conn)
       conn.execute('INSERT INTO exitresponses VALUES (?,?,?,?,?,?)', (None, timestamp, self.sessionid, aid, qid, qresponse))
     conn.commit() # KEEP
     conn.close() # KEEP
   
-  def log_finalpay(self, paydata):  # paydata is (id, pay) tuples
+  def log_finalpay(self, paydata):
+    """Log final pay for each agent to 'finalpay' table
+    
+    paydata = (agent id, final pay)
+    """
     if self.NO_LOGGING: return
     timestamp = time.time()
     inserts = []
@@ -471,16 +608,24 @@ class db_logger(object):
     self.queue_insert('finalpay', inserts, many=True)
         
   def log_simtime(self, simnum, iternum, stime, etime):
+    """Log elapsed time of a simulation round to 'simtime' table"""
     if self.NO_LOGGING: return
     timestamp = time.time()
     
     self.queue_insert('simtime', (None, timestamp, self.sessionid, simnum, iternum, stime, etime, etime-stime))
         
   def queue_insert(self, instable, instuple, many=False):
+    """Queue an insert for the database
+    
+    instable:  the table in which to make the insert
+    instuple:  tuple of values for each column, or list of these tuples
+    many: False if this is a single insert, True if instuple is a list
+          (decides whether to use execute or executemany to make the insert)
+    """
     self.insqueue.put( (instable, instuple, many) ) 
   
   def batch_inserts(self, forcecommit=True):
-    conn=sqlite3.connect(self.dbfile)
+    conn = sqlite3.connect(self.dbfile)
     while not self.insqueue.empty():
       try:
         instable, instuple, many = self.insqueue.get(False)
@@ -499,10 +644,18 @@ class db_logger(object):
       conn.commit()
     
   def batch_insert_thread(self):
+    """Thread that makes batch inserts from self.insqueue
+    
+    Speeds up performance by minimizing number of commits 
+    for bursts of inserts.
+    
+    Get all waiting inserts and execute them.
+    Once no inserts come in for 2 seconds, commit all inserts.
+    Continue while self.autoins
+    """
     print "Database insert thread started"
     commits = False
-    conn=sqlite3.connect(self.dbfile)
-    waiting = 0
+    conn = sqlite3.connect(self.dbfile)
     while self.autoins:
       try:
         instable, instuple, many = self.insqueue.get(block=True, timeout=2.0)
@@ -522,26 +675,32 @@ class db_logger(object):
         if commits:
           conn.commit()
           commits = False
-        waiting = 0
       self.forcecommit = False
     conn.close()
     print "Database insert thread ended"
     
   def start_batch_insert_thread(self):
+    """Start thread that makes batch inserts from self.insqueue"""
     self.autoins = True
-    # start thingy in thread
     t = threading.Thread(target=self.batch_insert_thread)
     self.insthread = t
-    t.daemon = True     # Note that this could lose data! But also makes it easier to quit the server...
+    
+    # Note that this could lose data! 
+    # But also makes it easier to quit the server...
+    t.daemon = True
+    
     t.start()
     
   def stop_batch_insert_thread(self):
+    """End the batch insert thread"""
     self.autoins = False
     
   def __del__(self):
+    """On object destruction, do inserts and end the batch insert thread"""
     if self.insthread:
       self.autoins = False
       self.insthread.join()
 
   def flush_inserts(self):
+    """Ensure that insert queue is empty"""
     self.insqueue.join()
