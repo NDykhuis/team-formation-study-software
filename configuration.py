@@ -48,7 +48,7 @@ PROTOCOL = 99
 ##   PROTOCOL 100:  (automated)
 ##     10 minutes of sim agents only simulation; 10 rounds each.
 
-class configuration(object):
+class Configuration(object):
   
   n = 16           # Number of agents
   nhumans = 0      # Number of humans (set by simserver based on how many frontends connect)
@@ -581,7 +581,7 @@ class configuration(object):
   
   def setutility(self, strategy):
     self.strategy = strategy
-    self.utility_agent, self.utility_group, self.utility_groupmerge = configuration._utility_map[self.strategy]
+    self.utility_agent, self.utility_group, self.utility_groupmerge = Configuration._utility_map[self.strategy]
   
   #learning_rate = 0.25
 
@@ -627,7 +627,7 @@ class configuration(object):
 
   def settiebreaker(self, utility_tiebreak):
     self.utility_tiebreak = utility_tiebreak
-    self.utility_tiebreaker = configuration._tiebreak_map[self.utility_tiebreak]
+    self.utility_tiebreaker = Configuration._tiebreak_map[self.utility_tiebreak]
   
   def printself(self):
     for k,v in vars(self).iteritems():
@@ -636,7 +636,7 @@ class configuration(object):
       
   def outputcfg(self, showhidden=False):
     cfg = {}
-    vard = dict(vars(configuration))
+    vard = dict(vars(Configuration))
     vard.update(vars(self))
     for k,v in vard.iteritems():
       dtype = type(v).__name__
@@ -665,94 +665,94 @@ def trylist(L):
 ##     no video, no ultimatum, play pubgoods and do ratings
 ##     10 minutes; 3 minutes margin
 if PROTOCOL == 0:
-  configuration._do_video = True
-  configuration._do_intro_sim = True
-  configuration._do_ultimatum = False
-  configuration.do_publicgoods = True
-  configuration.hide_publicgoods = True
-  configuration.do_ratings = True
-  configuration.delay_sim_agents = True
-  configuration._time_limit = 70
-  configuration._margin_time = 5
+  Configuration._do_video = True
+  Configuration._do_intro_sim = True
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = True
+  Configuration.do_ratings = True
+  Configuration.delay_sim_agents = True
+  Configuration._time_limit = 70
+  Configuration._margin_time = 5
 elif PROTOCOL == 1:
-  configuration._do_video = True
-  configuration._do_intro_sim = True
-  configuration._do_ultimatum = False
-  configuration.do_publicgoods = True
-  configuration.hide_publicgoods = False
-  configuration.show_global_ratings = True
-  configuration.do_ratings = True
-  configuration.delay_sim_agents = True
-  configuration._time_limit = 70
-  configuration._margin_time = 5
+  Configuration._do_video = True
+  Configuration._do_intro_sim = True
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = False
+  Configuration.show_global_ratings = True
+  Configuration.do_ratings = True
+  Configuration.delay_sim_agents = True
+  Configuration._time_limit = 70
+  Configuration._margin_time = 5
 elif PROTOCOL == 2:
-  configuration._do_video = True
-  configuration._do_intro_sim = True
-  configuration._do_ultimatum = False
-  configuration.do_publicgoods = True
-  configuration.hide_publicgoods = False
-  configuration.show_global_ratings = False
-  configuration.do_ratings = True
-  configuration.delay_sim_agents = True
-  configuration._time_limit = 70
-  configuration._margin_time = 5
+  Configuration._do_video = True
+  Configuration._do_intro_sim = True
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = False
+  Configuration.show_global_ratings = False
+  Configuration.do_ratings = True
+  Configuration.delay_sim_agents = True
+  Configuration._time_limit = 70
+  Configuration._margin_time = 5
 elif PROTOCOL == 3:
-  configuration._do_video = True
-  configuration._do_intro_sim = True
-  configuration._do_ultimatum = False
-  configuration.do_publicgoods = True
-  configuration.hide_publicgoods = False
-  configuration.show_global_ratings = True
-  configuration.do_ratings = True
-  configuration.delay_sim_agents = True
-  configuration._time_limit = 70
-  configuration._margin_time = 5
-  configuration.alt_pubgoods = True
+  Configuration._do_video = True
+  Configuration._do_intro_sim = True
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = False
+  Configuration.show_global_ratings = True
+  Configuration.do_ratings = True
+  Configuration.delay_sim_agents = True
+  Configuration._time_limit = 70
+  Configuration._margin_time = 5
+  Configuration.alt_pubgoods = True
 elif PROTOCOL == 98:
-  configuration._do_video = True
-  configuration._do_intro_sim = True
-  configuration._do_ultimatum = False
-  configuration.do_publicgoods = True
-  configuration.hide_publicgoods = False
-  configuration.do_ratings = True
-  configuration._time_limit = 10
-  configuration._margin_time = 3
-  configuration.delay_sim_agents = False
+  Configuration._do_video = True
+  Configuration._do_intro_sim = True
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = False
+  Configuration.do_ratings = True
+  Configuration._time_limit = 10
+  Configuration._margin_time = 3
+  Configuration.delay_sim_agents = False
 elif PROTOCOL == 99:
-  configuration._do_video = False
-  configuration._do_intro_sim = True
-  configuration._do_ultimatum = False
-  configuration.do_publicgoods = True
-  configuration.hide_publicgoods = False
-  configuration.do_ratings = True
-  configuration._time_limit = 10
-  configuration._margin_time = 3
-  configuration.delay_sim_agents = False
+  Configuration._do_video = False
+  Configuration._do_intro_sim = True
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = False
+  Configuration.do_ratings = True
+  Configuration._time_limit = 10
+  Configuration._margin_time = 3
+  Configuration.delay_sim_agents = False
 elif PROTOCOL == 100:
-  configuration._do_video = False
-  configuration._do_intro_sim = False
-  configuration._do_ultimatum = False
-  configuration.do_publicgoods = True
-  configuration.hide_publicgoods = False
-  configuration.do_ratings = True
-  configuration._time_limit = 10
-  configuration._margin_time = 0
-  configuration.delay_sim_agents = False
-  configuration._threaded_sim = False
-  configuration.reset_graph_iters = 20
-  configuration._log_teamstatus = False
-  configuration.percent_conditional = 0.5
-  configuration.nsteps = 30
-  configuration.n = 19
+  Configuration._do_video = False
+  Configuration._do_intro_sim = False
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = False
+  Configuration.do_ratings = True
+  Configuration._time_limit = 10
+  Configuration._margin_time = 0
+  Configuration.delay_sim_agents = False
+  Configuration._threaded_sim = False
+  Configuration.reset_graph_iters = 20
+  Configuration._log_teamstatus = False
+  Configuration.percent_conditional = 0.5
+  Configuration.nsteps = 30
+  Configuration.n = 19
 
-class multiconfig(configuration):
+class MultiConfig(Configuration):
   reps = 1  # Number of reps for each configuration
   groups_can_merge = [False]
   expel_agents = [False]
   fully_connect_groups = [False]
   #n = [150, 500, 1000]
   #n = [500]
-  n = [configuration.n]
+  n = [Configuration.n]
   #connections = [4, 6, 8, 10, 12]
   connections= [4, 6]
   prob_rewire = [0.1, 0.2]     # For watts-strogatz and grid rewire
@@ -772,7 +772,7 @@ class multiconfig(configuration):
     pass
     
   def itersims(self):
-    curr = configuration()
+    curr = Configuration()
     for fc in trylist(self.fully_connect_groups):
       curr.fully_connect_groups = fc
       for ex in trylist(self.expel_agents):

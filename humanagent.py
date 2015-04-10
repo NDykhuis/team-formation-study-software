@@ -39,9 +39,9 @@ class humanagent(agent):
     self.type = 'human'
     
     # THIS IS DUPLICATED FROM FRONTEND.PY - should move to configuration?
-    self.gletters = [chr(ord('A')+i) for i in range(configuration.n)]
-    if configuration.hide_publicgoods:
-      self.anames = ['Agent '+str(i) for i in range(configuration.n)]
+    self.gletters = [chr(ord('A')+i) for i in range(Configuration.n)]
+    if Configuration.hide_publicgoods:
+      self.anames = ['Agent '+str(i) for i in range(Configuration.n)]
     else:
       # Icky hardcoding
       self.anames = ['Cat', 'Dog', 'Bear', 'Monkey', 'Cow', 'Elephant', 'Gorilla', 'Fish', 'Sheep', 'Frog', 'Bird', 'Lion', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Bee', 'Donkey']
@@ -477,9 +477,9 @@ class humanagent(agent):
     maxcontrib = startpay
     newpay = privatepay + potpay
     self.messages.append('You made '+CURR+str(round(startpay, 2))+' by working with this team.')
-    cdesc = 'the shared pot' if not configuration.hide_publicgoods else 'the lottery'
+    cdesc = 'the shared pot' if not self.cfg.hide_publicgoods else 'the lottery'
     self.messages.append('You contributed '+CURR+str(contrib)+' to '+cdesc+' and kept '+CURR+str(round(keep,2)))
-    if self.cfg.alt_pubgoods and not configuration.hide_publicgoods:
+    if self.cfg.alt_pubgoods and not self.cfg.hide_publicgoods:
       ratings = [self.global_ratings[n.id] for n in self.group.agents if n.id in self.global_ratings]
       contribs = [teampays[n.id][0]/float(startpay) for n in self.group.agents]
       potmult = self.cfg.pubgoods_calc(contribs, ratings)

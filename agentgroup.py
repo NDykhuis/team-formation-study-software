@@ -39,11 +39,11 @@ class actor(object):
     pass
 
   def log(self, message, level=5):
-    if level <= configuration._verbose:
+    if level <= Configuration._verbose:
       print str(message)
   
   def logp(self, messagetuple, level=5):
-    if level <= configuration._verbose:
+    if level <= Configuration._verbose:
       print ' '.join(str(s) for s in messagetuple)
 
 
@@ -59,7 +59,7 @@ class ultagent(object):
       self.random = random.randint
   
   def fake_wait(self):
-    if configuration.delay_sim_agents:
+    if Configuration.delay_sim_agents:
       time.sleep(max(random.gauss(self.delaymean, self.delaysd), 0))
 
   def ultimatum(self, other_player):

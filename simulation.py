@@ -47,7 +47,7 @@ class simulation:
     pass
 
   def log(self, message, level=5):
-    if level <= configuration._verbose:
+    if level <= Configuration._verbose:
       print str(message)
 
   def setup(self, graph, config):

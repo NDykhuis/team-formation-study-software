@@ -54,14 +54,14 @@ if __name__ == '__main__':
   alt_options = ['single', 'auto']
   
   dblog = DBLogger('simlog.db')
-  configuration._dblog = dblog
+  Configuration._dblog = dblog
   dblog.start_batch_insert_thread()
   
   DYNAMIC = True   # Temporary; should be replaced with command-line or configuration.py option
   KEEP_GRAPH = True
   
   if len(sys.argv) == 1 or sys.argv[1] not in alt_options:      ## MAIN SETTING:  Run a series of sims until time expires.
-    allconfs = multiconfig()
+    allconfs = MultiConfig()
     if len(sys.argv) > 1:
       outfile = sys.argv[1]
     else:
@@ -71,16 +71,16 @@ if __name__ == '__main__':
     conns = cw.getclients()
 
     ## Log this session's configuration
-    u_rounds = 0 if not configuration._do_ultimatum else configuration.ultimatum_niter
-    dblog.log_config(u_rounds, configuration._do_intro_sim, configuration.do_publicgoods,
-                     configuration.hide_publicgoods, configuration.pubgoods_mult, configuration.do_ratings,
-                     configuration._time_limit-configuration._margin_time, len(conns),
-                     configuration.show_other_team_members, configuration.keep_teams,
+    u_rounds = 0 if not Configuration._do_ultimatum else Configuration.ultimatum_niter
+    dblog.log_config(u_rounds, Configuration._do_intro_sim, Configuration.do_publicgoods,
+                     Configuration.hide_publicgoods, Configuration.pubgoods_mult, Configuration.do_ratings,
+                     Configuration._time_limit-Configuration._margin_time, len(conns),
+                     Configuration.show_other_team_members, Configuration.keep_teams,
                      DYNAMIC, KEEP_GRAPH,
-                     configuration.show_global_ratings, configuration.show_nhistory)
+                     Configuration.show_global_ratings, Configuration.show_nhistory)
     
     # Start the heartbeat
-    if configuration._verbose > 4:
+    if Configuration._verbose > 4:
       hthread = threading.Thread(target=heartbeat_thread)
       hthread.daemon = True
       hthread.start()
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     ## Start with a well-defined simulation (like WS4 with no rewire) to make sure that humans play each other, and play a reasonable number of AIs
     
     # Standard starter configuration
-    std = standardconfig = configuration()
+    std = standardconfig = Configuration()
     if DYNAMIC:
       std.groups_can_merge = False
       std.expel_agents = False
@@ -142,13 +142,13 @@ if __name__ == '__main__':
     for t in mythreads:
       t.join()
   
-    if configuration._do_video:
+    if Configuration._do_video:
       for a in sim.humans:
         a.startcapture()
   
-    if configuration.do_ratings:
+    if Configuration.do_ratings:
       for a in sim.humans:
-        a.initratings(range(configuration.n))
+        a.initratings(range(Configuration.n))
         a.showratings()
       std.lastratings = {}
   
@@ -267,11 +267,11 @@ if __name__ == '__main__':
         cfg.simnumber += 1
         
         
-      if configuration._do_video:
+      if Configuration._do_video:
         for a in sim.humans:
           a.endcapture()  
       
-      if configuration.do_ratings:
+      if Configuration.do_ratings:
         for a in sim.humans:
           a.disableratings()
         
@@ -330,11 +330,11 @@ if __name__ == '__main__':
           print "OUT OF TIME!"
           break
         
-      if configuration._do_video:
+      if Configuration._do_video:
         for a in sim.humans:
           a.endcapture()  
       
-      if configuration.do_ratings:
+      if Configuration.do_ratings:
         for a in sim.humans:
           a.disableratings()
           
@@ -357,7 +357,7 @@ if __name__ == '__main__':
       paydata.append( (a.id, a.finalpay) )
     dblog.log_finalpay(paydata)
     
-    #if configuration.do_ratings:
+    #if Configuration.do_ratings:
     #  for a in sim.humans:
     #    a.hideratings()
     
@@ -365,7 +365,7 @@ if __name__ == '__main__':
     k=raw_input('END OF EXPERIMENT. Press Enter to terminate server.')
       
   elif sys.argv[1] == 'single':    # Run a single ... exit survey?
-    cfg = configuration()
+    cfg = Configuration()
     
     cw = ClientWaiter()
     conns = cw.getclients()
@@ -410,7 +410,7 @@ if __name__ == '__main__':
     plt.show()
   
   elif sys.argv[1] == 'auto':     ## Automated option: run sims without humans and log to a file
-    allconfs = multiconfig()
+    allconfs = MultiConfig()
     outfile = sys.argv[2]
     
     confs = [conf for conf in allconfs.itersims()]

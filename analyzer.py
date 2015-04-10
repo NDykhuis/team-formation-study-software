@@ -260,10 +260,10 @@ class analyzer:
       sortheader = sorted(outline.keys())
       
       if cfg.simnumber == 1:
-          configuration._header = sortheader
-      elif configuration._header != sortheader:
+          Configuration._header = sortheader
+      elif Configuration._header != sortheader:
           print "Header mismatch!"
-          print "cfg: ", configuration._header
+          print "cfg: ", Configuration._header
           print "now: ", sortheader
           sys.exit(1)
       

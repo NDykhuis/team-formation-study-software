@@ -22,7 +22,7 @@ import sqlite3
 import time
 
 # Try to use this as little as possible...
-from configuration import configuration
+from configuration import Configuration
 
 import threading
 import Queue
@@ -601,7 +601,7 @@ class DBLogger(object):
     timestamp = time.time()
     inserts = []
     for userid, pay in paydata:
-      inserts.append( (None, timestamp, self.sessionid, userid, pay, configuration.exchange_rate) )
+      inserts.append( (None, timestamp, self.sessionid, userid, pay, Configuration.exchange_rate) )
     
     self.queue_insert('finalpay', inserts, many=True)
         

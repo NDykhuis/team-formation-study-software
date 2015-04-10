@@ -39,7 +39,7 @@ from vidcapture import *
 from configuration import *
 from utils import *
 from teamcolors import *
-MAX_TEAMS = configuration.n   # For color choosing
+MAX_TEAMS = Configuration.n   # For color choosing
 
 CURR = u'\xA7'
 
@@ -113,12 +113,12 @@ class TFNetBack(threading.Thread):
 AVATAR_DIR = './avatars'
 
 #GCHR_start = ord('A')
-#GCHR_letters = [chr(GCHR_start+i) for i in range(configuration.n)]
+#GCHR_letters = [chr(GCHR_start+i) for i in range(Configuration.n)]
 #def gname(gid):     # Convert group ids to strings
   #return GCHR_letters[gid]
 
 ## icky hardcoding...
-##ACHR_names = ['Agent '+str(i) for i in range(configuration.n)]     # Boring names
+##ACHR_names = ['Agent '+str(i) for i in range(Configuration.n)]     # Boring names
 #ACHR_names = ['Cat', 'Dog', 'Bear', 'Bird', 'Cow', 'Elephant', 'Fish', 'Frog', 'Gorilla', 'Lion', 'Monkey', 'Bee', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Sheep', 'Donkey']    # "Real" names
               
 #def aname(aid):
@@ -136,9 +136,9 @@ class TFGui(object):
     self.ratinglog = []
     self.nteam = 1
     
-    self.gletters = [chr(ord('A')+i) for i in range(configuration.n)]
-    if configuration.hide_publicgoods:
-      self.anames = ['Agent '+str(i) for i in range(configuration.n)]
+    self.gletters = [chr(ord('A')+i) for i in range(Configuration.n)]
+    if Configuration.hide_publicgoods:
+      self.anames = ['Agent '+str(i) for i in range(Configuration.n)]
     else:
       # Icky hardcoding
       self.anames = ['Cat', 'Dog', 'Bear', 'Monkey', 'Cow', 'Elephant', 'Gorilla', 'Fish', 'Sheep', 'Frog', 'Bird', 'Lion', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Bee', 'Donkey']
