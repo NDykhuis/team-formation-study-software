@@ -30,15 +30,16 @@ import sys
 import datetime
 from itertools import izip
 import fcntl
+import threading
+import matplotlib.pyplot as plt
 
-from configuration import *
-from graph import *
-from analyzer import *
-from agentgroup import *
-from clientwaiter import *    
-from humanagent import *
-from simagent import *
-from db_logger import *
+from configuration import Configuration
+from graph import GraphManager
+from agentgroup import Group
+from clientwaiter import ClientWaiter
+from humanagent import HumanAgent
+from simagent import SimAgent, DumbAgent
+from db_logger import DBLogger
 
  
 
@@ -271,174 +272,174 @@ class simulation:
     trunstart = time.time()
     
     try:
-     for iternum in xrange(cfg.nsteps):
-      tstart = time.time()
-      
-      self.cfg.iternum = iternum
-      
-      ### PARALLEL - apply
-      self.log_teamstatus('apply', groups)
-      if cfg._threaded_sim:
-        mythreads = []
-        for a in random.sample(agents, n):
-          ## Should only start threads for the human agents
-          if a.slow:
-            t = threading.Thread(target=a.propose)
-            mythreads.append(t)
-            t.start()
-          else:
-            a.propose()
-        self.joinall(mythreads)
-      else:
-        for a in random.sample(agents, n):
-          a.propose()
-      
-      ### PARALLELIZE
-      if cfg.groups_can_merge:
-        self.log_teamstatus('groupapply', groups)
-        for g in random.sample(groups, n):
-          if len(g.agents) > 1: # or len(g.applications):
-            g.propose()
-      
-      ### PARALLEL - acceptvote
-      self.log_teamstatus('acceptvote', groups)
-      if cfg._threaded_sim:
-        mythreads = []
-        for g in random.sample(groups, n):
-          ## Should only start threads for the human agents
-          if len(g.agents):
-            g.update()
-            if g.slow:
-              t = threading.Thread(target=g.consider)
+      for iternum in xrange(cfg.nsteps):
+        tstart = time.time()
+        
+        self.cfg.iternum = iternum
+        
+        ### PARALLEL - apply
+        self.log_teamstatus('apply', groups)
+        if cfg._threaded_sim:
+          mythreads = []
+          for a in random.sample(agents, n):
+            ## Should only start threads for the human agents
+            if a.slow:
+              t = threading.Thread(target=a.propose)
               mythreads.append(t)
               t.start()
             else:
-              g.consider()
-        self.joinall(mythreads)
-      else:
-        for g in random.sample(groups, n):
-          if len(g.agents): # or len(g.applications):
-            g.consider()
-      
-      ### SERIAL - group merge
-      if cfg.groups_can_merge:
-        self.log_teamstatus('groupmerge', groups)
-        for g in random.sample(groups, n):
-          if len(g.agents): # or len(g.applications):
-            g.considermerge()
-      
-      ### SERIAL - join
-      self.log_teamstatus('join', groups)
-      for a in random.sample(agents, n):
-        if len(a.acceptances):
-          if a.type=='human':
-            self.log_teamstatus('join', groups, activeagent=a.id)
-          log("Waiting for "+str(a.id))
-          a.consider()
-      
-      ### SERIAL - expel agents
-      expelee = None
-      if cfg.expel_agents:
-        self.log_teamstatus('expel', groups)
-        # Theoretically, there should always be enough empty groups for everyone
-        emptygroups = [g for g in groups if not len(g.agents)]
-        for g in random.sample(groups, n):
-          if len(g.agents) > 1:
-            self.log_teamstatus('expel', groups, activeagent=g.id)
-            expelees = g.expel_agent()
-            for expelee in expelees:
-              newgroup = emptygroups.pop()
-              expelee.switchgroup(newgroup)
-
-      ### PARALLEL - postprocess_iter
-      self.log_teamstatus('enditer', groups)
-      if cfg._threaded_sim:
-        mythreads = []
-        for a in random.sample(agents, n):
-          ## Should only start threads for the human agents
-          if a.slow:
-            t = threading.Thread(target=a.postprocess_iter)
-            mythreads.append(t)
-            t.start()
-          else:
-            a.postprocess_iter()
-        self.joinall(mythreads)
-      else:
-        for a in random.sample(agents, n):
-          a.postprocess_iter()
-
-      tend = time.time()
-
-      if cfg._draw_graph:
-        G = cfg._Gptr
-        if not cfg._pause_graph:
-          plt.ion()
-        plt.clf()
-        ncolors = [G.graph['teamcolors'][a.group.id] for a in agents]
-        
-        weights = [dat['weight'] for u,v,dat in G.edges(data=True)]
-        maxweight, minweight = float(max(weights)), float(min(weights))
-        maxwidth = 4.0
-        if maxweight == minweight:   # Handle graphs where all weights are the same.
-          widths = 1.0
+              a.propose()
+          self.joinall(mythreads)
         else:
-          widthconv = maxwidth / maxweight
-          widths = [abs(w) * widthconv + 1.0 for w in weights]
-        colors = ['red', 'black']
-        ecolors = [colors[w >= 0] for w in weights]
+          for a in random.sample(agents, n):
+            a.propose()
         
-        nx.draw(G,pos = G.graph['layout'], node_color=ncolors, font_color='w', width=widths, edge_color=ecolors)
-        plt.draw()
-        if cfg._pause_graph:
-          plt.show()        
+        ### PARALLELIZE
+        if cfg.groups_can_merge:
+          self.log_teamstatus('groupapply', groups)
+          for g in random.sample(groups, n):
+            if len(g.agents) > 1: # or len(g.applications):
+              g.propose()
+        
+        ### PARALLEL - acceptvote
+        self.log_teamstatus('acceptvote', groups)
+        if cfg._threaded_sim:
+          mythreads = []
+          for g in random.sample(groups, n):
+            ## Should only start threads for the human agents
+            if len(g.agents):
+              g.update()
+              if g.slow:
+                t = threading.Thread(target=g.consider)
+                mythreads.append(t)
+                t.start()
+              else:
+                g.consider()
+          self.joinall(mythreads)
+        else:
+          for g in random.sample(groups, n):
+            if len(g.agents): # or len(g.applications):
+              g.consider()
+        
+        ### SERIAL - group merge
+        if cfg.groups_can_merge:
+          self.log_teamstatus('groupmerge', groups)
+          for g in random.sample(groups, n):
+            if len(g.agents): # or len(g.applications):
+              g.considermerge()
+        
+        ### SERIAL - join
+        self.log_teamstatus('join', groups)
+        for a in random.sample(agents, n):
+          if len(a.acceptances):
+            if a.type=='human':
+              self.log_teamstatus('join', groups, activeagent=a.id)
+            log("Waiting for "+str(a.id))
+            a.consider()
+        
+        ### SERIAL - expel agents
+        expelee = None
+        if cfg.expel_agents:
+          self.log_teamstatus('expel', groups)
+          # Theoretically, there should always be enough empty groups for everyone
+          emptygroups = [g for g in groups if not len(g.agents)]
+          for g in random.sample(groups, n):
+            if len(g.agents) > 1:
+              self.log_teamstatus('expel', groups, activeagent=g.id)
+              expelees = g.expel_agent()
+              for expelee in expelees:
+                newgroup = emptygroups.pop()
+                expelee.switchgroup(newgroup)
 
-      if cfg._pause_every_step:
-        k = raw_input()
-        while len(k) > 1:
-          print eval(k)
+        ### PARALLEL - postprocess_iter
+        self.log_teamstatus('enditer', groups)
+        if cfg._threaded_sim:
+          mythreads = []
+          for a in random.sample(agents, n):
+            ## Should only start threads for the human agents
+            if a.slow:
+              t = threading.Thread(target=a.postprocess_iter)
+              mythreads.append(t)
+              t.start()
+            else:
+              a.postprocess_iter()
+          self.joinall(mythreads)
+        else:
+          for a in random.sample(agents, n):
+            a.postprocess_iter()
+
+        tend = time.time()
+
+        if cfg._draw_graph:
+          G = cfg._Gptr
+          if not cfg._pause_graph:
+            plt.ion()
+          plt.clf()
+          ncolors = [G.graph['teamcolors'][a.group.id] for a in agents]
+          
+          weights = [dat['weight'] for u,v,dat in G.edges(data=True)]
+          maxweight, minweight = float(max(weights)), float(min(weights))
+          maxwidth = 4.0
+          if maxweight == minweight:   # Handle graphs where all weights are the same.
+            widths = 1.0
+          else:
+            widthconv = maxwidth / maxweight
+            widths = [abs(w) * widthconv + 1.0 for w in weights]
+          colors = ['red', 'black']
+          ecolors = [colors[w >= 0] for w in weights]
+          
+          nx.draw(G,pos = G.graph['layout'], node_color=ncolors, font_color='w', width=widths, edge_color=ecolors)
+          plt.draw()
+          if cfg._pause_graph:
+            plt.show()        
+
+        if cfg._pause_every_step:
           k = raw_input()
-      
-      # Check if anything has changed
-      teams = [a.group.id for a in agents]
-      log(lastteams)
-      log(teams)
-      
-      # Additional debug info for the experimenter
-      for g in groups:
-        if len(g.agents):
-          log("Group {}: {}".format(g.id, sorted([a.id for a in g.agents])), 6)
-      
-      if teams == lastteams:
-        deaditers += 1
-        log("DEADITERS: "+str(deaditers))
-      else:
-        deaditers = 0
-      
-      log("Iteration "+str(iternum)+" complete in "+str(round(tend-tstart, 2))+" seconds",3)
-      
-      cfg._dblog.log_simtime(cfg.simnumber, iternum, tstart, tend)
-      
-      
-      ## TERMINATE SIM CONDITIONS
-      if deaditers > cfg.deaditers: # or iternum > cfg.nsteps:
-        log("ENDING SIM: REACHED CONVERGENCE")# OR OUT OF STEPS"
-        enditer = iternum
-        break
-      else:
-        lastteams = teams
-        iters += 1
-      
-      if endtime and time.time() > endtime and iternum > 2:
-        log("ENDING SIM: OUT OF TIME")
-        enditer = iternum
-        break
+          while len(k) > 1:
+            print eval(k)
+            k = raw_input()
         
-      if cfg._draw_graph:
-        time.sleep(cfg.delaytime)
-     
-     else:
-       log("ENDING SIM: OUT OF STEPS")
-       enditer = iternum
+        # Check if anything has changed
+        teams = [a.group.id for a in agents]
+        log(lastteams)
+        log(teams)
+        
+        # Additional debug info for the experimenter
+        for g in groups:
+          if len(g.agents):
+            log("Group {}: {}".format(g.id, sorted([a.id for a in g.agents])), 6)
+        
+        if teams == lastteams:
+          deaditers += 1
+          log("DEADITERS: "+str(deaditers))
+        else:
+          deaditers = 0
+        
+        log("Iteration "+str(iternum)+" complete in "+str(round(tend-tstart, 2))+" seconds",3)
+        
+        cfg._dblog.log_simtime(cfg.simnumber, iternum, tstart, tend)
+        
+        
+        ## TERMINATE SIM CONDITIONS
+        if deaditers > cfg.deaditers: # or iternum > cfg.nsteps:
+          log("ENDING SIM: REACHED CONVERGENCE")# OR OUT OF STEPS"
+          enditer = iternum
+          break
+        else:
+          lastteams = teams
+          iters += 1
+        
+        if endtime and time.time() > endtime and iternum > 2:
+          log("ENDING SIM: OUT OF TIME")
+          enditer = iternum
+          break
+          
+        if cfg._draw_graph:
+          time.sleep(cfg.delaytime)
+      
+      else:
+        log("ENDING SIM: OUT OF STEPS")
+        enditer = iternum
         
     except KeyboardInterrupt:
       log("Simulation early termination due to user interrupt!",-1)

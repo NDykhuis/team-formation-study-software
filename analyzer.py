@@ -24,13 +24,13 @@ import networkx as nx
 import fcntl
 import datetime
 import numpy as np
+import math
 
-from configuration import *
+from configuration import Configuration
 
-class analyzer:
+class Analyzer:
   def __init__(self):
     self.data = None
-    pass
   
   def load(self, G, cfg):
     self.G = G
@@ -101,7 +101,7 @@ class analyzer:
     ncolors = [colorsys.hsv_to_rgb(grouphues[dat['group']], 1, float(dat['nowpay'])/float(maxpay)) for dat in agentdats]
     
     # Weights
-    weights = [dat['weight'] for u,v,dat in G.edges(data=True)]
+    weights = [dat['weight'] for _, _, dat in G.edges(data=True)]
     maxweight = float(max(weights))
     minweight = float(min(weights))
     maxwidth = 4.0
@@ -164,7 +164,7 @@ class analyzer:
     for n, dat in G.nodes_iter(data=True):
       askills = dat['skills']
       for i in range(len(skills)):
-          skills[i] += askills[i]
+        skills[i] += askills[i]
     data["Total skills"] = skills
     
     breadth = 0
@@ -260,12 +260,12 @@ class analyzer:
       sortheader = sorted(outline.keys())
       
       if cfg.simnumber == 1:
-          Configuration._header = sortheader
+        Configuration._header = sortheader
       elif Configuration._header != sortheader:
-          print "Header mismatch!"
-          print "cfg: ", Configuration._header
-          print "now: ", sortheader
-          raise Exception()
+        print "Header mismatch!"
+        print "cfg: ", Configuration._header
+        print "now: ", sortheader
+        raise Exception()
       
       # add header if empty; otherwise, append
       if f.tell() == 0:

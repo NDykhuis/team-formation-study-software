@@ -32,16 +32,16 @@ import sys
 import datetime
 from itertools import izip
 import fcntl
+import matplotlib.pyplot as plt
+import threading
 
-from graph import *
-from analyzer import *
-from agentgroup import *
-from clientwaiter import *    
-from humanagent import *
-from simagent import *
-from db_logger import *
-from simulation import *
-from configuration import *
+from graph import GraphManager
+from analyzer import Analyzer
+from agentgroup import Agent
+from clientwaiter import ClientWaiter
+from db_logger import DBLogger
+from simulation import simulation
+from configuration import Configuration, MultiConfig
 
 
 def heartbeat_thread():
@@ -163,7 +163,7 @@ if __name__ == '__main__':
       sim.run()
       Gdone = sim.export()
       
-      ann = analyzer()
+      ann = Analyzer()
       ann.load(Gdone, std)
       ann.groupsummary()
       ann.summary()
@@ -223,7 +223,7 @@ if __name__ == '__main__':
         sim.run(endtime = starttime+cfg._time_limit*60)
         Gdone = sim.export()
         
-        ann = analyzer()
+        ann = Analyzer()
         ann.load(Gdone, cfg)
         if cfg._verbose > 3:
           ann.groupsummary()
@@ -307,7 +307,7 @@ if __name__ == '__main__':
         sim.run(endtime = starttime+cfg._time_limit*60)
         Gdone = sim.export()
         
-        ann = analyzer()
+        ann = Analyzer()
         ann.load(Gdone, cfg)
         ann.groupsummary()
         ann.summary()
@@ -401,7 +401,7 @@ if __name__ == '__main__':
     sim.run()
     Gdone = sim.export()
     
-    ann = analyzer()
+    ann = Analyzer()
     ann.load(Gdone, cfg)
     ann.groupsummary()
     ann.summary()
@@ -425,7 +425,7 @@ if __name__ == '__main__':
       if sim.setup(gm.G, conf):
         sim.run()
       Gdone = sim.export()
-      ann = analyzer()
+      ann = Analyzer()
       ann.load(Gdone, conf)
       ann.summary()
       ann.dumpsummary(outfile)

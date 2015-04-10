@@ -34,9 +34,8 @@ import copy
 
 import subprocess
 
-from vidcapture import *
-
-from configuration import *
+from vidcapture import VidCapture
+from configuration import Configuration
 from utils import *
 from teamcolors import *
 MAX_TEAMS = Configuration.n   # For color choosing
@@ -2065,9 +2064,9 @@ class TFGui(object):
     try:
       widget.configure(state=state)
     except tk.TclError:
-        pass
+      pass
     for child in widget.winfo_children():
-        self.setState(child, state=state)
+      self.setState(child, state=state)
     
 
 class messageTester(threading.Thread):

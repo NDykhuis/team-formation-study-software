@@ -18,13 +18,14 @@
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
 
-
-from configuration import *
-from agentgroup import *
-from utils import *
 import datetime
 import operator
 import json
+import numpy as np
+
+from configuration import Configuration
+from agentgroup import Agent
+from utils import send_message, receive_message, send_and_receive
 
 CURR = u'\xA7'
 

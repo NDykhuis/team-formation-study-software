@@ -17,9 +17,11 @@
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
 
+import random
+import time
 
-from configuration import *
-from agentgroup import *
+from configuration import Configuration
+from agentgroup import Agent, UltAgent
  
 class DumbAgent(Agent, UltAgent):
   def __init__(self, cfg, adat=None, skills=None, aid=None):
@@ -63,8 +65,8 @@ class DumbAgent(Agent, UltAgent):
     contrib = random.randint(0, nowpayint)
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, newpay, teampays):
-    self.pgpay = newpay
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):  
+    self.pgpay = keep+potpay
 
 
 class SimAgent(Agent, UltAgent):
@@ -195,7 +197,7 @@ class SimAgent(Agent, UltAgent):
     bestagent = self.cfg.utility_tiebreaker(utility)
   
     if bestagent is not None:
-        self.logp(("Agent", self.id, "voting for agent", bestagent.id), 6)
+      self.logp(("Agent", self.id, "voting for agent", bestagent.id), 6)
 
     if self.cfg.agent_memory and bestagent is not None:
       # Increment counter of number of times we've voted for this agent
