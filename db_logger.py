@@ -19,9 +19,7 @@
 
 
 import sqlite3
-import datetime
 import time
-import sys
 
 # Try to use this as little as possible...
 from configuration import configuration
@@ -625,6 +623,7 @@ class db_logger(object):
     self.insqueue.put( (instable, instuple, many) ) 
   
   def batch_inserts(self, forcecommit=True):
+    """Insert all items from self.insqueue and commit if forcecommit is set."""
     conn = sqlite3.connect(self.dbfile)
     while not self.insqueue.empty():
       try:
