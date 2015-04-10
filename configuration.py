@@ -230,6 +230,8 @@ class Configuration(object):
     self.task = self.nmemtask
     #self.task = self.bdtask
     #self.setupbdtask()
+    self._Gptr = None
+    self._agentdict = None
   
   def reset(self):
     #self.task = self.bdtask
@@ -508,7 +510,7 @@ class Configuration(object):
     #  print "Agent", myagent.id, "\nUtility:\n", '\n'.join([str(( task(g.withskills(myagent))/(g.gsize + 1) - nowpay,  totalweights.get(g.id, 0.0)/numnbrs.get(g.id,1),  g.gsize-nowgsize,   random.random()-0.5,   g.id )) for g in acceptances])
     
     #return bestgroup
-    return [( task(g.withskills(myagent))/(g.gsize + 1) - nowpay,  totalbias.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowweight,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
+    return [( task(g.withskills(myagent))/(g.gsize + 1) - nowpay,  totalbias.get(g.id, 0.0)/numnbrs.get(g.id,1)-nowbias,  g.gsize-nowgsize,   random.random()-0.5,   g ) for g in acceptances]
 
   def utility_group_bias(self, mygroup):
     applications = mygroup.applications
@@ -540,6 +542,7 @@ class Configuration(object):
     nowpay = mygroup.nowpay
     task = self.task
     nowgsize = mygroup.gsize
+    G = self._Gptr
     
     totalbias = {}
     numnbrs = {}

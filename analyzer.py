@@ -265,7 +265,7 @@ class analyzer:
           print "Header mismatch!"
           print "cfg: ", Configuration._header
           print "now: ", sortheader
-          sys.exit(1)
+          raise Exception()
       
       # add header if empty; otherwise, append
       if f.tell() == 0:

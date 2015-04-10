@@ -393,7 +393,7 @@ class TFGui(object):
     
     return sframe
   
-  def focus_next_window(event):
+  def focus_next_window(self, event):
     event.widget.tk_focusNext().focus()
     return("break")
   
@@ -1589,14 +1589,15 @@ class TFGui(object):
         
     self.canvas.grid(row=0, column=0)
     
-  def update_myteam(self):
-    csize = self.csize
-    nsize = self.nsize
-    cent = csize/2
-    centtl = cent - nsize/2
-    centbr = cent + nsize/2
-    self.myoval = self.canvas.create_oval(centtl, centtl, centbr, centbr, fill=self.colors[self.myteam], width=2)
-    self.canvas.create_image(centtl+x, centtl+y, image=self.avatars_sm[self.myid])
+  # Unused
+  #def update_myteam(self):
+    #csize = self.csize
+    #nsize = self.nsize
+    #cent = csize/2
+    #centtl = cent - nsize/2
+    #centbr = cent + nsize/2
+    #self.myoval = self.canvas.create_oval(centtl, centtl, centbr, centbr, fill=self.colors[self.myteam], width=2)
+    #self.canvas.create_image(centtl+x, centtl+y, image=self.avatars_sm[self.myid])
     
   def show_screen(self, screen):
     self.activescreen.grid_remove()
@@ -1623,7 +1624,7 @@ class TFGui(object):
   
   def m_exit(self, event):
     self.getdata(event)
-    self.show_screen(self.exitscreen)
+    self.show_screen(self.make_exitscreen())
     self.backend.sendqueue.put('done')
     
   def m_instructions(self, event):
@@ -1912,7 +1913,7 @@ class TFGui(object):
     self.mwidgets['paylab'].config(text='You keep:')
     
     # update neighbor view with team members
-    # -- this is done by the humanagent on the server before this function is called
+    # -- this is done by the HumanAgent on the server before this function is called
 
     if not self.cfgdict['hide_publicgoods']:
       longtext = 'At this stage, choose how much of your potential pay you\nwould like to contribute to the shared pot and select "Submit"\n'
@@ -1990,7 +1991,7 @@ class TFGui(object):
     
   def m_conclusion(self, event):
     data = self.getdata(event)
-    self.show_screen(self.endscreen)
+    self.show_screen(self.make_conclusion())
     self.backend.sendqueue.put('done')  
   
   def submit_reminder(self, widget):

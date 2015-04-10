@@ -184,7 +184,7 @@ if __name__ == '__main__':
         
       std.simnumber += 1
     
-    agent.agentid=0
+    Agent.agentid=0
     ## END INTRO SIMULATION
     
     
@@ -262,7 +262,7 @@ if __name__ == '__main__':
           print "OUT OF TIME!"
           break
         
-        agent.agentid=0
+        Agent.agentid=0
         sim.reset()
         cfg.simnumber += 1
         
@@ -319,7 +319,7 @@ if __name__ == '__main__':
           print "Close plot to end program"
           plt.show()
         
-        agent.agentid=0
+        Agent.agentid=0
         
         tnow = time.time()
         elapsed = (tnow - starttime)/60
@@ -431,4 +431,4 @@ if __name__ == '__main__':
       ann.dumpsummary(outfile)
       if conf._pause_after_sim:
         k=raw_input()
-      agent.agentid = 0 
+      Agent.agentid = 0 

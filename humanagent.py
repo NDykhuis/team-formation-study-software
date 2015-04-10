@@ -29,9 +29,9 @@ import json
 CURR = u'\xA7'
 
 
-class humanagent(agent):
+class HumanAgent(Agent):
   def __init__(self, cfg, connection, adat=None, skills=None, aid=None):
-    super(humanagent, self).__init__(cfg, adat, skills, aid)
+    super(HumanAgent, self).__init__(cfg, adat, skills, aid)
     
     self.client = connection
     self.messages = []

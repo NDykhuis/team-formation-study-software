@@ -235,7 +235,7 @@ class simulation:
     
     emptygroups = []
     
-    # Hide ratings during instructions screen  (now handled by humanagent class)
+    # Hide ratings during instructions screen  (now handled by HumanAgent class)
     #if cfg.do_ratings:
     #  for a in self.humans:
     #    a.hideratings()     
@@ -256,7 +256,7 @@ class simulation:
     #print "Instructions done; press ENTER"  ##TEMP HACK!!!
     #raw_input()
     
-    # Show ratings after instructions screen  (now handled by humanagent class)
+    # Show ratings after instructions screen  (now handled by HumanAgent class)
     if cfg.do_ratings:
       for a in self.humans:
         a.showratings()
@@ -620,7 +620,7 @@ class simulation:
           ratings = [cfg.lastratings[tm.id] for tm in a.group.agents if tm.id in cfg.lastratings]
           avgrating = sum(ratings)/len(ratings) if len(ratings) else -1
           contribs = [pgdict[tm][0] for tm in a.group.agents]
-          pctcontribs [c/float(contrib+keep) for c in contribs]
+          pctcontribs = [c/float(contrib+keep) for c in contribs]
           avgcontrib = sum(pctcontribs)/len(pctcontribs)
           multiplier = cfg.pubgoods_calc(pctcontribs, ratings)
           sharedpay = sum(contribs)*multiplier/float(len(a.group.agents))
@@ -661,7 +661,7 @@ class simulation:
     dumbnodes = scramblenodes[0:ndumb]
     simnodes = scramblenodes[ndumb:]
     
-    return [dumbagent(cfg,adat=dat) for nid, dat in dumbnodes] + [simagent(cfg,adat=dat) for nid,dat in simnodes]
+    return [DumbAgent(cfg,adat=dat) for nid, dat in dumbnodes] + [SimAgent(cfg,adat=dat) for nid,dat in simnodes]
     
   def initagents(self):
     cfg = self.cfg
@@ -673,12 +673,12 @@ class simulation:
       humanodes = allnodes[0:cfg.nhumans]
       simnodes = allnodes[cfg.nhumans:]
       #humannodes = random.sample(allnodes, cfg.nhumans)
-      self.humans = [humanagent(cfg,conn,adat=dat) for conn,(nid,dat) in zip(cfg._conns, humanodes)]
-      #simagents = [simagent(cfg,adat=dat) for nid,dat in simnodes]
+      self.humans = [HumanAgent(cfg,conn,adat=dat) for conn,(nid,dat) in zip(cfg._conns, humanodes)]
+      #simagents = [SimAgent(cfg,adat=dat) for nid,dat in simnodes]
       simagents = self.makesimagents(simnodes)
       agents = self.humans + simagents
     else:
-      #agents = [simagent(cfg,adat=dat) for nid,dat in self.G.nodes_iter(data=True)]
+      #agents = [SimAgent(cfg,adat=dat) for nid,dat in self.G.nodes_iter(data=True)]
       agents = self.makesimagents(self.G.nodes(data=True))
       self.humans = []
     
@@ -695,8 +695,8 @@ class simulation:
     
   # Initialize each agent to be its own degenerate group
   def initgroups(self):
-    #groups = dict((a.id, group(a.id, self.cfg)) for a in self.agents)
-    groups = [group(a.id, self.cfg) for a in self.agents]
+    #groups = dict((a.id, Group(a.id, self.cfg)) for a in self.agents)
+    groups = [Group(a.id, self.cfg) for a in self.agents]
     for a, g in izip(self.agents, groups):
       g.addfirst(a)
       a.group = g

@@ -29,7 +29,7 @@ import time
 
 from configuration import Configuration
 
-class actor(object):
+class Actor(object):
   """Base class for agents that can play Team Formation"""
   skills = []
   gsize = 0
@@ -57,7 +57,7 @@ class actor(object):
       print ' '.join(str(s) for s in messagetuple)
 
 
-class ultagent(object):
+class UltAgent(object):
   """Base class with functions necessary for playing Ultimatum.
   
   Methods contain just enough code to play Ultimatum randomly
@@ -120,12 +120,12 @@ class ultagent(object):
   def show_conclusion_d(self, other_player, amount, role):
     pass
 
-class agent(actor):
+class Agent(Actor):
   def __init__(self, cfg, adat=None, skills=None, aid=None):
     self.cfg = cfg
     if adat is None:
       if aid is None:
-        self.id = agent.idcounter; agent.idcounter += 1
+        self.id = Agent.idcounter; Agent.idcounter += 1
       else:
         self.id = aid 
       if skills is None: 
@@ -270,7 +270,7 @@ class agent(actor):
     
   def reset(self):
     if not self.cfg.keep_teams:
-      self.group = 0
+      self.group = None
     self.acceptances = []
     self.switches = 0
     self.gsize = 1      # for compatibility with group merging
@@ -278,7 +278,7 @@ class agent(actor):
     self.neighbors()
     
     
-class group(actor):
+class Group(Actor):
   def __init__(self, gid, cfg):
     self.id = gid
     self.cfg = cfg

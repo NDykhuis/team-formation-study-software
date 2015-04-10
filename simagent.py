@@ -21,9 +21,9 @@
 from configuration import *
 from agentgroup import *
  
-class dumbagent(agent, ultagent):
+class DumbAgent(Agent, UltAgent):
   def __init__(self, cfg, adat=None, skills=None, aid=None):
-    super(dumbagent, self).__init__(cfg, adat, skills, aid)
+    super(DumbAgent, self).__init__(cfg, adat, skills, aid)
     self.dumb = True
   
   def propose(self):
@@ -67,9 +67,9 @@ class dumbagent(agent, ultagent):
     self.pgpay = newpay
 
 
-class simagent(agent, ultagent):
+class SimAgent(Agent, UltAgent):
   def __init__(self, cfg, adat=None, skills=None, aid=None):
-    super(simagent, self).__init__(cfg, adat, skills, aid)
+    super(SimAgent, self).__init__(cfg, adat, skills, aid)
     
     if self.cfg.agent_memory:
       self.initmem()
@@ -79,7 +79,9 @@ class simagent(agent, ultagent):
     if self.cfg.delay_sim_agents:
       self.slow = True
     else:
-      self.tf_delay=self.tf_delay_null
+      self.tf_delay = self.tf_delay_null
+      
+    self.disposition = None
   
   def initmem(self):
     self.proposemem = {}
@@ -88,7 +90,7 @@ class simagent(agent, ultagent):
     self.expelmem = {}
   
   def reset(self):
-    super(simagent, self).reset()
+    super(SimAgent, self).reset()
     
     if self.cfg.agent_memory:
       self.initmem()
@@ -102,7 +104,7 @@ class simagent(agent, ultagent):
       time.sleep(max(random.gauss(self.cfg._agent_delays[stage], self.cfg._agent_delay_dev[stage]), 0.25))
 
   def switchgroup(self, newgroup):
-    super(simagent, self).switchgroup(newgroup)
+    super(SimAgent, self).switchgroup(newgroup)
     if self.cfg.agent_memory:
       # Reset some memories since we're in a new group now
       self.proposemem = {}
