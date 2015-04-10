@@ -16,7 +16,11 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
+"""Creates and manages social network graphs with NetworkX.
 
+Can initialize social network graphs from various NetworkX graph generators.
+Also assigns agent skills and other data to the nodes and edges
+"""
 
 import random
 import networkx as nx
@@ -25,28 +29,35 @@ import colorsys
 import numpy as np
  
 class graphmanager:
+  """NetworkX social network graph manager.
+  
+  Creates a graph based on a configuration object, and initializes
+  with all necessary data about agent skills, edge weights, etc.
+  
+  After construction the object, call setup() to create the graph.
+  
+  Attributes:
+    G: the NetworkX graph object
+  """
   def __init__(self, cfg):
     self.cfg = cfg
+    self.G = None
 
   def setup(self):
+    """Creates the NetworkX graph and initializes agent data."""
     self.initgraph()
     self.initagents()
 
   def reset(self):
-    for n, dat in G.nodes_iter(data=True):
+    """Reset agent data from a previous run."""
+    for n, dat in self.G.nodes_iter(data=True):
       dat['group'] = n
       dat['switches'] = 0
       dat['nowpay'] = 0
       dat['acceptances'] = []
-    
-  def initgroups(self):
-    groups = [group(a.id, self.cfg) for a in self.agents]
-    for a, g in izip(self.agents, groups):
-      g.addfirst(a)
-      
-    self.groups = groups
   
   def initgraph(self):
+    """Create a NetworkX graph, based on a configuration object."""
     cfg = self.cfg
     if cfg.graphseed is not None:
       currstate = random.getstate()
@@ -58,7 +69,8 @@ class graphmanager:
     ntries = 0
     
     while not graph_ok:
-      if cfg.graph_type in ['complete_graph', 'wheel_graph', 'cycle_graph', 'path_graph']:
+      if cfg.graph_type in ['complete_graph', 'wheel_graph', 
+                            'cycle_graph', 'path_graph']:
         try:
           func = eval("nx."+cfg.graph_type)
           G = func(cfg.n)
@@ -98,7 +110,8 @@ class graphmanager:
         random.shuffle(hnodes)
         random.shuffle(snodes)
         nodes = []
-        for h,s in zip(hnodes, snodes): # "Zip" the human and sim nodes together (not efficient)
+        # "Zip" the human and sim nodes together (not efficient)
+        for h, s in zip(hnodes, snodes): 
           nodes.append(h)
           nodes.append(s)
         nodes += hnodes[(cfg.n-cfg.nhumans):]   # Add the dangling parts
@@ -111,7 +124,8 @@ class graphmanager:
         G.add_edge(nodes[-1], nodes[1])
       elif cfg.graph_type == 'small world':
         try:
-          G = nx.generators.random_graphs.watts_strogatz_graph(n,cfg.connections,cfg.prob_rewire)
+          G = nx.generators.random_graphs.watts_strogatz_graph(
+            cfg.n,cfg.connections,cfg.prob_rewire)
         except nx.exception.NetworkXError as e: 
           print e
           raise
@@ -120,33 +134,37 @@ class graphmanager:
       elif cfg.graph_type == "grid_graph":
         dim = int(math.ceil(math.sqrt(cfg.n)))
         G = nx.grid_graph(dim=[dim, dim])
-        G = nx.relabel.convert_node_labels_to_integers(G,first_label=0, ordering="sorted")
+        G = nx.relabel.convert_node_labels_to_integers(
+          G,first_label=0, ordering="sorted")
         G.remove_nodes_from(range(cfg.n, dim*dim))
         
         # Danger - this can lead to disconnected graphs! (with low prob)
         if cfg.rewire_grid_graph:
-            # Code from networkx watts_strogatz_graph generator
-            nodes = list(range(cfg.n))
-            orig_edges = G.edges()[:]
-            for e in orig_edges:
-                if random.random() < cfg.prob_rewire:
-                    node = random.choice((0,1))
-                    other_node = 1-node
-                    u = e[node]; v = e[other_node]
-                    w = random.choice(nodes)
-                    # Enforce no self-loops or multiple edges
-                    while w == u or G.has_edge(u, w): 
-                        w = random.choice(nodes)
-                    G.remove_edge(u,v)  
-                    G.add_edge(u,w)
-      elif cfg.graph_type in ["watts_strogatz_graph", "newman_watts_strogatz_graph", "connected_watts_strogatz_graph"]:
+          # Code from networkx watts_strogatz_graph generator
+          nodes = list(range(cfg.n))
+          orig_edges = G.edges()[:]
+          for e in orig_edges:
+            if random.random() < cfg.prob_rewire:
+              node = random.choice( (0, 1) )
+              other_node = 1-node
+              u, v = e[node], e[other_node]
+              w = random.choice(nodes)
+              # Enforce no self-loops or multiple edges
+              while w == u or G.has_edge(u, w): 
+                w = random.choice(nodes)
+              G.remove_edge(u, v)  
+              G.add_edge(u, w)
+      elif cfg.graph_type in ["watts_strogatz_graph", 
+                              "newman_watts_strogatz_graph", 
+                              "connected_watts_strogatz_graph"]:
         try:
           func = eval("nx."+cfg.graph_type)
           G = func(cfg.n, cfg.connections, cfg.prob_rewire)
         except nx.exception.NetworkXError as e: 
           print e
           raise
-      elif cfg.graph_type in ["erdos_renyi_graph", "binomial_graph", "gnp_random_graph", "fast_gnp_random_graph"]:
+      elif cfg.graph_type in ["erdos_renyi_graph", "binomial_graph", 
+                              "gnp_random_graph", "fast_gnp_random_graph"]:
         try:
           func = eval("nx."+cfg.graph_type)
           
@@ -170,12 +188,13 @@ class graphmanager:
         try:
           func = eval("nx."+cfg.graph_type)
           
-          # Calibrate number of edges to match the watts-strogatz as closely as possible
-          ne = target_edge_count = cfg.connections/2 * cfg.n
-          c = 0.5*(cfg.n-math.sqrt(cfg.n**2-4*ne))
-          conn = int(round(c,0))
+          # Calibrate number of edges to match the watts-strogatz 
+          # as closely as possible
+          num_edges = target_edge_count = cfg.connections/2 * cfg.n
+          conns = 0.5*(cfg.n-math.sqrt(cfg.n**2-4*num_edges))
+          conns = int(round(conns, 0))
           
-          G = func(cfg.n, conn)
+          G = func(cfg.n, conns)
         except nx.exception.NetworkXError as e: 
           print e
           raise
@@ -199,8 +218,8 @@ class graphmanager:
           human_nbrs = [n for n in nbrs if n in hids]
           if not len(human_nbrs):
             others = [n for n in hids if n != i]
-            G.remove_edge(i,random.choice(nbrs))
-            G.add_edge(i,random.choice(others))
+            G.remove_edge(i, random.choice(nbrs))
+            G.add_edge(i, random.choice(others))
 
 
       # Ensure graph is connected
@@ -215,7 +234,8 @@ class graphmanager:
       
       ntries += 1
       if ntries > 200:
-        raise nx.NetworkXError("Could not create valid graph; maximum number of tries exceeded")
+        err = "Could not create valid graph; maximum number of tries exceeded"
+        raise nx.NetworkXError(err)
 
     if cfg.graphseed is not None:
       random.setstate(currstate)
@@ -228,10 +248,11 @@ class graphmanager:
 
     if cfg._draw_graph or cfg.dynamic_graph:
       if cfg.springseed is not None:
-          currstate = np.random.get_state()
-          np.random.seed(cfg.springseed)
+        currstate = np.random.get_state()
+        np.random.seed(cfg.springseed)
         
-      if cfg.graph_type in ['wheel_graph', 'star_graph', 'cycle_graph', 'path_graph', 'complete_graph']:
+      if cfg.graph_type in ['wheel_graph', 'star_graph', 'cycle_graph', 
+                            'path_graph', 'complete_graph']:
         Glayout = nx.circular_layout(G)
       else:
         Glayout = nx.spring_layout(G, weight=None)
@@ -240,7 +261,7 @@ class graphmanager:
         np.random.set_state(currstate)
       
       HSV_tuples = [(x*1.0/cfg.n, 1, 0.6) for x in range(cfg.n)]
-      teamcolors = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
+      teamcolors = [colorsys.hsv_to_rgb(*t) for t in HSV_tuples]
       random.shuffle(teamcolors)
       
       G.graph['layout'] = Glayout
@@ -252,6 +273,7 @@ class graphmanager:
     self.G = G
     
   def initagents(self):
+    """Initialize agents and edges with skills and attributes."""
     cfg = self.cfg
     n = cfg.n
     G = self.G
@@ -268,15 +290,15 @@ class graphmanager:
       dat['nowpay'] = 0
     
       # Set skills
-      lev = random.randint(1,min(cfg.nskills,cfg.maxskills))
-      s = [1]*lev + [0]*(cfg.nskills-lev)
-      random.shuffle(s)
-      dat['skills']=s
+      lev = random.randint(1, min(cfg.nskills, cfg.maxskills))
+      skills = [1]*lev + [0]*(cfg.nskills-lev)
+      random.shuffle(skills)
+      dat['skills'] = skills
     
       dat['acceptances'] = []
       
     # Set weight on edges and bias
-    for me,nbr,edat in G.edges(data=True):
+    for _, _, edat in G.edges(data=True):
       #edat['weight'] = 0.0
       #edat['weight'] = random.triangular(-4.0, 4.0, 0.0)
       #edat['weight'] = random.random()
@@ -295,7 +317,7 @@ class graphmanager:
     for n, dat in G.nodes_iter(data=True):
       askill = dat['skills']
       for i in range(len(skills)):
-          skills[i] += askill[i]
+        skills[i] += askill[i]
     print "Total skills:", skills
       
     for n, dat in G.nodes_iter(data=True):
