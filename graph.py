@@ -28,7 +28,7 @@ import math
 import colorsys
 import numpy as np
  
-class graphmanager:
+class GraphManager:
   """NetworkX social network graph manager.
   
   Creates a graph based on a configuration object, and initializes

@@ -119,7 +119,7 @@ if __name__ == '__main__':
     std.nhumans = len(conns)
     std._conns = conns
 
-    gm = graphmanager(std)
+    gm = GraphManager(std)
     gm.setup()
     sim = simulation()
     sim.setup(gm.G, std)
@@ -294,7 +294,7 @@ if __name__ == '__main__':
         cfg.nhumans = len(conns)
         cfg._conns = conns
         
-        gm = graphmanager(cfg)
+        gm = GraphManager(cfg)
         try:
           gm.setup()
         except Exception as e:      ### TEMPORARY general catch
@@ -372,7 +372,7 @@ if __name__ == '__main__':
     cfg.nhumans = len(conns)
     cfg._conns = conns
     
-    gm = graphmanager(cfg)
+    gm = GraphManager(cfg)
     gm.setup()
     sim = simulation()
     sim.setup(gm.G, cfg)
@@ -419,7 +419,7 @@ if __name__ == '__main__':
     #for conf in allconfs.itersims():
     for conf in confs:
       conf.printself()
-      gm = graphmanager(conf)
+      gm = GraphManager(conf)
       gm.setup()
       sim = simulation()
       if sim.setup(gm.G, conf):
