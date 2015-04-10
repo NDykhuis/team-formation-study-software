@@ -53,7 +53,7 @@ def heartbeat_thread():
 if __name__ == '__main__':
   alt_options = ['single', 'auto']
   
-  dblog = db_logger('simlog.db')
+  dblog = DBLogger('simlog.db')
   configuration._dblog = dblog
   dblog.start_batch_insert_thread()
   

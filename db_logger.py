@@ -31,7 +31,7 @@ def r2(pay):
   """ Shorthand for 'round to 2 decimals' """
   return round(pay, 2)
 
-class db_logger(object):
+class DBLogger(object):
   """Handles logging results to SQLite3 database
   
   Contains numerous methods for logging all aspects of team formation.
