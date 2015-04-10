@@ -78,6 +78,7 @@ class SimAgent(Agent, UltAgent):
       
     if self.cfg.delay_sim_agents:
       self.slow = True
+      self.tf_delay = self.tf_delay_real
     else:
       self.tf_delay = self.tf_delay_null
       
@@ -98,7 +99,7 @@ class SimAgent(Agent, UltAgent):
   def tf_delay_null(self, stage):
     pass
 
-  def tf_delay(self, stage):
+  def tf_delay_real(self, stage):
     #print "tf_delay", self.id
     if self.cfg._agent_delays[stage] and (self.id < self.cfg.delay_n_sims or not self.cfg.delay_n_sims):
       time.sleep(max(random.gauss(self.cfg._agent_delays[stage], self.cfg._agent_delay_dev[stage]), 0.25))
