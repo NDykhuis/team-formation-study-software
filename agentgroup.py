@@ -16,21 +16,31 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
+"""Defines base classes for implementing agents and groups.
 
+Includes all classes necessary to make agents for team formation and ultimatum,
+as well as groups for team formation.
+"""
 
 import random
-from configuration import *
 import threading
 import numpy as np
 import time
 
+from configuration import Configuration
+
 class actor(object):
+  """Base class for agents that can play Team Formation"""
   skills = []
   gsize = 0
   idcounter = 0
   def propose(self):
+    """Should look at n.group for n in neighbors, and call
+       n.group.takeapplication() to make any desired proposals"""
     pass
   def consider(self):
+    """Should look at groups in self.acceptances and call
+       self.switchgroup(g) for any group to join"""
     pass
   def accept(self):
     pass
@@ -48,6 +58,16 @@ class actor(object):
 
 
 class ultagent(object):
+  """Base class with functions necessary for playing Ultimatum.
+  
+  Methods contain just enough code to play Ultimatum randomly
+  based on offer distribution defined by initialization parameters;
+  can be overridden in derived classes
+  """
+  def __init__(self):
+    self.p1, self.p2, self.delaymean, self.delaysd = None
+    self.random = None
+  
   ## ULTIMATUM FUNCTIONS
   def ultimatum_init(self, distribution='normal', p1=5, p2=1, delaymean=5, delaysd=2):
     self.p1, self.p2, self.delaymean, self.delaysd = p1, p2, delaymean, delaysd
@@ -83,7 +103,8 @@ class ultagent(object):
     pass
   
   def decide_offer(self, other_player, amount):
-    # threshold for offer the player will accept is inverse of the kind of offers this player makes
+    # threshold for offer the player will accept is inverse 
+    # of the kind of offers this player makes
     threshold = 10-int(round(self.random(self.p1, self.p2), 0))
     
     self.fake_wait()
@@ -111,7 +132,7 @@ class agent(actor):
         #skills=[0]*cfg.nskills
         skills = np.zeros(cfg.nskills, dtype='int')
       self.skills = np.array(skills)
-      self.group = 0
+      self.group = None
       self.switches = 0
       self.bias = {}
       self.nowpay = 0
@@ -123,6 +144,7 @@ class agent(actor):
       self.nowpay = adat['nowpay']
       #self.bias = adat['bias']
       self.bias = {}
+    self.nbrs = set()
     self.gsize = 1
     self.acceptances = []
     
@@ -138,18 +160,21 @@ class agent(actor):
     
   def randskills(self):
     nskills = len(self.skills)
-    lev = random.randint(1,min(nskills,self.cfg.maxskills))
+    lev = random.randint(1, min(nskills, self.cfg.maxskills))
     #s = [1]*lev + [0]*(nskills-lev)
-    s = np.zeros(nskills, dtype='int')
-    for i in range(lev):
-      s[random.choice(nskills)] += 1
+    skills = np.zeros(nskills, dtype='int')
+    for _ in range(lev):
+      skills[random.choice(nskills)] += 1
     #random.shuffle(s)
-    self.skills=s
+    self.skills = skills
   
   def randbiases(self):
     for n in self.nbrs:
       #self.bias[n] = np.random.normal()    # does not use the same random seed
-      self.bias[n.id] = random.triangular(1.0, self.cfg.biasrange, 1)**random.choice((-1.0, 1.0))   # multiplier for utility of working with someone
+      # multiplier for utility of working with someone
+      bias = random.triangular(1.0, self.cfg.biasrange, 1.0)
+      bias = bias**random.choice((-1.0, 1.0))
+      self.bias[n.id] = bias
   
   def update(self):
     if self.cfg.bias:
@@ -165,7 +190,8 @@ class agent(actor):
     return pay/(len(alist))*self.biasavg(alist)
   
   def biasavg(self, agents):
-    return float(sum([self.bias.get(nid, 1.0) for nid in agents]))/(len(agents))    # one for average bias, other for fraction of pay
+    # one for average bias, other for fraction of pay
+    return float(sum([self.bias.get(nid, 1.0) for nid in agents]))/(len(agents))
   
   def propose(self):
     ### IMPLEMENT IN CHILDREN ###
@@ -229,7 +255,8 @@ class agent(actor):
   def publicgoods(self, pgdict, potmult):
     pass
   
-  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, 
+                              potpay, teampays):
     pass
     
   def getratings(self):
@@ -272,8 +299,9 @@ class group(actor):
     self.slow = any(a.slow for a in self.agents)
     try:
       if self.cfg.bias:
-        self.nowearns = self.cfg.task(self.skills)
-        self.nowpay = sum(a.nowpaycalc(self.nowearns) for a in self.agents)/self.gsize
+        nowearns = self.cfg.task(self.skills)
+        self.nowpay = sum(a.nowpaycalc(nowearns) for a in self.agents)
+        self.nowpay /= self.gsize
       else:
         self.nowpay = self.cfg.task(self.skills)/self.gsize
     except ZeroDivisionError:
@@ -318,7 +346,7 @@ class group(actor):
       raise NotImplementedError("Propose does not work with bias yet!")
     if self.gsize == 1:
       return
-    task=self.cfg.task
+    task = self.cfg.task
     nbrgroups = self.findnbrgroups()
     for g in nbrgroups.values():
       if g == self:
@@ -343,11 +371,6 @@ class group(actor):
     
     self.update()
     
-    task = self.cfg.task
-    nowpay = self.nowpay
-    
-    bestagent = None
-    
     # Have each member vote on who to accept (-1 means accept no one)
     votes = []
     if self.cfg._threaded_sim:
@@ -355,7 +378,8 @@ class group(actor):
       for a in random.sample(self.agents, self.gsize):
         ## Should only start threads for the human agents
         if a.slow:
-          t = threading.Thread(target=self.acceptvote_thread, args=(a, self.applications, votes))
+          t = threading.Thread(target=self.acceptvote_thread, 
+                               args=(a, self.applications, votes))
           t.start()
           #print "Starting thread with apps:", [a.id for a in self.applications]
           mythreads.append(t)
@@ -371,14 +395,15 @@ class group(actor):
       self.applications = []
       return
     if self.cfg._verbose > 3 and self.slow:
-      print "Group", self.id, "receives votes:", [(a.id if a is not None else -1) for a in votes]
+      print "Group", self.id, "receives votes:", \
+        [(a.id if a is not None else -1) for a in votes]
     
     # Tabulate the votes
     voted = {}
     for v in votes:
-      voted[v] = voted.get(v,0)+1
+      voted[v] = voted.get(v, 0)+1
     sortvotes = sorted(zip(voted.values(), voted.keys()))
-    maxvotes = max(v for v,a in sortvotes)
+    maxvotes = max(v for v, a in sortvotes)
     tops = [a for v, a in sortvotes if v == maxvotes]
     
     if self.cfg._verbose > 5:
@@ -409,7 +434,7 @@ class group(actor):
     # Find highest-value group to join
     if not len(self.acceptances):
       return
-    task=self.cfg.task
+    
     self.update()
     
     bestgroup = None
@@ -447,11 +472,8 @@ class group(actor):
   def expel_agent(self):
     if self.gsize == 1:
       return None
-    task = self.cfg.task
-    self.update()
-    nowpay = self.nowpay
     
-    badagent = None
+    self.update()
     
     # Have each member vote on who to accept (-1 means accept no one)
     votes = {}
@@ -486,7 +508,7 @@ class group(actor):
     
     # If any agent votes for itself, make it leave the group
     newvotes = []
-    for v,a in zip(votes, voters):
+    for v, a in zip(votes, voters):
       if v != None and v.id == a.id:
         expelees.append(a)
       else:
@@ -501,9 +523,9 @@ class group(actor):
     # Tabulate the votes
     voted = {}
     for v in votes:
-      voted[v] = voted.get(v,0)+1
+      voted[v] = voted.get(v, 0)+1
     sortvotes = sorted(zip(voted.values(), voted.keys()))
-    maxvotes = max(v for v,a in sortvotes)
+    maxvotes = max(v for v, a in sortvotes)
     tops = [a for v, a in sortvotes if v == maxvotes]
     
     if self.cfg._verbose > 5:
