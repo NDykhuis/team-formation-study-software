@@ -30,7 +30,8 @@ import time
 from configuration import Configuration
 
 class Actor(object):
-  """Base class for agents that can play Team Formation"""
+  """Base class for actions required to play Team Formation .
+     Parent of Agent and Group classes."""
   skills = []
   gsize = 0
   idcounter = 0
@@ -38,21 +39,27 @@ class Actor(object):
     """Should look at n.group for n in neighbors, and call
        n.group.takeapplication() to make any desired proposals"""
     pass
+  def acceptvote(self, applicants):
+    """Should look at agents in applicants, and return one of them,
+       or None to accept no one."""
+    pass
   def consider(self):
     """Should look at groups in self.acceptances and call
        self.switchgroup(g) for any group to join"""
     pass
-  def accept(self):
-    pass
   def reset(self):
-    # Reset simulation-specific parameters, such as group, pay, etc.
+    """Should reset simulation-specific parameters, such as group, pay, etc."""
     pass
 
   def log(self, message, level=5):
+    """Log a message to the server console, based on _verbose cfg option.
+       Converts its argument to a string before printing."""
     if level <= Configuration._verbose:
       print str(message)
   
   def logp(self, messagetuple, level=5):
+    """Log a message to the server console, based on _verbose cfg option.
+       Takes a tuple of message elements, and joins them before printing."""
     if level <= Configuration._verbose:
       print ' '.join(str(s) for s in messagetuple)
 
@@ -70,6 +77,13 @@ class UltAgent(object):
   
   ## ULTIMATUM FUNCTIONS
   def ultimatum_init(self, distribution='normal', p1=5, p2=1, delaymean=5, delaysd=2):
+    """Initialize parameters of offer distribution.
+    
+    Arguments:
+      distribution: 'normal' or 'uniform'
+      p1, p2: mean and sd of normal, or upper and lower bound of uniform
+      delaymean, delaysd: time required to make decisions
+    """
     self.p1, self.p2, self.delaymean, self.delaysd = p1, p2, delaymean, delaysd
     if distribution == 'normal':
       # p1 is mean, p2 is sd
@@ -79,16 +93,24 @@ class UltAgent(object):
       self.random = random.randint
   
   def fake_wait(self):
+    """Sleep to simulate time to decide, based on cfg.delay_sim_agents"""
     if Configuration.delay_sim_agents:
       time.sleep(max(random.gauss(self.delaymean, self.delaysd), 0))
 
   def ultimatum(self, other_player):
+    """Notify this agent that they are playing Ultimatum with other_player."""
     pass
   
   def dictator(self, other_player):
+    """Notify this agent that they are playing Dictator with other_player."""
     pass
   
   def ask_for_offer(self, other_player):
+    """Request this player to make an offer to other_player.
+    
+    Returns:
+      an offer amount between 0 and 10
+    """
     offer = int(round(self.random(self.p1, self.p2), 0))
     offer = max(offer, 0)
     offer = min(offer, 10)
@@ -100,11 +122,17 @@ class UltAgent(object):
     return offer
   
   def wait_offer(self, other_player):
+    """Notify this agent to wait for an offer from other_player."""
     pass
   
   def decide_offer(self, other_player, amount):
-    # threshold for offer the player will accept is inverse 
-    # of the kind of offers this player makes
+    """Decide whether to accept an offer of amount from other_player.
+       Accept the offer if it is the kind of offer this agent would make.
+       (ex. Agents who offer 7 will accept 3, and vice-versa)
+       
+    Returns:
+      boolean indicating whether offer was accepted
+    """
     threshold = 10-int(round(self.random(self.p1, self.p2), 0))
     
     self.fake_wait()
@@ -112,15 +140,47 @@ class UltAgent(object):
     return (amount > threshold)
   
   def wait_decide(self, other_player):
+    """Notify this agent to wait for other_player to decide on an offer"""
     pass
   
   def show_conclusion_u(self, other_player, amount, result, role):
+    """Show conclusion of one round of Ultimatum with other_player
+    
+    Arguments:
+      other_player: ID of other player (int)
+      amount: amount that was offered (int)
+      result: accept or reject (boolean)
+      role: 0 if I made the offer, 1 if the other player did
+    """
     pass
   
   def show_conclusion_d(self, other_player, amount, role):
+    """Show conclusion of one round of Dictator with other_player
+    
+    Arguments:
+      other_player: ID of other player (int)
+      amount: amount that was offered (int)
+      role: 0 if I made the offer, 1 if the other player did
+    """
     pass
 
 class Agent(Actor):
+  """Base class for Team Formation individual agents.
+  
+  Includes methods for making decisions in Team Formation, as well as
+  dealing with ratings, history, and pay calculations.
+  
+  Attributes:
+    id: the agent's id (integer)
+    group: reference to this agent's current Group
+    nowpay: pay this agent would receive in the current group.
+            This should stay updated by self.update()
+    skills: list of the agent's skills (length==cfg.nskills)
+    gsize: always 1, since this is a single agent
+    slow: boolean; does this agent take time (seconds) to make decisions?
+    dumb: boolean; does this agent always decide randomly?
+    type: 'sim' or 'human'
+  """
   def __init__(self, cfg, adat=None, skills=None, aid=None):
     self.cfg = cfg
     if adat is None:
@@ -159,6 +219,7 @@ class Agent(Actor):
     self.global_ratings = {}
     
   def randskills(self):
+    """Assign a random set of skills to this agent"""
     nskills = len(self.skills)
     lev = random.randint(1, min(nskills, self.cfg.maxskills))
     #s = [1]*lev + [0]*(nskills-lev)
@@ -169,6 +230,7 @@ class Agent(Actor):
     self.skills = skills
   
   def randbiases(self):
+    """Assign bias to each neighbor edge randomly"""
     for n in self.nbrs:
       #self.bias[n] = np.random.normal()    # does not use the same random seed
       # multiplier for utility of working with someone
@@ -177,12 +239,14 @@ class Agent(Actor):
       self.bias[n.id] = bias
   
   def update(self):
+    """Update self.nowpay with pay in current group"""
     if self.cfg.bias:
       self.nowpay = self.nowpaycalc(self.cfg.task(self.group.skills))
     else:
       self.nowpay = self.cfg.task(self.group.skills)/self.group.gsize
     
   def nowpaycalc(self, pay, addagent=-1, delagent=-1):
+    """Calculate current utility taking into account opinions of neighbors"""
     alist = [a.id for a in self.group.agents if a.id != delagent]
     if addagent != -1:
       alist += [addagent]
@@ -190,29 +254,36 @@ class Agent(Actor):
     return pay/(len(alist))*self.biasavg(alist)
   
   def biasavg(self, agents):
+    """Get this agent's average bias (opinion) for a list of agents"""
     # one for average bias, other for fraction of pay
     return float(sum([self.bias.get(nid, 1.0) for nid in agents]))/(len(agents))
   
   def propose(self):
-    ### IMPLEMENT IN CHILDREN ###
+    """Should look at n.group for n in neighbors, and call
+       n.group.takeapplication() to make any desired proposals"""
     pass
 
   def notifyaccept(self, group):
+    """Notify this agent that it has been accepted by group"""
     self.acceptances.append(group)
 
   def acceptvote(self, applicants):
-    ### IMPLEMENT IN CHILDREN ###
+    """Should look at agents in applicants, and return one of them,
+       or None to accept no one."""
     pass
 
   def consider(self):
-    ### IMPLEMENT IN CHILDREN ###
+    """Should look at groups in self.acceptances and call
+       self.switchgroup(g) for any group to join"""
     pass
 
   def expelvote(self):
-    ### IMPLEMENT IN CHILDREN ###
+    """Should look at agents in self.group.agents and return one of them
+       to expel, or None to expel no one."""
     pass
   
   def switchgroup(self, newgroup):
+    """Remove this agent from its current group, and add it to newgroup"""
     if self.cfg._verbose > 3:
       print "Agent", self.id, "joining group", newgroup.id
     self.group.remove(self)
@@ -222,53 +293,101 @@ class Agent(Actor):
     self.update()
   
   def notifygaccept(self, aid):
-    ### IMPLEMENT IN HUMAN CLIENT ###
+    """Notify this agent that its group has voted to accept an agent.
+       Argument: aid - integer ID of an agent"""
     pass
   
   def notifyjoin(self, aid, add=True, expel=False):
-    ### IMPLEMENT IN HUMAN CLIENT ###
+    """Notify this agent that an agent has joined, left, or been expelled."""
     pass
   
   def neighbors(self):
+    """Set up self.nbrs with a list of neighbors based on the NetworkX
+       graph stored in a Configuration._Gptr."""
     G = self.cfg._Gptr
     self.nbrs = set(self.cfg._agentdict[aid] for aid in G[self.id].iterkeys())
     self.totalweight = sum(dat['weight'] for dat in G[self.id].itervalues())
     
   def nbrweight(self):
+    """Calculate the total weight on neighbor edges in the NetworkX graph
+       stored in Configuration._Gptr. 
+       Used to enforce social bandwidth limitations."""
     G = self.cfg._Gptr
     self.maxweight = sum(dat['weight'] for dat in G[self.id].itervalues())
  
   def addnbrgroups(self, nbrdict):
+    """Add the groups of all my neighbors to the dictionary nbrdict
+    Arguments:
+      nbrdict: dictionary mapping group ID to Group object
+    """
     for n in self.nbrs:
       nbrdict[n.group.id] = n.group
   
   def addnbr(self, nbr):
+    """Add a neighbor to self.nbrs"""
     self.nbrs.add(nbr)
 
   def postprocess_iter(self):
+    """Notify the agent that an iteration has finished, and do any
+       necessary postprocessing."""
     pass
 
   def postprocess(self, globalpay=None):
-    ### IMPLEMENT IN CHILDREN ###
+    """Notify the agent that a round has finished, and do any
+       necessary postprocessing.
+    Argument: 
+      globalpay: average pay for all agents with the same skillset"""
     pass
   
   def publicgoods(self, pgdict, potmult):
+    """Decide how much to contribute in public goods game.
+    
+    Report two integers, contrib and keep, that add up to self.nowpay.
+    Uses a dictionary to return an amount for threading compatibility.
+    
+    Arguments:
+      pgdict: dictionary of agent ID -> (contrib, keep) tuples
+      potmult: current pot multiplier, or (low, high) potential multipliers
+               for alternative public goods
+    Returns:
+      Set pgdict[self] = (contrib, keep)"""
     pass
   
   def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, 
                               potpay, teampays):
+    """Learn the results of publicgoods, and do any postprocessing.
+    
+    Arguments:
+      startpay: how much pay I earned from working with this team (int)
+      keep: how much pay I kept (int)
+      contrib: how much pay I contributed (int)
+      privatepay: how much pay I received on my own (float)
+      potpay: how much pay I received from the shared public pot (float)
+      teampays: agent ID -> (contrib, keep) dictionary for my team.
+    """
     pass
     
   def getratings(self):
+    """Return a dictionary of my ratings of the other agents.
+    Dictionary maps agent ID (int) to my rating of that agent (int, 1-5)"""
     return {}
   
   def updatehistory(self, pghistory):
+    """Update my known history of pubgoods contributions.
+    Argument:
+      pghistory: dictionary of agent ID -> list of previous contributions
+    """
     pass
   
   def updateratings(self, ratings):
+    """Update my knowledge of global ratings of the other agents.
+    Argument:
+      ratings: dictionary of agent ID -> average rating (float, 1-5)
+    """
     pass
     
   def reset(self):
+    """Reset all simulation-specific member variables."""
     if not self.cfg.keep_teams:
       self.group = None
     self.acceptances = []
