@@ -76,7 +76,8 @@ class UltAgent(object):
     self.random = None
   
   ## ULTIMATUM FUNCTIONS
-  def ultimatum_init(self, distribution='normal', p1=5, p2=1, delaymean=5, delaysd=2):
+  def ultimatum_init(self, distribution='normal', p1=5, p2=1, 
+                     delaymean=5, delaysd=2):
     """Initialize parameters of offer distribution.
     
     Arguments:
@@ -559,7 +560,8 @@ class Group(Actor):
     tops = [a for v, a in sortvotes if v == maxvotes]
     
     if self.cfg._verbose > 5:
-      print "Group", self.id, "votes:", [(v, (a.id if a is not None else -1)) for v, a in sortvotes]
+      print "Group", self.id, "votes:", \
+        [(v, (a.id if a is not None else -1)) for v, a in sortvotes]
     
     if len(tops) == 1:
       pick = tops[0]
@@ -663,8 +665,10 @@ class Group(Actor):
       self.applications = []
       return
     if self.cfg._verbose > 3 and self.slow:
-      #print "Group", self.id, "receives expel votes:", [(a.id if a is not None else -1) for a in votes]
-      print "Group", self.id, "receives expel votes:", {v.id:(a.id if a is not None else -1) for v,a in zip(voters,votes)}
+      #print "Group", self.id, "receives expel votes:", \
+      #  [(a.id if a is not None else -1) for a in votes]
+      print "Group", self.id, "receives expel votes:", \
+        {v.id:(a.id if a is not None else -1) for v,a in zip(voters,votes)}
     
     # Master list of agents to expel
     expelees = []
@@ -675,7 +679,8 @@ class Group(Actor):
       if v != None and v.id == a.id:
         expelees.append(a)
       else:
-        newvotes.append(v)  # If agent left the group, remove from the expel vote.
+        # If agent left the group, remove from the expel vote.
+        newvotes.append(v)
     votes = newvotes
     
     for a in self.agents:
@@ -692,7 +697,8 @@ class Group(Actor):
     tops = [a for v, a in sortvotes if v == maxvotes]
     
     if self.cfg._verbose > 5:
-      print "Group", self.id, "expel votes:", [(v, (a.id if a is not None else -1)) for v, a in sortvotes]
+      print "Group", self.id, "expel votes:", \
+        [(v, (a.id if a is not None else -1)) for v, a in sortvotes]
     
     if len(tops) == 1:
       pick = tops[0]
@@ -704,7 +710,8 @@ class Group(Actor):
         print "Group", self.id, "expels", pick.id
       for a in self.agents:
         # Notify the group about the agent that got expelled
-        a.notifyjoin(pick.id, add=False, expel=True)    ## TEMPORARY: should probably be "notifygexpel"
+        ## TEMPORARY: should probably be "notifygexpel"
+        a.notifyjoin(pick.id, add=False, expel=True)
       expelees.append(pick)
     else:
       for a in self.agents:
