@@ -398,6 +398,24 @@ class Agent(Actor):
     
     
 class Group(Actor):
+  """A Group is a collection of Agents
+  
+  Groups can accept or expel members. If cfg.groups_can_merge is set,
+  groups can also act like an agent, and apply to merge with other groups.
+  A group has the same attributes (from Actor class) as an Agent: 
+  it has skills, a size, current pay, and can propose to join other groups.
+  
+  Note that the simplest group is a single agent.
+  
+  Attributes:
+    id: ID of the group, set by default to first agent's ID (integer)
+    skills: cumulative skills of the group (list of length nskills)
+    agents: list of group members (Agent objects)
+    gsize: number of members ( len(self.agents) )
+    slow: boolean; one or more agents take real time to make decisions
+    nowpay: pay of each individual agent in the group
+  """
+  
   def __init__(self, gid, cfg):
     self.id = gid
     self.cfg = cfg
@@ -412,7 +430,7 @@ class Group(Actor):
     self.slow = False
     
   def update(self):
-    # Update all cached values
+    """ Update all cached values, including gsize, slow, and nowpay"""
     self.worth = sum(a.worth for a in self.agents)
     self.gsize = len(self.agents)
     self.slow = any(a.slow for a in self.agents)
@@ -427,10 +445,15 @@ class Group(Actor):
       self.nowpay = 0
 
   def addfirst(self, agent):
+    """Add the first agent to the group. Sets the agent's group variable"""
     agent.group = self
     self.add(agent)
 
   def add(self, agent):
+    """Add an agent to this group, and update relevant values
+       such as nowpay and skills.
+       Also add network connections if cfg.fully_connect_groups is set.
+    """
     self.notifyjoin(agent.id, add=True)
     self.agents.append(agent)
     self.skills = self.withskills(agent)
@@ -444,6 +467,9 @@ class Group(Actor):
           agent.addnbr(a)
     
   def remove(self, agent):
+    """Remove an agent (if a member) from the group, and update values.
+       If agent is not a member, do nothing.
+    """
     if agent in self.agents:
       self.agents.remove(agent)
       self.skills = self.withoutskills(agent)
@@ -451,16 +477,20 @@ class Group(Actor):
       self.notifyjoin(agent.id, add=False)
 
   def withskills(self, agent):
+    """Return the group's cumulative skills plus the skills of agent"""
     #return [self.skills[i] + agent.skills[i] for i in range(self.nskills)]
     #print type(self.skills), type(agent.skills)
     return self.skills + agent.skills
   def withoutskills(self, agent):
+    """Return the group's cumulative skills minus the skills of agent"""
     return self.skills - agent.skills
 
   def takeapplication(self, agent):
+    """Receive an application to join from agent"""
     self.applications.append(agent)
 
   def propose(self):
+    """Apply to all neighboring groups that increase pay (group merge)"""
     if self.cfg.bias:
       raise NotImplementedError("Propose does not work with bias yet!")
     if self.gsize == 1:
@@ -476,10 +506,13 @@ class Group(Actor):
         g.takeapplication(self)
 
   def acceptvote_thread(self, a, applications, votes):
+    """Function to take acceptvotes in separate threads."""
     vote = a.acceptvote(applications)
     votes.append(vote)
 
   def consider(self):
+    """Consider all applications, and allow members to vote to accept one."""
+    
     # This function handles both groups and agents in the groupmerge case
     if not len(self.applications):
       return
@@ -548,6 +581,8 @@ class Group(Actor):
     self.applications = []
 
   def considermerge(self):
+    """Consider all acceptances from other groups to merge, and merge
+       if an offer improves pay"""
     if self.cfg.bias:
       raise NotImplementedError("Propose does not work with bias yet!")
     # Find highest-value group to join
@@ -571,24 +606,33 @@ class Group(Actor):
     self.acceptances = []
 
   def notifyaccept(self, group):
+    """Notify this group that it has been accepted to merge with group"""
     self.acceptances.append(group)
 
   def notifygaccept(self, aid):
+    """Notify everyone in this group of the acceptance of an agent"""
     for a in self.agents:
       a.notifygaccept(aid)
   
   def notifyjoin(self, aid, add=True):
+    """Notify everyone in this group that an agent has joined or left"""
     for a in self.agents:
       a.notifyjoin(aid, add)
 
   def finishmerge(self):
+    """Complete a group merge by clearing out self.acceptances"""
     self.acceptances = []
 
   def expelvote_thread(self, a, votes):
+    """Function to take expelvotes in separate threads."""
     vote = a.expelvote()
     votes[a] = vote
 
   def expel_agent(self):
+    """Consider all members, and allow members to vote to expel one.
+    
+    Returns: an Agent to expel, or None
+    """
     if self.gsize == 1:
       return None
     
@@ -673,6 +717,7 @@ class Group(Actor):
     pass
 
   def findnbrgroups(self):
+    """Find all neighboring groups by gathering neighbors of every agent"""
     nbrs = {}
     for a in self.agents:
       a.addnbrgroups(nbrs)
@@ -683,6 +728,7 @@ class Group(Actor):
     #return nbrgroups  
 
   def printgroup(self):
+    """Print out ID, member IDs, and skills of this group"""
     aids = ""
     for a in self.agents:
       aids += str(a.id) + " "
@@ -691,6 +737,7 @@ class Group(Actor):
     print "Skills:", self.skills
     
   def reset(self):
+    """Reset the group - remove all members and reset skills"""
     self.skills = np.zeros(self.cfg.nskills, dtype='int') #[0]*self.cfg.nskills
     self.nskills = self.cfg.nskills
     self.agents = []
