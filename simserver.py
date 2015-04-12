@@ -20,18 +20,9 @@
 #
 
 
-from operator import itemgetter
-import numpy as np
 import time
-from time import strftime
-import networkx as nx
-import os
 import random
-import math
 import sys
-import datetime
-from itertools import izip
-import fcntl
 import matplotlib.pyplot as plt
 import threading
 
