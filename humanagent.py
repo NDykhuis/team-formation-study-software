@@ -46,6 +46,7 @@ class HumanAgent(Agent):
       self.anames = ['Cat', 'Dog', 'Bear', 'Monkey', 'Cow', 'Elephant', 'Gorilla', 'Fish', 'Sheep', 'Frog', 'Bird', 'Lion', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Bee', 'Donkey']
     
     self.current_ratings = {}
+    self.finalpay = -1
     
     send_message(self.client, ('setmyid', self.id))
     self.sendcfg()
@@ -60,8 +61,8 @@ class HumanAgent(Agent):
         jsoncfg[k] = v
       except TypeError:
         pass
-    send_message(self.client, ('setconfig', jsoncfg))
-    receive_message(self.client)    # Make sure the config gets set before moving on
+    send_and_receive(self.client, ('setconfig', jsoncfg))
+    # Make sure the config gets set before moving on
 
   def gname(self, gid):
     return self.gletters[gid]
@@ -85,8 +86,7 @@ class HumanAgent(Agent):
     
     self.sendcfg()
     
-    send_message(self.client, ('instructions', 0))
-    receive_message(self.client)
+    send_and_receive(self.client, ('instructions', 0))
     #if self.cfg.do_ratings: self.showratings()
     self.logp(("Instructions done for", self.id))
 
@@ -103,13 +103,14 @@ class HumanAgent(Agent):
     send_message(self.client, ('disableratings', 0))
 
   def introsurvey(self):
-    send_message(self.client, ('introsurvey', 0))
-    gender, college, status = receive_message(self.client)
+    gender, college, status = send_and_receive(self.client, ('introsurvey', 0))
     self.cfg._dblog.log_introsurvey(self.id, (gender, college, status))
   
   def exitsurvey(self):
     self.logratings()
     send_message(self.client, ('exitsurvey', 0))
+    
+    # Receive num of questions, and then each question and response
     n_qs = receive_message(self.client)
     responses = []
     for i in range(n_qs):
@@ -124,7 +125,7 @@ class HumanAgent(Agent):
     self.logratings(step='exitsurvey')
     self.logratingstatus('final', range(self.cfg.n))    # Log ratings of everyone
     
-    self.logp(("Agent",self.id,"exit survey submitted"), 0)
+    self.logp(("Agent", self.id, "exit survey submitted"), 0)
 
   def startcapture(self):
     send_message(self.client, ('startcapture', 0))
@@ -159,13 +160,12 @@ class HumanAgent(Agent):
     send_message(self.client, ('updatenbrs', nbrdata) )
 
   def getframetimes(self):
-    send_message(self.client, ('getframetimes', 0))
-    return receive_message(self.client)   # sframe, eframe, stime, etime
+    # sframe, eframe, stime, etime
+    return send_and_receive(self.client, ('getframetimes', 0))
 
   def logratings(self, simnum = None, iternum = None, step = 'NA'):
     if not self.cfg.do_ratings: return
-    send_message(self.client, ('getratinglog', 0))
-    ratings = receive_message(self.client)
+    ratings = send_and_receive(self.client, ('getratinglog', 0))
     if not len(ratings):
       return
     if not simnum:
@@ -196,7 +196,9 @@ class HumanAgent(Agent):
       maxrtgs = [-1 if not len(rats) else max(rats) for rats in rtgs]
     else:
       myrtgs = [self.current_ratings.get(aid, -1) for aid in otherids]
-      globalrtgs = [-1 if not self.cfg.show_global_ratings else self.global_ratings.get(aid,-1) for aid in otherids]
+      globalrtgs = [-1 if not self.cfg.show_global_ratings 
+                    else self.global_ratings.get(aid, -1) 
+                    for aid in otherids]
       minrtgs = maxrtgs = [-1 for aid in otherids]
     try:
       self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs)
@@ -217,7 +219,7 @@ class HumanAgent(Agent):
     send_message(self.client, ('updatehistory', pghistory))
 
   def propose(self):
-    task=self.cfg.task
+    task = self.cfg.task
     self.update()   ## Maybe needs to come after the propose message!
     
     nbrgroups = set( n.group for n in self.nbrs )
@@ -235,10 +237,8 @@ class HumanAgent(Agent):
     self.logratingstatus('apply', gids+(-1, ), gmembers+([a.id for a in self.group.agents],))
 
     # Send all data to GUI and blocking receive
-    send_message(self.client, ('propose', gdata) )
-
     # Wait for user to reply with list of applications
-    applications = receive_message(self.client)
+    applications = send_and_receive(self.client, ('propose', gdata) )
     
     self.logratings(step='apply')
     
@@ -251,7 +251,7 @@ class HumanAgent(Agent):
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.log_apply(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, newpays, applications, sframe, eframe, stime, etime)
     
-    self.logp(("Agent",self.id,"proposes",applications))
+    self.logp(("Agent", self.id, "proposes", applications))
   
     for gid in applications:
       g = idgroups[gid]
@@ -262,7 +262,7 @@ class HumanAgent(Agent):
       # If no applicants, shouldn't be calling this function, but in any case, return None
       return None
     
-    task=self.cfg.task
+    task = self.cfg.task
     self.update()
 
     ## TODO: create a case for group merging
@@ -276,10 +276,8 @@ class HumanAgent(Agent):
     self.logratingstatus('acceptvote', naids)
     
     # Send all data to GUI and blocking receive
-    send_message(self.client, ('acceptvote', gdata) )
-
     # Wait for user to reply with list of applications
-    accept_id = receive_message(self.client)
+    accept_id = send_and_receive(self.client, ('acceptvote', gdata) )
     
     self.logratings(step='acceptvote')
 
@@ -314,10 +312,8 @@ class HumanAgent(Agent):
     self.logratingstatus('expelvote', naids)
     
     # Send all data to GUI and blocking receive
-    send_message(self.client, ('expelvote', gdata) )
-
     # Wait for user to reply with list of applications
-    expel_id = receive_message(self.client)
+    expel_id = send_and_receive(self.client, ('expelvote', gdata) )
     
     self.logratings(step='expelvote')
 
@@ -351,10 +347,8 @@ class HumanAgent(Agent):
     self.logratingstatus('join', gids+(-1, ), gmembers+([a.id for a in self.group.agents], ))
     
     # Send all data to GUI and blocking receive
-    send_message(self.client, ('consider', gdata) )
-
     # Wait for user to reply with list of applications
-    choice_id = receive_message(self.client)
+    choice_id = send_and_receive(self.client, ('consider', gdata) )
     
     self.logratings(step='join')
     
@@ -402,10 +396,9 @@ class HumanAgent(Agent):
     # Send all data to GUI and blocking receive
     self.update()
     if len(self.messages):
-      send_message(self.client, ('turndone', '\n'.join(self.messages)) )
-      receive_message(self.client)
+      send_and_receive(self.client, ('turndone', '\n'.join(self.messages)) )
     else:
-      self.log("No new messages for human player",6)
+      self.log("No new messages for human player", 6)
     
     #if self.cfg.do_ratings:
     #  self.logratings(step='postprocess_iter')
@@ -417,12 +410,11 @@ class HumanAgent(Agent):
   
   def postprocess(self, globalpay=None):
     self.update()
-    self.messages.append('You earned '+CURR+str(round(self.nowpay,2)))
+    self.messages.append('You earned '+CURR+str(round(self.nowpay, 2)))
         
     self.logratings()
     send_message(self.client, ('addpay', round(self.nowpay, 2)) )
-    send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
-    done = receive_message(self.client)
+    send_and_receive(self.client, ('postprocess', '\n'.join(self.messages)) )
     self.logratings(step='postprocess')
     
     
@@ -430,12 +422,11 @@ class HumanAgent(Agent):
     
   def postprocess_pg(self, globalpay=None):
     self.update()
-    self.messages.append('You can earn '+CURR+str(round(self.nowpay,2))+' on this team.')
+    self.messages.append('You can earn '+CURR+str(round(self.nowpay, 2))+' on this team.')
     
     self.logratings()
-    send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
+    send_and_receive(self.client, ('postprocess', '\n'.join(self.messages)) )
     #send_message(self.client, ('addpay', round(self.nowpay, 2)) )
-    done = receive_message(self.client)
     self.logratings(step='postprocess')
     
     self.logratings()
@@ -447,8 +438,7 @@ class HumanAgent(Agent):
     self.update()
     
     if self.cfg.do_ratings: self.hideratings()
-    send_message(self.client, ('publicgoods_instructions', potmult))
-    receive_message(self.client)
+    send_and_receive(self.client, ('publicgoods_instructions', potmult))
     if self.cfg.do_ratings: self.showratings()
     
     ## Send team as neighbors
@@ -462,8 +452,7 @@ class HumanAgent(Agent):
     self.logratingstatus('pubgood', [n.id for n in self.group.agents if n != self])
     
     # Send current pay with the publicgoods message
-    send_message(self.client, ('publicgoods', (int(self.nowpay), potmult)))
-    contrib = receive_message(self.client)
+    contrib = send_and_receive(self.client, ('publicgoods', (int(self.nowpay), potmult)))
     self.logratings(step='publicgoods')
     
     self.logp(("Agent", self.id, "contribs", contrib, "/", int(self.nowpay)))
@@ -477,15 +466,19 @@ class HumanAgent(Agent):
     newpay = privatepay + potpay
     self.messages.append('You made '+CURR+str(round(startpay, 2))+' by working with this team.')
     cdesc = 'the shared pot' if not self.cfg.hide_publicgoods else 'the lottery'
-    self.messages.append('You contributed '+CURR+str(contrib)+' to '+cdesc+' and kept '+CURR+str(round(keep,2)))
+    self.messages.append('You contributed '+CURR+str(contrib)+' to '+cdesc+
+                         ' and kept '+CURR+str(round(keep, 2)))
     if self.cfg.alt_pubgoods and not self.cfg.hide_publicgoods:
-      ratings = [self.global_ratings[n.id] for n in self.group.agents if n.id in self.global_ratings]
+      ratings = [self.global_ratings[n.id] for n in self.group.agents 
+                 if n.id in self.global_ratings]
       contribs = [teampays[n.id][0]/float(startpay) for n in self.group.agents]
       potmult = self.cfg.pubgoods_calc(contribs, ratings)
       potmult = int((potmult-1)*100)
       self.messages.append('The pot was increased by {0}%'.format(potmult))
-    self.messages.append('You received '+CURR+str(round(potpay,2))+' from '+cdesc)
-    self.messages.append('You earned '+CURR+str(round(newpay,2))+' this round.')
+    self.messages.append('You received '+CURR+str(round(potpay,2))+
+                         ' from '+cdesc)
+    self.messages.append('You earned '+CURR+str(round(newpay,2))+
+                         ' this round.')
     #if self.cfg.do_ratings and self.group.gsize > 1:
     #  self.messages.append('You may now rate the behavior of your teammates if you wish.')
     
@@ -513,8 +506,7 @@ class HumanAgent(Agent):
     
     self.logratings()
     
-    send_message(self.client, ('postprocess', '\n'.join(self.messages)) )
-    done = receive_message(self.client)
+    send_and_receive(self.client, ('postprocess', '\n'.join(self.messages)) )
     self.logratings(step='pg_postprocess')
     
     self.logratingstatus('simend', teamids)
@@ -536,8 +528,7 @@ class HumanAgent(Agent):
     send_message(self.client, ('d_instructions', None))
   
   def ask_for_offer(self, other_player):
-    send_message(self.client, ('u_makeoffer', other_player))
-    amount = receive_message(self.client)
+    amount = send_and_receive(self.client, ('u_makeoffer', other_player))
     
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.ultevent_insert(self.id, other_player, 'make_offer', amount, sframe, eframe, stime, etime)
@@ -548,8 +539,7 @@ class HumanAgent(Agent):
     send_message(self.client, ('u_waitoffer', other_player))
   
   def decide_offer(self, other_player, amount):
-    send_message(self.client, ('u_decideoffer', (other_player, amount)))
-    result = receive_message(self.client)
+    result = send_and_receive(self.client, ('u_decideoffer', (other_player, amount)))
     
     sframe, eframe, stime, etime = self.getframetimes()
     self.cfg._dblog.ultevent_insert(self.id, other_player, 'decide_offer', result, sframe, eframe, stime, etime)
@@ -560,8 +550,7 @@ class HumanAgent(Agent):
     send_message(self.client, ('u_waitdecide', other_player))
   
   def show_conclusion_u(self, other_player, amount, result, role):
-    send_message(self.client, ('u_conclusion', (other_player, amount, result, role)))
-    receive_message(self.client)
+    send_and_receive(self.client, ('u_conclusion', (other_player, amount, result, role)))
     
     if result:
       if role == 0:
