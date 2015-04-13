@@ -17,6 +17,17 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
+"""Agent class to allow humans on client computers to play team formation.
+
+The HumanAgent class is the server-side backend of the human interaction
+system. It performs all calculation of payoffs, etc, and forwards the info
+to the Frontend client over TCP. The Frontend client is a fairly-thin wrapper
+which simply takes messages describing what screen to display, with what info,
+and receives input from the user.
+
+Numerous functions use send_and_receive to ask for user input, and ensure that
+the program (or thread) blocks until it has been received.
+"""
 
 import json
 import numpy as np
@@ -29,6 +40,20 @@ CURR = u'\xA7'
 
 
 class HumanAgent(Agent):
+  """HumanAgent class implements all functions necessary for team formation
+  
+  Each function gathers the relevant information, then ships it off to a
+  Frontend instance over TCP for evaluation and decision by a human player.
+  
+  Attributes:
+    slow: always True, since humans take time to decide
+    type: 'human'
+    client: the sockets connection to the Frontend
+    finalpay: total pay, only set after the exit survey is submitted
+    messages: list accumulator of message strings that are sent to the user as
+              a summary of the turn during the postprocess stage.
+  """
+  
   def __init__(self, cfg, connection, adat=None, skills=None, aid=None):
     super(HumanAgent, self).__init__(cfg, adat, skills, aid)
     
@@ -55,6 +80,11 @@ class HumanAgent(Agent):
     self.sendcfg()
 
   def sendcfg(self):
+    """Send the current configuration to the client as a dictionary.
+    
+    Sends only the variables which can be packed with JSON.
+    Blocks until client confirms that it has received the message
+    """
     cfgdict = self.cfg.outputcfg(showhidden=True)
     # remove all things that are not jsonnable
     jsoncfg = {}
@@ -68,14 +98,17 @@ class HumanAgent(Agent):
     # Make sure the config gets set before moving on
 
   def gname(self, gid):
+    """Get the name (letter) of a group from an integer group ID"""
     return self.gletters[gid]
   
   def aname(self, aid):
+    """Get the name of an agent from an integer agent ID"""
     if aid == self.id:
       return "You"
     return self.anames[aid]
   
   def initvideo(self):
+    """Tell client to start video capture and open a preview window"""
     cfg = self.cfg
     # send additional video info here
     vdata = (cfg._do_video, cfg._dblog.sessionid, self.id)
@@ -83,6 +116,7 @@ class HumanAgent(Agent):
     send_message(self.client, ('startpreview', 0))
     
   def instructions(self):
+    """Tell client to show instructions screen and close preview window"""
     if self.cfg.do_ratings: self.hideratings()
     
     send_message(self.client, ('endpreview', 0))
@@ -94,22 +128,28 @@ class HumanAgent(Agent):
     self.logp(("Instructions done for", self.id))
 
   def initratings(self, neighbors):
+    """Tell client to create the ratings sidebar"""
     send_message(self.client, ('initratings', neighbors))
 
   def showratings(self):
+    """Tell client to show the ratings sidebar"""
     send_message(self.client, ('showratings', 0))
 
   def hideratings(self):
+    """Tell client to hide the ratings sidebar"""
     send_message(self.client, ('hideratings', 0))
 
   def disableratings(self):
+    """Tell client to make ratings sidebar un-clickable"""
     send_message(self.client, ('disableratings', 0))
 
   def introsurvey(self):
+    """Tell client to present intro survey screen, and record response"""
     gender, college, status = send_and_receive(self.client, ('introsurvey', 0))
     self.cfg._dblog.log_introsurvey(self.id, (gender, college, status))
   
   def exitsurvey(self):
+    """Tell client to present exit survey, and after submit, get final pay"""
     self.logratings()
     send_message(self.client, ('exitsurvey', 0))
     
@@ -131,15 +171,19 @@ class HumanAgent(Agent):
     self.logp(("Agent", self.id, "exit survey submitted"), 0)
 
   def startcapture(self):
+    """Client: start video capture"""
     send_message(self.client, ('startcapture', 0))
     
   def stopcapture(self):
+    """Client: pause video capture"""
     send_message(self.client, ('stopcapture', 0))
 
   def endcapture(self):
+    """Client: terminate video capture"""
     send_message(self.client, ('endcapture', 0))
 
   def update(self):
+    """Update current pay and neighbors here and in the GUI"""
     if self.cfg.bias:
       self.nowpay = self.nowpaycalc(self.cfg.task(self.group.skills))
     else:
@@ -155,6 +199,7 @@ class HumanAgent(Agent):
     self.updatenbrs()
 
   def updatenbrs(self):
+    """Update graphical view of neighbors in the GUI"""
     #nbrdata = [(n.id, n.group.id) for n in self.nbrs]  # old nbrdata
     if self.cfg.show_skills:
       nbrdata = [(n.id, n.group.id, int(np.where(n.skills)[0][0])) for n in self.nbrs]
@@ -163,10 +208,29 @@ class HumanAgent(Agent):
     send_message(self.client, ('updatenbrs', nbrdata) )
 
   def getframetimes(self):
-    # sframe, eframe, stime, etime
+    """Get the start and end frame numbers and timestamps from the last event.
+    
+    Returns:
+      tuple of (start frame, end frame, start time, end time)
+      frame numbers are ints, times are Unix timestamps
+    """
     return send_and_receive(self.client, ('getframetimes', 0))
 
   def logratings(self, simnum = None, iternum = None, step = 'NA'):
+    """Get all accumulated ratings from the client and log to database.
+    
+    Also update self.current_ratings with the most recent rating assigned.
+    
+    Arguments:
+      simnum: the current round number
+      iternum: the current iteration number
+      step: the current step (apply, acceptvote, join, expel, pubgood, etc.)
+    
+    All ratings fetched will be marked with these values, so to ensure that
+    ratings are assigned to the correct step, collect ratings once before the
+    step starts, and again after the step ends, marking with the step name on
+    the second call. (see usage in code)
+    """
     if not self.cfg.do_ratings: return
     ratings = send_and_receive(self.client, ('getratinglog', 0))
     if not len(ratings):
@@ -187,6 +251,15 @@ class HumanAgent(Agent):
     self.logp(("Agent", self.id, "ratings:", ratings))
 
   def logratingstatus(self, eventtype, otherids, gmembers=None):
+    """Log the current ratings that a user is seeing when making a decision.
+    
+    If gmembers is None, then otherids is a list of agent IDs, as during the
+    acceptvote or pubgood steps.
+    
+    If gmembers is not None, then otherids is a list of group IDs, and gmembers
+    is a list of lists of the agent IDs of the members of each group, used
+    during the apply or join steps.
+    """
     if gmembers is not None:
       rtgs = [[self.current_ratings.get(aid) for aid in g if aid in self.current_ratings] 
               for g in gmembers if len(g)]
@@ -218,16 +291,31 @@ class HumanAgent(Agent):
       )
 
   def getratings(self):
+    """Get current ratings from the client, and return them.
+    
+    Returns:
+      dictionary mapping agent ID (int) to rating (int)
+    """
     ratings = send_and_receive(self.client, ('getratings', 0))
     self.current_ratings.update(ratings)
     return self.current_ratings
   
   def updateratings(self, ratings):
+    """Send the current global ratings to the client to update UI.
+    
+    Arguments:
+      ratings: dictionary mapping agent ID (int) to rating (int, 1-5)
+    """
     self.global_ratings = ratings
     if self.cfg.show_global_ratings:
       send_message(self.client, ('updateglobalratings', ratings))
 
   def updatehistory(self, pghistory):
+    """Send public contribution history information to the client to update UI.
+    
+    Arguments:
+      pghistory: dictionary mapping agent ID to list of previous contributions
+    """
     send_message(self.client, ('updatehistory', pghistory))
 
   def propose(self):
