@@ -177,7 +177,7 @@ class SimAgent(Agent, UltAgent):
   def propose(self):
     """Look at all of the neighboring groups and propose 
        to the ones that improve pay."""
-    task=self.cfg.task
+    task = self.cfg.task
     self.update()
     
     self.tf_delay('propose')
@@ -191,37 +191,37 @@ class SimAgent(Agent, UltAgent):
     totalweights = {}
     numnbrs = {}
     for nbr, dat in self.cfg._Gptr[self.id].iteritems():
-      g = self.cfg._agentdict[nbr].group.id
-      totalweights[g] = totalweights.get(g,0.0) + dat['weight']
-      numnbrs[g] = numnbrs.get(g,0) + 1
+      group = self.cfg._agentdict[nbr].group.id
+      totalweights[group] = totalweights.get(group, 0.0) + dat['weight']
+      numnbrs[group] = numnbrs.get(group, 0) + 1
     #print totalweights
     
-    for g in nbrgroups:
-      #g = n.group
-      #if g == self.group:
+    for group in nbrgroups:
+      #group = n.group
+      #if group == self.group:
       #  continue
-      newskills = g.withskills(self)
+      newskills = group.withskills(self)
       if self.cfg.bias:
-        alist = [a.id for a in g.agents]+[self.id]
+        alist = [a.id for a in group.agents]+[self.id]
         self.logp(("agent", self.id, "in group", self.group.id, 
-                   "proposing to", g.id), 6)
+                   "proposing to", group.id), 6)
         #if task(newskills)*np.mean([self.bias.get(n, 1.0) 
         #     for n in alist])/(len(alist)+1) >= self.nowpay:
         newpay = task(newskills)/(len(alist)+1)*self.biasavg(alist)
         if newpay >= self.nowpay:
-          g.takeapplication(self)
+          group.takeapplication(self)
       else:
-        gpay = task(newskills)/(g.gsize+1)
-        if gpay > self.nowpay and totalweights.get(g.id, 0) >= 1:
+        gpay = task(newskills)/(group.gsize+1)
+        if gpay > self.nowpay and totalweights.get(group.id, 0) >= 1:
           if (not self.cfg.agent_memory or 
-              self.do_mem(self.proposemem.get((g, gpay),0))):
-            g.takeapplication(self)
+              self.do_mem(self.proposemem.get((group, gpay),0))):
+            group.takeapplication(self)
 
             self.logp(("agent", self.id, "in group", self.group.id, 
-                       "proposing to", g.id), 6)
+                       "proposing to", group.id), 6)
             
             if self.cfg.agent_memory:
-              self.proposemem[(g,gpay)] = self.proposemem.get((g,gpay),0) + 1
+              self.proposemem[(group, gpay)] = self.proposemem.get((group, gpay) ,0) + 1
 
   def acceptvote(self, applicants):
     """Look at all applicants, and accept one that improves pay most.
@@ -272,15 +272,13 @@ class SimAgent(Agent, UltAgent):
     if self.cfg.agent_memory and bestagent is not None:
       # Increment counter of number of times we've voted for this agent
       bautil = [u[0] for u in utility if u[-1] == bestagent][0]
-      self.votemem[(bestagent,bautil)] = self.votemem.get((bestagent, bautil), 0) + 1
+      self.votemem[(bestagent, bautil)] = self.votemem.get((bestagent, bautil), 0) + 1
 
     return bestagent
       
 
   def consider(self):
     """Join the highest-value group, or stay in the case of a tie."""
-    task=self.cfg.task
-    
     if not len(self.acceptances):
       return
     self.update()
@@ -352,7 +350,6 @@ class SimAgent(Agent, UltAgent):
     cfg = self.cfg
     G = cfg._Gptr
     self.update()
-    #self.neighbors()
     self.nbrs = set(self.cfg._agentdict[aid] for aid in G[self.id].iterkeys())
     teammates = set(a.id for a in self.group.agents)
     teammates.remove(self.id)
@@ -364,7 +361,7 @@ class SimAgent(Agent, UltAgent):
     self.leftovers = self.maxweight - nowweight
     
     if not len(nbrs):
-      self.logp(("ERROR: node",self.id,"has no neighbors!"), -1)
+      self.logp(("ERROR: node", self.id, "has no neighbors!"), -1)
       #return
     
     if globalpay is not None:
@@ -383,25 +380,25 @@ class SimAgent(Agent, UltAgent):
       available = self.maxweight
       zweight = {'weight':0.0}
       # (teammates | nbrs) = all the nodes you know or interacted with
-      weights = { a:(G.get_edge_data(self.id,a,default=zweight)['weight']) 
+      weights = { a:(G.get_edge_data(self.id, a, default=zweight)['weight']) 
                  for a in (teammates | nbrs) }
       # divide by two because BOTH agents do this same thing 
       lr = self.cfg.weight_learning_rate #* 0.5
       addamount = [0.0, (lr * available+self.leftovers) / len(teammates)]
       #print "Before:", sum(weights.values()), self.totalweight
-      for n,oldweight in weights.iteritems():
+      for n, oldweight in weights.iteritems():
         weights[n] = (1-lr)*oldweight + addamount[n in teammates]
       
       #print "After:", sum(weights.values()), self.totalweight
-      for a,w in weights.iteritems():
+      for agent, weight in weights.iteritems():
         try:
-          G[self.id][a]['weight'] = w
+          G[self.id][agent]['weight'] = weight
         except KeyError:
-          G.add_edge(self.id, a, weight=w)
+          G.add_edge(self.id, agent, weight=weight)
           #self.nbrs.add(self.cfg._agentdict[a])
         
       # if there are any connections that are too weak, consider rewiring
-      removenbrs = [a for a,w in weights.iteritems() 
+      removenbrs = [a for a, w in weights.iteritems() 
                     if w < self.cfg.weak_threshold]
       G.remove_edges_from( (self.id, a) for a in removenbrs )
       
@@ -416,7 +413,7 @@ class SimAgent(Agent, UltAgent):
       zweight = {'weight':0.0}
       #weights = { a:(G.get_edge_data(self.id,a,default=zweight)['weight']) 
       #            for a in nbrs }   # All the nodes you know
-      weights = [ ((G.get_edge_data(self.id,a,default=zweight)['weight']), a)
+      weights = [ ((G.get_edge_data(self.id, a, default=zweight)['weight']), a)
                   for a in nbrs ]   # All the nodes you know
       
       moveweight = 0
@@ -426,7 +423,7 @@ class SimAgent(Agent, UltAgent):
       movenbrs = []
       
       while moveweight < 1.0 and len(weights):
-        mins = [(w, n) for w,n in weights if w == min(weights)[0]]
+        mins = [(w, n) for w, n in weights if w == min(weights)[0]]
         minwght, minnbr = random.choice(mins)
         weights.remove( (minwght, minnbr) )
         moveweight += minwght
@@ -483,7 +480,7 @@ class SimAgent(Agent, UltAgent):
         avgcontrib = sum(othercontribs)/len(othercontribs)
         noise = random.random()-0.5
         mypctcontrib = avgcontrib + (noise*self.cfg.conditional_variance)
-        mypctcontrib = min(max(mypctcontrib,0),1)   # Keep in 0,1 range
+        mypctcontrib = min(max(mypctcontrib, 0), 1)   # Keep in 0,1 range
       else:
         mypctcontrib = random.random()
       contrib = int(round(mypctcontrib*nowpayint))
@@ -537,10 +534,10 @@ class SimAgent(Agent, UltAgent):
     ratings = {}
     #clow, chigh = self.cfg.pg_contribrange[self.disposition]
     for aid, pctcontrib in self.pgmem.iteritems():
-      #rating = min(max(int(pctcontrib/chigh*4.0+1),1),5)   # Fancy version
+      #rating = min(max(int(pctcontrib/chigh*4.0+1),1), 5)  # Fancy version
       #rating = int(pctcontrib*4.0+1)                       # Simple version
       noise = random.random()-0.5   # Half a rating
-      rating = int(min(max(pctcontrib*4.0+1+noise, 1),5))    # Noisy version
+      rating = int(min(max(pctcontrib*4.0+1+noise, 1), 5))   # Noisy version
       
       # More likely to post rating if high or low
       # Can't rate zero; ratings can be 1-5
