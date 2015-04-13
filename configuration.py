@@ -49,6 +49,11 @@ PROTOCOL = 99
 ##     10 minutes of sim agents only simulation; 10 rounds each.
 
 class Configuration(object):
+  """Stores configuration parameters for the simulation.
+  
+  Uses the unfortunate convention that a preceding _ means the variable
+  will not be output to the database in the configuration dump.
+  """
   
   n = 16           # Number of agents
   nhumans = 0      # Number of humans (set by simserver based on how many frontends connect)
