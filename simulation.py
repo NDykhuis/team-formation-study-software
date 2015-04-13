@@ -18,7 +18,6 @@
 #
 
 import time
-from time import strftime
 import networkx as nx
 import random
 from itertools import izip

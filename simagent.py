@@ -20,7 +20,6 @@
 import random
 import time
 
-from configuration import Configuration
 from agentgroup import Agent, UltAgent
  
 class DumbAgent(Agent, UltAgent):

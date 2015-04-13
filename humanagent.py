@@ -18,8 +18,6 @@
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
 
-import datetime
-import operator
 import json
 import numpy as np
 
