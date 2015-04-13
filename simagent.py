@@ -16,6 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 #
+"""Defines simulated agents that can play Team Formation.
+
+Includes DumbAgent which decides randomly, and greedy SimAgent.
+"""
 
 import random
 import time
@@ -23,11 +27,15 @@ import time
 from agentgroup import Agent, UltAgent
  
 class DumbAgent(Agent, UltAgent):
+  """Barebones agent that makes all decisions randomly."""
+  
   def __init__(self, cfg, adat=None, skills=None, aid=None):
+    """Sets self.dumb to True"""
     super(DumbAgent, self).__init__(cfg, adat, skills, aid)
     self.dumb = True
   
   def propose(self):
+    """Randomly chooses 0 to n groups to apply to."""
     nbrgroups = set( n.group for n in self.nbrs )
     nbrgroups.discard(self.group)
     
@@ -41,9 +49,11 @@ class DumbAgent(Agent, UltAgent):
       g.takeapplication(self)
     
   def acceptvote(self, applicants):
+    """Randomly chooses from applicants, or None"""
     return random.choice(applicants + [None])
     
   def consider(self):
+    """Randomly chooses a group to join, or None"""
     bestgroup = random.choice(self.acceptances+[None])
     
     if bestgroup is not None:
@@ -52,23 +62,49 @@ class DumbAgent(Agent, UltAgent):
     self.acceptances = []
   
   def expelvote(self):
+    """Randomly chooses an agent to expel, or None"""
     return random.choice(self.group.agents + [None])
   
   def postprocess(self, globalpay=None):
+    """Does nothing"""
     pass
 
   def publicgoods(self, pgdict, potmult):
+    """Contributes a random amount from 0 to self.nowpay"""
     self.update()
     nowpayint = int(self.nowpay)
     #return random.randint(0, int(self.nowpay))
     contrib = random.randint(0, nowpayint)
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):  
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+    """Sets self.pgpay to keep + nowpay"""
     self.pgpay = keep+potpay
 
 
 class SimAgent(Agent, UltAgent):
+  """Greedy agent that chooses the option of greatest pay at each step.
+  
+  At every step, choose the option that pays the most. 
+  In the case of ties, break ties randomly (unless social_sim_agents set).
+  If no group pays more, stay with current group.
+  
+  During public goods, contribute according to self.disposition.
+  
+  Rate the other agents by transforming 0-100% contributions to 1-5 scale,
+  with some noise and probability of actually posting the rating.
+  
+  Uses configuration options:
+    delay_sim_agents, _agent_delays, _agent_delay_dev: 
+      Take real time making decisions to emulate human behavior
+    agent_memory, agent_mem_threshold, agent_mem_decay:
+      Stop applying to groups after repeated rejections with no change
+    social_sim_agents, social_learning_rate:
+      Expel or refuse to accept agents based on past contributions
+    pg_contribrange:
+      How much to contribute based on disposition
+  """
+  
   def __init__(self, cfg, adat=None, skills=None, aid=None):
     super(SimAgent, self).__init__(cfg, adat, skills, aid)
     
@@ -86,6 +122,11 @@ class SimAgent(Agent, UltAgent):
     self.disposition = None
   
   def initmem(self):
+    """Initialize memory (for cfg.agent_memory)
+    
+    Stop repeating an unsuccessful action after a few tries,
+    unless something changes.
+    """
     self.proposemem = {}
     self.votemem = {}
     self.joinmem = {}
@@ -98,14 +139,17 @@ class SimAgent(Agent, UltAgent):
       self.initmem()
 
   def tf_delay_null(self, stage):
+    """Dummy function for no delay"""
     pass
 
   def tf_delay_real(self, stage):
+    """Wait based on times defined in cfg._agent_delays for stage"""
     #print "tf_delay", self.id
     if self.cfg._agent_delays[stage] and (self.id < self.cfg.delay_n_sims or not self.cfg.delay_n_sims):
       time.sleep(max(random.gauss(self.cfg._agent_delays[stage], self.cfg._agent_delay_dev[stage]), 0.25))
 
   def switchgroup(self, newgroup):
+    """Switch group, and reset memory (because something changed"""
     super(SimAgent, self).switchgroup(newgroup)
     if self.cfg.agent_memory:
       # Reset some memories since we're in a new group now
@@ -113,18 +157,25 @@ class SimAgent(Agent, UltAgent):
       self.votemem = {}
       self.expelmem = {}
   
-  # decides whether to do an action, based on the number of times action was previously done
   def do_mem(self, nprev):
+    """Decide whether to do an action, based on the number of times 
+       action was previously done.
+       
+    Likelihood of doing the action decays after cfg.agent_mem_threshold
+    by cfg.agent_mem_decay to the power of number of steps past threshold.
+    """
+       
     cfg = self.cfg
     return (nprev < cfg.agent_mem_threshold) or (random.random() < cfg.agent_mem_decay**(nprev-cfg.agent_mem_threshold))
   
   def propose(self):
+    """Look at all of the neighboring groups and propose 
+       to the ones that improve pay."""
     task=self.cfg.task
     self.update()
     
     self.tf_delay('propose')
     
-    # Look at all of the neighboring groups and propose to the ones that improve pay
     nbrgroups = set( n.group for n in self.nbrs )
     nbrgroups.discard(self.group)
     
@@ -162,7 +213,13 @@ class SimAgent(Agent, UltAgent):
               self.proposemem[(g,gpay)] = self.proposemem.get((g,gpay),0) + 1
 
   def acceptvote(self, applicants):
-    ### COPY in code from agentgroup group consider
+    """Look at all applicants, and accept one that improves pay most.
+    
+    With social_sim_agents, refuse to accept agents who contribute less
+    than my minimum contribution level, and rank agents by contribution.
+    In absence of contribution memory, use global ratings information.
+    """
+    
     self.update()
     
     self.tf_delay('acceptvote')
@@ -207,9 +264,9 @@ class SimAgent(Agent, UltAgent):
       
 
   def consider(self):
+    """Join the highest-value group, or stay in the case of a tie."""
     task=self.cfg.task
     
-    # Find highest-value group to join
     if not len(self.acceptances):
       return
     self.update()
@@ -231,6 +288,10 @@ class SimAgent(Agent, UltAgent):
   
   
   def expelvote(self):
+    """Expel any agent that reduces pay, or makes low contributions.
+    
+    Only consider contributions if social_sim_agents is set.
+    """
     task = self.cfg.task
     self.update()
     
@@ -257,24 +318,17 @@ class SimAgent(Agent, UltAgent):
       utilities = [(task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay, random.random(), agent) for agent in myg.agents if agent != self]
       worstagent = self.cfg.utility_tiebreaker(utilities)
       return worstagent
-    
-    # Old code; use new utility system instead
-    #for agent in random.sample(myg.agents, myg.gsize):
-      #if agent == self:
-        #continue
-      #if self.cfg.bias:
-        #newpay = task(myg.withoutskills(agent))
-        #paysans = float(sum([a.nowpaycalc(newpay, delagent=agent) for a in myg.agents]))/len(myg.agents)
-      #else:
-        #paysans = task(myg.withoutskills(agent))/(myg.gsize-1)
-      #if paysans > nowpay:
-        #return agent
-      #else:
-        #return None
-  
+      
   
   def postprocess(self, globalpay=None):
-    # strengthen/weaken connections based on payoff
+    """Evaluate the results of team formation and public goods
+    
+    If cfg.strengthen_teams or cfg.rewire_discontent:
+      Compare my pay to global pay for agents with my skills.
+      Strengthen or weaken connection weight to teammates based on pay.
+    (these cases are not currently in use)
+    """
+    
     cfg = self.cfg
     G = cfg._Gptr
     self.update()
@@ -296,6 +350,8 @@ class SimAgent(Agent, UltAgent):
       mypay = self.nowpay
       avgpay = globalpay[tuple(self.skills)]
       happiness_threshold = 0.75
+    
+    ### Below code is not currently in use in experiments:
     
     ## IF WE'RE HAPPY WITH OUR TEAM:
     if cfg.strengthen_teams and (globalpay is None or not cfg.rewire_discontent or mypay >= avgpay*happiness_threshold) and len(teammates):
@@ -368,7 +424,18 @@ class SimAgent(Agent, UltAgent):
     ##   Should we make this a digraph? Or is there some other way to fix this?
     
 
-  def publicgoods(self,pgdict, potmult):
+  def publicgoods(self, pgdict, potmult):
+    """Return a contribution for public goods by setting it in pgdict.
+    
+    Contribute based on self.disposition:
+      'conditional' contribute the expected average for the team, plus noise.
+      all others contribute based on cfg.pg_contribrange
+    
+    Does not currently consider potmult.
+    
+    Returns:
+      sets pgdict[self] = (amount contributed, amount kept)
+    """
     self.update()
     nowpayint = int(self.nowpay)
     
@@ -393,6 +460,11 @@ class SimAgent(Agent, UltAgent):
     
   
   def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+    """Add pay and keep track of contribution statistics.
+    
+    Set self.pgpay to my total pay for this round.
+    Update self.pgmem with alpha-decay running average of contributions.
+    """
     self.pgpay = privatepay+potpay
     
     prepay = startpay
@@ -413,6 +485,18 @@ class SimAgent(Agent, UltAgent):
         self.pgmem[aid] = pctcontrib
 
   def getratings(self):
+    """Calculate ratings for the other agents and return them.
+    
+    Compute rating by mapping past average contributions (0 to 100%)
+    to the 1-5 rating scale, and adding +- half a rating of noise.
+    
+    Agent is more likely to post extreme ratings (1s or 5s).
+    
+    Note that the ratings will change each time this function is called.
+    Also note that this function has the ability to NOT return a rating
+    for a previously-rated agent, which human players cannot do.
+    """
+    
     ratings = {}
     #clow, chigh = self.cfg.pg_contribrange[self.disposition]
     for aid, pctcontrib in self.pgmem.iteritems():
@@ -428,4 +512,5 @@ class SimAgent(Agent, UltAgent):
     return ratings
   
   def updateratings(self, ratings):
+    """Update my knowledge of the public ratings"""
     self.global_ratings = ratings
