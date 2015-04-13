@@ -43,7 +43,10 @@ class HumanAgent(Agent):
       self.anames = ['Agent '+str(i) for i in range(Configuration.n)]
     else:
       # Icky hardcoding
-      self.anames = ['Cat', 'Dog', 'Bear', 'Monkey', 'Cow', 'Elephant', 'Gorilla', 'Fish', 'Sheep', 'Frog', 'Bird', 'Lion', 'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 'Bee', 'Donkey']
+      self.anames = ['Cat', 'Dog', 'Bear', 'Monkey', 'Cow', 'Elephant', 
+                     'Gorilla', 'Fish', 'Sheep', 'Frog', 'Bird', 'Lion', 
+                     'Owl', 'Panda', 'Penguin', 'Pig', 'Rabbit', 'Rooster', 
+                     'Bee', 'Donkey']
     
     self.current_ratings = {}
     self.finalpay = -1
@@ -123,7 +126,7 @@ class HumanAgent(Agent):
       
     self.cfg._dblog.log_exitsurvey(self.id, responses)
     self.logratings(step='exitsurvey')
-    self.logratingstatus('final', range(self.cfg.n))    # Log ratings of everyone
+    self.logratingstatus('final', range(self.cfg.n)) # Log ratings of everyone
     
     self.logp(("Agent", self.id, "exit survey submitted"), 0)
 
@@ -185,11 +188,14 @@ class HumanAgent(Agent):
 
   def logratingstatus(self, eventtype, otherids, gmembers=None):
     if gmembers is not None:
-      rtgs = [[self.current_ratings.get(aid) for aid in g if aid in self.current_ratings] for g in gmembers if len(g)]
-      grtgs = [[self.global_ratings.get(aid) for aid in g if aid in self.global_ratings] for g in gmembers if len(g)]
+      rtgs = [[self.current_ratings.get(aid) for aid in g if aid in self.current_ratings] 
+              for g in gmembers if len(g)]
+      grtgs = [[self.global_ratings.get(aid) for aid in g if aid in self.global_ratings] 
+               for g in gmembers if len(g)]
       myrtgs = [-1 if not len(rats) else float(sum(rats))/len(rats) for rats in rtgs]
       if self.cfg.show_global_ratings:
-        globalrtgs = [-1 if not len(grats) else float(sum(grats))/len(grats) for grats in grtgs]
+        globalrtgs = [-1 if not len(grats) else float(sum(grats))/len(grats) 
+                      for grats in grtgs]
       else:
         globalrtgs = [-1 for rats in rtgs]
       minrtgs = [-1 if not len(rats) else min(rats) for rats in rtgs]
@@ -201,9 +207,15 @@ class HumanAgent(Agent):
                     for aid in otherids]
       minrtgs = maxrtgs = [-1 for aid in otherids]
     try:
-      self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs)
+      self.cfg._dblog.log_ratingstatus(
+        self.cfg.simnumber, self.cfg.iternum, eventtype, self.id, otherids, 
+        myrtgs, globalrtgs, minrtgs, maxrtgs
+      )
     except AttributeError:
-      self.cfg._dblog.log_ratingstatus(self.cfg.simnumber, -1, eventtype, self.id, otherids, myrtgs, globalrtgs, minrtgs, maxrtgs)
+      self.cfg._dblog.log_ratingstatus(
+        self.cfg.simnumber, -1, eventtype, self.id, otherids, 
+        myrtgs, globalrtgs, minrtgs, maxrtgs
+      )
 
   def getratings(self):
     ratings = send_and_receive(self.client, ('getratings', 0))
@@ -230,7 +242,8 @@ class HumanAgent(Agent):
     
     idgroups = {g.id:g for g in nbrgroups}
 
-    gdata = sorted([ (g.id, g.gsize, task(g.withskills(self))/(g.gsize+1), [a.id for a in g.agents]) for g in nbrgroups])
+    gdata = sorted([ (g.id, g.gsize, task(g.withskills(self))/(g.gsize+1), 
+                      [a.id for a in g.agents]) for g in nbrgroups])
     gids, gsizes, newpays, gmembers = zip(*gdata)
 
     self.logratings()
@@ -249,7 +262,10 @@ class HumanAgent(Agent):
       self.messages.append('You did not apply to any groups')
 
     sframe, eframe, stime, etime = self.getframetimes()
-    self.cfg._dblog.log_apply(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, newpays, applications, sframe, eframe, stime, etime)
+    self.cfg._dblog.log_apply(
+      self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, 
+      newpays, applications, sframe, eframe, stime, etime
+    )
     
     self.logp(("Agent", self.id, "proposes", applications))
   
@@ -259,17 +275,20 @@ class HumanAgent(Agent):
   
   def acceptvote(self, applicants):
     if not len(applicants):
-      # If no applicants, shouldn't be calling this function, but in any case, return None
+      # If no applicants, shouldn't be calling this function, but in any case, 
+      # return None
       return None
     
     task = self.cfg.task
     self.update()
+    myg = self.group
 
     ## TODO: create a case for group merging
     # acceptvote_groupmerge
     
     idagents = {a.id:a for a in applicants}
-    gdata = sorted([ (a.id, task(self.group.withskills(a))/(self.group.gsize+a.gsize)) for a in applicants])
+    gdata = sorted([(a.id, task(myg.withskills(a))/(myg.gsize+a.gsize)) 
+                    for a in applicants])
     naids, newpays = zip(*gdata)
     
     self.logratings()
@@ -281,17 +300,25 @@ class HumanAgent(Agent):
     
     self.logratings(step='acceptvote')
 
-    naids = list(naids); newpays = list(newpays)
-    naids.append(-1); newpays.append(self.nowpay)   # Add the "accept no one" option
+    naids = list(naids)
+    newpays = list(newpays)
+    # Add the "accept no one" option
+    naids.append(-1)
+    newpays.append(self.nowpay)
+    
     sframe, eframe, stime, etime = self.getframetimes()
-    self.cfg._dblog.log_accept(self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, newpays, accept_id, sframe, eframe, stime, etime)
+    self.cfg._dblog.log_accept(
+      self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay,
+      newpays, accept_id, sframe, eframe, stime, etime
+    )
 
 
     if accept_id != -1:
       self.logp(("Agent", self.id, "votes to accept", accept_id))
 
     if accept_id != -1:
-      #self.messages.append('You voted to accept agent '+str(accept_id)+' into the group')
+      #self.messages.append('You voted to accept agent '+str(accept_id)+
+      #                     ' into the group')
       return idagents[accept_id]
     else:
       # No applicant should join the team
@@ -305,7 +332,8 @@ class HumanAgent(Agent):
   
     idagents = {a.id:a for a in myg.agents}
     #del idagents[self.id]
-    gdata = sorted([ (a.id, task(myg.withoutskills(a))/(myg.gsize-1)) for aid, a in sorted(idagents.items()) if aid != self.id])
+    gdata = sorted([(a.id, task(myg.withoutskills(a))/(myg.gsize-1)) 
+                    for aid, a in sorted(idagents.items()) if aid != self.id])
     naids, newpays = zip(*gdata)
     
     self.logratings()
@@ -318,7 +346,10 @@ class HumanAgent(Agent):
     self.logratings(step='expelvote')
 
     sframe, eframe, stime, etime = self.getframetimes()
-    self.cfg._dblog.log_expel(self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, newpays, expel_id, sframe, eframe, stime, etime)
+    self.cfg._dblog.log_expel(
+      self.cfg.simnumber, self.cfg.iternum, self.id, naids, self.nowpay, 
+      newpays, expel_id, sframe, eframe, stime, etime
+    )
 
     self.logp(("Agent", self.id, "votes to expel", expel_id))
 
@@ -326,12 +357,14 @@ class HumanAgent(Agent):
       # No member should leave the team
       return None
     else:
-      #self.messages.append('You voted to expel agent '+str(accept_id)+' from the group')
+      #self.messages.append('You voted to expel agent '+str(accept_id)+
+      #                     ' from the group')
       return idagents[expel_id]
 
 
   def consider(self):
-    if not len(self.acceptances) or not len([g.gsize for g in self.acceptances if g.gsize > 0]):
+    if not len(self.acceptances) or \
+       not len([g.gsize for g in self.acceptances if g.gsize > 0]):
       self.messages.append('You received no acceptances')
       return
     
@@ -340,11 +373,13 @@ class HumanAgent(Agent):
     
     idgroups = {g.id:g for g in self.acceptances}
 
-    gdata = sorted([ (g.id, g.gsize, task(g.withskills(self))/(g.gsize+1), [a.id for a in g.agents]) for g in self.acceptances])
+    gdata = sorted([ (g.id, g.gsize, task(g.withskills(self))/(g.gsize+1), 
+                      [a.id for a in g.agents]) for g in self.acceptances])
     gids, gsizes, gpays, gmembers = zip(*gdata)
     
     self.logratings()
-    self.logratingstatus('join', gids+(-1, ), gmembers+([a.id for a in self.group.agents], ))
+    self.logratingstatus('join', gids+(-1, ), 
+                         gmembers+([a.id for a in self.group.agents], ))
     
     # Send all data to GUI and blocking receive
     # Wait for user to reply with list of applications
@@ -359,10 +394,18 @@ class HumanAgent(Agent):
       self.messages.append('You switched to group '+self.gname(choice_id))
       self.switchgroup(idgroups[choice_id])
     
-    gids = list(gids); gsizes = list(gsizes); gpays = list(gpays)
-    gids.append(-1); gsizes.append(self.group.gsize); gpays.append(self.nowpay)  # Add your current group (no change)
+    gids = list(gids)
+    gsizes = list(gsizes)
+    gpays = list(gpays)
+    # Add your current group (no change)
+    gids.append(-1)
+    gsizes.append(self.group.gsize)
+    gpays.append(self.nowpay)
     sframe, eframe, stime, etime = self.getframetimes()
-    self.cfg._dblog.log_join(self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, gpays, choice_id, sframe, eframe, stime, etime)
+    self.cfg._dblog.log_join(
+      self.cfg.simnumber, self.cfg.iternum, self.id, gids, self.nowpay, gpays, 
+      choice_id, sframe, eframe, stime, etime
+    )
     
     if choice_id != -1:
       self.logp(("Agent", self.id, "joins", choice_id))
@@ -372,7 +415,8 @@ class HumanAgent(Agent):
   def notifygaccept(self, aid):
     actor = 'Your group' if self.group.gsize > 1 else 'You'
     if aid != -1:
-      self.messages.append(actor+' voted to accept '+self.aname(aid)+' to join your team')
+      self.messages.append(actor+' voted to accept '+self.aname(aid)+
+                           ' to join your team')
     else:
       self.messages.append(actor+' voted to allow no one to join your team')
     
@@ -422,7 +466,8 @@ class HumanAgent(Agent):
     
   def postprocess_pg(self, globalpay=None):
     self.update()
-    self.messages.append('You can earn '+CURR+str(round(self.nowpay, 2))+' on this team.')
+    self.messages.append('You can earn '+CURR+str(round(self.nowpay, 2))+
+                         ' on this team.')
     
     self.logratings()
     send_and_receive(self.client, ('postprocess', '\n'.join(self.messages)) )
@@ -443,7 +488,8 @@ class HumanAgent(Agent):
     
     ## Send team as neighbors
     if self.cfg.show_skills:
-      teamdata = [(n.id, n.group.id, int(np.where(n.skills)[0][0])) for n in self.group.agents if n != self]
+      teamdata = [(n.id, n.group.id, int(np.where(n.skills)[0][0])) 
+                  for n in self.group.agents if n != self]
     else:
       teamdata = [(n.id, n.group.id, -1) for n in self.group.agents if n != self]
     send_message(self.client, ('updatenbrs', teamdata) )    
@@ -464,6 +510,8 @@ class HumanAgent(Agent):
   def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
     maxcontrib = startpay
     newpay = privatepay + potpay
+    
+    # Send summary info to the GUI
     self.messages.append('You made '+CURR+str(round(startpay, 2))+' by working with this team.')
     cdesc = 'the shared pot' if not self.cfg.hide_publicgoods else 'the lottery'
     self.messages.append('You contributed '+CURR+str(contrib)+' to '+cdesc+
@@ -475,12 +523,10 @@ class HumanAgent(Agent):
       potmult = self.cfg.pubgoods_calc(contribs, ratings)
       potmult = int((potmult-1)*100)
       self.messages.append('The pot was increased by {0}%'.format(potmult))
-    self.messages.append('You received '+CURR+str(round(potpay,2))+
+    self.messages.append('You received '+CURR+str(round(potpay, 2))+
                          ' from '+cdesc)
-    self.messages.append('You earned '+CURR+str(round(newpay,2))+
+    self.messages.append('You earned '+CURR+str(round(newpay, 2))+
                          ' this round.')
-    #if self.cfg.do_ratings and self.group.gsize > 1:
-    #  self.messages.append('You may now rate the behavior of your teammates if you wish.')
     
     ### UPDATE UI WITH DATA ABOUT TEAM CONTRIBS
     teammateids = [n.id for n in self.group.agents]
@@ -531,7 +577,9 @@ class HumanAgent(Agent):
     amount = send_and_receive(self.client, ('u_makeoffer', other_player))
     
     sframe, eframe, stime, etime = self.getframetimes()
-    self.cfg._dblog.ultevent_insert(self.id, other_player, 'make_offer', amount, sframe, eframe, stime, etime)
+    self.cfg._dblog.ultevent_insert(
+      self.id, other_player, 'make_offer', amount, sframe, eframe, stime, etime
+    )
     
     return amount
 
@@ -539,10 +587,13 @@ class HumanAgent(Agent):
     send_message(self.client, ('u_waitoffer', other_player))
   
   def decide_offer(self, other_player, amount):
-    result = send_and_receive(self.client, ('u_decideoffer', (other_player, amount)))
+    result = send_and_receive(self.client, 
+                              ('u_decideoffer', (other_player, amount)))
     
     sframe, eframe, stime, etime = self.getframetimes()
-    self.cfg._dblog.ultevent_insert(self.id, other_player, 'decide_offer', result, sframe, eframe, stime, etime)
+    self.cfg._dblog.ultevent_insert(
+      self.id, other_player, 'decide_offer', result, sframe, eframe, stime, etime
+    )
     
     return result
   
@@ -550,7 +601,8 @@ class HumanAgent(Agent):
     send_message(self.client, ('u_waitdecide', other_player))
   
   def show_conclusion_u(self, other_player, amount, result, role):
-    send_and_receive(self.client, ('u_conclusion', (other_player, amount, result, role)))
+    send_and_receive(self.client, 
+                     ('u_conclusion', (other_player, amount, result, role)))
     
     if result:
       if role == 0:
@@ -560,7 +612,9 @@ class HumanAgent(Agent):
     else:
       my_amount = 0
     sframe, eframe, stime, etime = self.getframetimes()
-    self.cfg._dblog.ultevent_insert(self.id, other_player, 'conclusion', my_amount, sframe, eframe, stime, etime)
+    self.cfg._dblog.ultevent_insert(
+      self.id, other_player, 'conclusion', my_amount, 
+      sframe, eframe, stime, etime)
     
     if self.cfg.do_ratings:
       self.logratings(step='ultimatum', simnum=-1, iternum=-1)
