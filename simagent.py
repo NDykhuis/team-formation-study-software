@@ -33,6 +33,7 @@ class DumbAgent(Agent, UltAgent):
     """Sets self.dumb to True"""
     super(DumbAgent, self).__init__(cfg, adat, skills, aid)
     self.dumb = True
+    self.pgpay = 0
   
   def propose(self):
     """Randomly chooses 0 to n groups to apply to."""
@@ -45,8 +46,8 @@ class DumbAgent(Agent, UltAgent):
     npropose = random.randrange(0, len(nbrgroups))
     proposes = random.sample(nbrgroups, npropose)
     
-    for g in proposes:
-      g.takeapplication(self)
+    for group in proposes:
+      group.takeapplication(self)
     
   def acceptvote(self, applicants):
     """Randomly chooses from applicants, or None"""
@@ -77,7 +78,8 @@ class DumbAgent(Agent, UltAgent):
     contrib = random.randint(0, nowpayint)
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+  def publicgoods_postprocess(
+    self, startpay, keep, contrib, privatepay, potpay, teampays):
     """Sets self.pgpay to keep + nowpay"""
     self.pgpay = keep+potpay
 
@@ -145,8 +147,11 @@ class SimAgent(Agent, UltAgent):
   def tf_delay_real(self, stage):
     """Wait based on times defined in cfg._agent_delays for stage"""
     #print "tf_delay", self.id
-    if self.cfg._agent_delays[stage] and (self.id < self.cfg.delay_n_sims or not self.cfg.delay_n_sims):
-      time.sleep(max(random.gauss(self.cfg._agent_delays[stage], self.cfg._agent_delay_dev[stage]), 0.25))
+    if (self.cfg._agent_delays[stage] and 
+        (self.id < self.cfg.delay_n_sims or not self.cfg.delay_n_sims)):
+      rand_delay = random.gauss(self.cfg._agent_delays[stage],
+                                self.cfg._agent_delay_dev[stage])
+      time.sleep(max(rand_delay, 0.25))
 
   def switchgroup(self, newgroup):
     """Switch group, and reset memory (because something changed"""
@@ -166,7 +171,8 @@ class SimAgent(Agent, UltAgent):
     """
        
     cfg = self.cfg
-    return (nprev < cfg.agent_mem_threshold) or (random.random() < cfg.agent_mem_decay**(nprev-cfg.agent_mem_threshold))
+    return (nprev < cfg.agent_mem_threshold) or \
+      (random.random() < cfg.agent_mem_decay**(nprev-cfg.agent_mem_threshold))
   
   def propose(self):
     """Look at all of the neighboring groups and propose 
@@ -197,17 +203,22 @@ class SimAgent(Agent, UltAgent):
       newskills = g.withskills(self)
       if self.cfg.bias:
         alist = [a.id for a in g.agents]+[self.id]
-        self.logp(("agent", self.id, "in group", self.group.id, "proposing to", g.id), 6)
-        #if task(newskills)*np.mean([self.bias.get(n, 1.0) for n in alist])/(len(alist)+1) >= self.nowpay:
-        if task(newskills)/(len(alist)+1)*self.biasavg(alist) >= self.nowpay:
+        self.logp(("agent", self.id, "in group", self.group.id, 
+                   "proposing to", g.id), 6)
+        #if task(newskills)*np.mean([self.bias.get(n, 1.0) 
+        #     for n in alist])/(len(alist)+1) >= self.nowpay:
+        newpay = task(newskills)/(len(alist)+1)*self.biasavg(alist)
+        if newpay >= self.nowpay:
           g.takeapplication(self)
       else:
         gpay = task(newskills)/(g.gsize+1)
         if gpay > self.nowpay and totalweights.get(g.id, 0) >= 1:
-          #if self.cfg._verbose > 5:
-          #  print "agent", self.id, "in group", self.group.id, "proposing to", g.id
-          if not self.cfg.agent_memory or self.do_mem(self.proposemem.get((g, gpay),0)):
+          if (not self.cfg.agent_memory or 
+              self.do_mem(self.proposemem.get((g, gpay),0))):
             g.takeapplication(self)
+
+            self.logp(("agent", self.id, "in group", self.group.id, 
+                       "proposing to", g.id), 6)
             
             if self.cfg.agent_memory:
               self.proposemem[(g,gpay)] = self.proposemem.get((g,gpay),0) + 1
@@ -232,11 +243,13 @@ class SimAgent(Agent, UltAgent):
       #pay, memory, random, agent
       nowgsize = self.group.gsize
       if self.disposition == 'conditional':
-        clow = self.pgmem.get(self.id, 0.5)+((random.random()-0.5)*self.cfg.conditional_variance)
+        clow = self.pgmem.get(self.id, 0.5) + \
+               ((random.random()-0.5)*self.cfg.conditional_variance)
       else:
         clow, chigh = self.cfg.pg_contribrange[self.disposition]
       utility = [(task(self.group.withskills(a))/(nowgsize + a.gsize) - nowpay, 
-                  self.pgmem.get(a.id, (self.global_ratings.get(a.id, 1)-1)/4.0)-clow,   # If no memory, use scaled global rating
+                  # If no memory, use scaled global rating
+                  self.pgmem.get(a.id, (self.global_ratings.get(a.id, 1)-1)/4.0)-clow,
                   #self.pgmem.get(a.id, self.cfg.default_assumed_contrib)-clow, 
                   #self.global_ratings.get(a.id, 0), 
                   random.random(), a) for a in self.group.applications]
@@ -245,7 +258,8 @@ class SimAgent(Agent, UltAgent):
 
     if self.cfg.agent_memory:
       # Remove all agents who I've voted for more than x times
-      utility = [u for u in utility if self.do_mem(self.votemem.get((u[-1],u[0]),0))]
+      utility = [u for u in utility if 
+                 self.do_mem(self.votemem.get((u[-1],u[0]),0))]
       if not len(utility):
         return None
 
@@ -282,7 +296,8 @@ class SimAgent(Agent, UltAgent):
   
     if bestgroup is not None:
       self.switchgroup(bestgroup)
-      self.logp(("Agent", self.id, "switching to", bestgroup.id, "  Utility:", [u[:-1]+(u[-1].id,) for u in utility]),6)
+      self.logp(("Agent", self.id, "switching to", bestgroup.id, 
+                 "  Utility:", [u[:-1]+(u[-1].id,) for u in utility]),6)
       
     self.acceptances = []
   
@@ -307,15 +322,20 @@ class SimAgent(Agent, UltAgent):
       clow, chigh = self.cfg.pg_contribrange[self.disposition]
       
       # Expel agents that contrib less than me in PG (first pass at AI)
+      # Always expel agents that lower pay, 
+      # but keep the option open to expel ones that raise pay
       utilities = [
-        (max(0, (task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay)), # Always expel agents that lower pay, but keep the option open to expel ones that raise pay
-        (clow+chigh)*0.5 - self.pgmem.get(agent.id,chigh) - random.random(), # Probability to expel agents that contrib less than my average
+        (max(0, (task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay)), 
+        # Probability to expel agents that contrib less than my average
+        (clow+chigh)*0.5 - self.pgmem.get(agent.id,chigh) - random.random(), 
         agent)
         for agent in myg.agents if agent != self]
       worstagent = self.cfg.utility_tiebreaker(utilities)
       return worstagent
     else:
-      utilities = [(task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay, random.random(), agent) for agent in myg.agents if agent != self]
+      utilities = [(task(myg.withoutskills(agent))/(myg.gsize-1) - nowpay,
+                    random.random(), agent) 
+                    for agent in myg.agents if agent != self]
       worstagent = self.cfg.utility_tiebreaker(utilities)
       return worstagent
       
@@ -340,7 +360,8 @@ class SimAgent(Agent, UltAgent):
     #  return
     nbrs = set(a.id for a in self.nbrs)
     
-    self.leftovers = self.maxweight - sum(dat['weight'] for dat in G[self.id].itervalues())
+    nowweight = sum(dat['weight'] for dat in G[self.id].itervalues())
+    self.leftovers = self.maxweight - nowweight
     
     if not len(nbrs):
       self.logp(("ERROR: node",self.id,"has no neighbors!"), -1)
@@ -354,13 +375,18 @@ class SimAgent(Agent, UltAgent):
     ### Below code is not currently in use in experiments:
     
     ## IF WE'RE HAPPY WITH OUR TEAM:
-    if cfg.strengthen_teams and (globalpay is None or not cfg.rewire_discontent or mypay >= avgpay*happiness_threshold) and len(teammates):
+    if (cfg.strengthen_teams and len(teammates) and 
+       (globalpay is None or not cfg.rewire_discontent or 
+          mypay >= avgpay*happiness_threshold)):
       # Somehow distribute weight from non-team neighbors to team neighbors
       #print self.leftovers
       available = self.maxweight
       zweight = {'weight':0.0}
-      weights = { a:(G.get_edge_data(self.id,a,default=zweight)['weight']) for a in (teammates | nbrs) }   # All the nodes you know or interacted with
-      lr = self.cfg.weight_learning_rate #* 0.5      # divide by two because BOTH agents do this same thing 
+      # (teammates | nbrs) = all the nodes you know or interacted with
+      weights = { a:(G.get_edge_data(self.id,a,default=zweight)['weight']) 
+                 for a in (teammates | nbrs) }
+      # divide by two because BOTH agents do this same thing 
+      lr = self.cfg.weight_learning_rate #* 0.5
       addamount = [0.0, (lr * available+self.leftovers) / len(teammates)]
       #print "Before:", sum(weights.values()), self.totalweight
       for n,oldweight in weights.iteritems():
@@ -375,19 +401,23 @@ class SimAgent(Agent, UltAgent):
           #self.nbrs.add(self.cfg._agentdict[a])
         
       # if there are any connections that are too weak, consider rewiring
-      removenbrs = [a for a,w in weights.iteritems() if w < self.cfg.weak_threshold]
+      removenbrs = [a for a,w in weights.iteritems() 
+                    if w < self.cfg.weak_threshold]
       G.remove_edges_from( (self.id, a) for a in removenbrs )
       
       ## Need to redistribute this weight back to the real teammates
-      #self.leftovers = sum(w for w in weights.values() if w < self.cfg.weak_threshold)
+      #self.leftovers = sum(w for w in weights.values() 
+      #                     if w < self.cfg.weak_threshold)
       #print self.leftovers
     
     ## OTHERWISE, LOOK FOR NEW CONNECTIONS
     elif cfg.rewire_discontent:
       # find my weakest connection 
       zweight = {'weight':0.0}
-      #weights = { a:(G.get_edge_data(self.id,a,default=zweight)['weight']) for a in nbrs }   # All the nodes you know
-      weights = [ ((G.get_edge_data(self.id,a,default=zweight)['weight']), a) for a in nbrs ]   # All the nodes you know
+      #weights = { a:(G.get_edge_data(self.id,a,default=zweight)['weight']) 
+      #            for a in nbrs }   # All the nodes you know
+      weights = [ ((G.get_edge_data(self.id,a,default=zweight)['weight']), a)
+                  for a in nbrs ]   # All the nodes you know
       
       moveweight = 0
       #moveweight += self.leftovers
@@ -416,11 +446,14 @@ class SimAgent(Agent, UltAgent):
       G.add_edge( self.id, newnbr, weight=self.leftovers )
       self.leftovers = 0
       
-      self.logp((self.id, 'connects to', newnbr, "(maxweight", self.maxweight, ")"))
-      ## ISSUE: no one will "listen to" this neighbor because they don't have enough of a connection to them!
+      self.logp((self.id, 'connects to', newnbr, 
+                 "(maxweight", self.maxweight, ")"))
+      ## ISSUE: no one will "listen to" this neighbor because 
+      ## they don't have enough of a connection to them!
     
     #self.neighbors()
-    ## PROBLEM:  having agents at both ends of an edge edit the weight messes up the total weight (social bandwidth) for the agents
+    ## PROBLEM:  having agents at both ends of an edge edit the weight messes 
+    ## up the total weight (social bandwidth) for the agents
     ##   Should we make this a digraph? Or is there some other way to fix this?
     
 
@@ -442,11 +475,14 @@ class SimAgent(Agent, UltAgent):
     self.tf_delay('publicgoods')
     
     if self.disposition == 'conditional':
-      #othercontribs = self.pgmem.values()  # This would include all the other agents...
-      othercontribs = [self.pgmem[a.id] for a in self.group.agents if a.id in self.pgmem and a.id != self.id]
+      # This would include all the other agents...
+      #othercontribs = self.pgmem.values()
+      othercontribs = [self.pgmem[a.id] for a in self.group.agents 
+                       if a.id in self.pgmem and a.id != self.id]
       if len(othercontribs):
         avgcontrib = sum(othercontribs)/len(othercontribs)
-        mypctcontrib = avgcontrib + ((random.random()-0.5)*self.cfg.conditional_variance)
+        noise = random.random()-0.5
+        mypctcontrib = avgcontrib + (noise*self.cfg.conditional_variance)
         mypctcontrib = min(max(mypctcontrib,0),1)   # Keep in 0,1 range
       else:
         mypctcontrib = random.random()
@@ -459,7 +495,8 @@ class SimAgent(Agent, UltAgent):
     pgdict[self] = (contrib, nowpayint-contrib)
     
   
-  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+  def publicgoods_postprocess(
+    self, startpay, keep, contrib, privatepay, potpay, teampays):
     """Add pay and keep track of contribution statistics.
     
     Set self.pgpay to my total pay for this round.
@@ -506,7 +543,8 @@ class SimAgent(Agent, UltAgent):
       rating = int(min(max(pctcontrib*4.0+1+noise, 1),5))    # Noisy version
       
       # More likely to post rating if high or low
-      probs = [99, 0.8, 0.5, 0.25, 0.5, 0.8]    # Can't rate zero; ratings can be 1-5
+      # Can't rate zero; ratings can be 1-5
+      probs = [99, 0.8, 0.5, 0.25, 0.5, 0.8]
       if random.random() < probs[rating]:
         ratings[aid] = rating
     return ratings
