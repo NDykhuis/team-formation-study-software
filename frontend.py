@@ -991,12 +991,12 @@ class TFGui(object):
         minpot = self.proptopct(self.cfgdict['ap_min_multiplier'])
         maxpot = self.proptopct(self.cfgdict['ap_max_multiplier'])
         longtext += "The pot will be increased by an amount between {pmin}% and {pmax}% and split evenly among everyone on your team.\n".format(pmin=minpot, pmax=maxpot)
-        longtext += "The multiplier will increase based on the ratings of the team members and the amount the team contributes. "
+        longtext += "\nThe pot multiplier will increase based on the ratings of the team members and the amount the team contributes. "
         minreal, maxreal = potmult
         minreal = self.proptopct(minreal)
         maxreal = self.proptopct(maxreal)
         longtext += "Given your team's ratings, the multiplier will be {0}% if no one contributes anything, and {1}% if everyone contributes everything.\n".format(minreal, maxreal)
-      longtext += "Each team member's contribution will be shown publicly to the other members of the team.\n"
+      longtext += "\nEach team member's contribution will be shown publicly to the other members of the team.\n"
     else:
       longtext = "Your team has been entered into a lottery. You may contribute as much of your pay as you would like to the lottery. The amount you contribute determines the amount you are eligible to win."
     
@@ -1921,7 +1921,7 @@ class TFGui(object):
         mult_low, mult_high = potmult
         minreal = self.proptopct(mult_low)
         maxreal = self.proptopct(mult_high)
-        longtext += "The pot will be increased by {0}% to {1}%, depending on contributions,\nand split evenly among everyone on your team.\n".format(minreal, maxreal)
+        longtext += "The pot will be increased by {0}% to {1}%, depending on how much your team contributes,\nand split evenly among everyone on your team.\n".format(minreal, maxreal)
       else:
         longtext += "The pot will be increased by "+str(int((potmult-1)*100))+"% and split evenly among everyone on your team.\n"
       longtext += "Each team member's contribution will be shown publicly to the other members of the team."      

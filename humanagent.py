@@ -600,10 +600,11 @@ class HumanAgent(Agent):
     newpay = privatepay + potpay
     
     # Send summary info to the GUI
-    self.messages.append('You made '+CURR+str(round(startpay, 2))+' by working with this team.')
+    self.messages.append('You made '+CURR+str(round(startpay, 2))+
+                         ' this round by working with this team.')
     cdesc = 'the shared pot' if not self.cfg.hide_publicgoods else 'the lottery'
-    self.messages.append('You contributed '+CURR+str(contrib)+' to '+cdesc+
-                         ' and kept '+CURR+str(round(keep, 2)))
+    self.messages.append('Of that, you contributed '+CURR+str(contrib)+' to '+
+                         cdesc+' and kept '+CURR+str(round(keep, 2)))
     if self.cfg.alt_pubgoods and not self.cfg.hide_publicgoods:
       ratings = [self.global_ratings[n.id] for n in self.group.agents 
                  if n.id in self.global_ratings]
@@ -613,7 +614,7 @@ class HumanAgent(Agent):
       self.messages.append('The pot was increased by {0}%'.format(potmult))
     self.messages.append('You received '+CURR+str(round(potpay, 2))+
                          ' from '+cdesc)
-    self.messages.append('You earned '+CURR+str(round(newpay, 2))+
+    self.messages.append('You earned a total of '+CURR+str(round(newpay, 2))+
                          ' this round.')
     
     ### UPDATE UI WITH DATA ABOUT TEAM CONTRIBS
