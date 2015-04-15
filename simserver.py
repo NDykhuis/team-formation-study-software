@@ -109,7 +109,7 @@ if __name__ == '__main__':
     std.simnumber = 0
     std.nhumans = len(conns)
     std._conns = conns
-
+    
     gm = GraphManager(std)
     gm.setup()
     sim = simulation()

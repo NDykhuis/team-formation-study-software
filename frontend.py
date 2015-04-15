@@ -1667,8 +1667,7 @@ class TFGui(object):
     if self.do_video:
       #self.vidfile = '../data/ses_{sessionid:02d}_{date}/user_{userid:02d}/cap_{sessionid:02d}-{userid:02d}'.format(
       #  sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
-      self.vidfile = '../data/{date}_ses_{sessionid:02d}/user_{userid:02d}/cap_{sessionid:02d}-{userid:02d}'.format(
-        sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
+      self.vidfile = '../data/{date}_ses_{sessionid:02d}/user_{userid:02d}/cap_{sessionid:02d}-{userid:02d}'.format(sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
       self.vidrec = VidCapture(self.vidfile)
     else:
       self.vidrec = None
@@ -1677,8 +1676,7 @@ class TFGui(object):
     if self.cfgdict['_capture_screenshots']:
       #self.scrprefix = '../data/ses_{sessionid:02d}_{date}/user_{userid:02d}/scr_{sessionid:02d}-{userid:02d}'.format(
       #  sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
-      self.scrprefix = '../data/{date}_ses_{sessionid:02d}/user_{userid:02d}/scr_{sessionid:02d}-{userid:02d}'.format(
-        sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
+      self.scrprefix = '../data/{date}_ses_{sessionid:02d}/user_{userid:02d}/scr_{sessionid:02d}-{userid:02d}'.format(sessionid=self.sessionid, userid=self.userid, date=today.strftime('%Y-%m-%d'))
       if not os.path.exists(os.path.dirname(self.scrprefix)):
         os.makedirs(os.path.dirname(self.scrprefix))
     

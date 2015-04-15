@@ -41,11 +41,11 @@ class DBLogger(object):
   
   def __init__(self, dbfile):
     self.dbfile = dbfile
-    self.setup()
     
     self.NO_LOGGING = False     # TEMP: Set to true to disable database output
     
     self.sessionid = None   # Init from database in self.setup()
+    self.setup()
     
     # Threaded producer-consumer code
     self.insthread = None
