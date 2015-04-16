@@ -33,7 +33,7 @@ from clientwaiter import ClientWaiter
 from db_logger import DBLogger
 from simulation import simulation
 from configuration import Configuration, MultiConfig
-from simhumanagent import *
+from SimHumanAgent import SimHumanAgent, HumanData
 
 
 def heartbeat_thread():
@@ -72,8 +72,8 @@ if __name__ == '__main__':
                      Configuration.show_global_ratings, Configuration.show_nhistory)
     
     # Load in sim human data, if requested
-    if configuration.simhumans:
-      configuration.hdata = humandata(configuration.simhuman_file)
+    if Configuration.simhumans:
+      Configuration.hdata = HumanData(Configuration.simhuman_file)
 
     # Start the heartbeat
     if Configuration._verbose > 4:

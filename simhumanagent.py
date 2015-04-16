@@ -3,15 +3,18 @@
 #  Uses data from human subjects experiments to emulate human agents
 #
 
-from configuration import *
-from agentgroup import *
-from utils import *
 import datetime
 import operator
 import json
 import math
+import random
+import time
 
 import numpy as np  # for genfromtxt and random.choice
+
+from configuration import Configuration
+from agentgroup import Agent
+from utils import *
 
 ## Data format after import:
 # uuid:
@@ -120,16 +123,16 @@ class humandata(object):
     self.dataprivate = [dat[u] for u in dat if dat[u]['condition']=='private']
       
   def gen_agent(self, cfg, adat=None, uuid=None):
-    # Create a simhumanagent from one of the rows of the data file
+    # Create a SimHumanAgent from one of the rows of the data file
     # If uuid is None, pick a row randomly
     if uuid:
-      return simhumanagent(cfg, self.datadict[uuid], adat)
+      return SimHumanAgent(cfg, self.datadict[uuid], adat)
     else:
-      #return simhumanagent(cfg, self.datadict[random.choice(self.datadict.keys())], adat)
+      #return SimHumanAgent(cfg, self.datadict[random.choice(self.datadict.keys())], adat)
       if cfg.show_global_ratings:
-        return simhumanagent(cfg, random.choice(self.datapublic), adat)
+        return SimHumanAgent(cfg, random.choice(self.datapublic), adat)
       else:
-        return simhumanagent(cfg, random.choice(self.dataprivate), adat)
+        return SimHumanAgent(cfg, random.choice(self.dataprivate), adat)
 
 
 
@@ -140,10 +143,10 @@ def logoddstoprob(logodds):
   except OverflowError:
     return 1.0
 
-class simhumanagent(agent):
+class SimHumanAgent(Agent):
   # Currently mostly copied from dumbagent
   def __init__(self, cfg, probdata, adat=None, skills=None, aid=None):
-    super(simhumanagent, self).__init__(cfg, adat, skills, aid)
+    super(SimHumanAgent, self).__init__(cfg, adat, skills, aid)
     # get info from the humandata class to init probabilities
     
     self.type = 'simhuman'
@@ -446,5 +449,5 @@ if __name__=='__main__':
   import sys
   datafile = sys.argv[1]
   h = humandata(datafile)
-  c = configuration()
+  c = Configuration()
   a = h.gen_agent(c)
