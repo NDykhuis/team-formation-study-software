@@ -53,7 +53,8 @@ class HumanData(object):
   def read_data(self, filename):
     self.datadict = dat = {}
     
-    filedata = np.genfromtxt('userdatatable.csv', delimiter=',', names=True, dtype=None, missing_values='NA')
+    filedata = np.genfromtxt('userdatatable.csv', delimiter=',', 
+                             names=True, dtype=None, missing_values='NA')
     
     for row in filedata:
       uuid = self.qstrip(row['uuid'])
@@ -65,9 +66,16 @@ class HumanData(object):
       sdat = udat[step] = {}
       sdat['nohist'] = row[step+'_nohist']
       if row[step+'_deltapay_aic']: # is not NA
-        sdat['deltapay'] = {'intercept':row[step+'_deltapay_intercept'],'slope':row[step+'_deltapay_slope']}
+        sdat['deltapay'] = {
+          'intercept':row[step+'_deltapay_intercept'],
+          'slope':row[step+'_deltapay_slope']
+        }
       if row[step+'_pastcontrib_aic']: # is not NA
-        sdat['pastcontrib'] = {'intercept':row[step+'_pastcontrib_intercept'],'slope':row[step+'_pastcontrib_slope'], 'slope_pay':row[step+'_pastcontrib_slope_pay']}
+        sdat['pastcontrib'] = {
+          'intercept':row[step+'_pastcontrib_intercept'],
+          'slope':row[step+'_pastcontrib_slope'],
+          'slope_pay':row[step+'_pastcontrib_slope_pay']
+        }
       sdat['time_q1'] = row[step+'_time_q1']
       sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
@@ -78,11 +86,22 @@ class HumanData(object):
       sdat['noaccept'] = row[step+'_noaccept']
       sdat['stayaccept'] = row[step+'_stayaccept']
       if row[step+'_deltapay_aic']: # is not NA
-        sdat['deltapay'] = {'intercept':row[step+'_deltapay_intercept'],'slope':row[step+'_deltapay_slope']}
+        sdat['deltapay'] = {
+          'intercept':row[step+'_deltapay_intercept'],
+          'slope':row[step+'_deltapay_slope']
+        }
       if row[step+'_globalrtg_aic']: # is not NA
-        sdat['globalrtg'] = {'intercept':row[step+'_globalrtg_intercept'],'slope':row[step+'_globalrtg_slope'], 'slope_pay':row[step+'_globalrtg_slope_pay']}
+        sdat['globalrtg'] = {
+          'intercept':row[step+'_globalrtg_intercept'],
+          'slope':row[step+'_globalrtg_slope'],
+          'slope_pay':row[step+'_globalrtg_slope_pay']
+        }
       if row[step+'_pastcontrib_aic']: # is not NA
-        sdat['pastcontrib'] = {'intercept':row[step+'_pastcontrib_intercept'],'slope':row[step+'_pastcontrib_slope'], 'slope_pay':row[step+'_pastcontrib_slope_pay']}
+        sdat['pastcontrib'] = {
+          'intercept':row[step+'_pastcontrib_intercept'],
+          'slope':row[step+'_pastcontrib_slope'],
+          'slope_pay':row[step+'_pastcontrib_slope_pay']
+        }
       sdat['time_q1'] = row[step+'_time_q1']
       sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
@@ -91,9 +110,18 @@ class HumanData(object):
       sdat = udat[step] = {}
       sdat['nohist'] = row[step+'_nohist']
       if row[step+'_deltapay_aic']: # is not NA
-        sdat['deltapay'] = {'intercept':row[step+'_deltapay_intercept'], 'slope_stay':row[step+'_deltapay_stay'], 'slope':row[step+'_deltapay_slope']}
+        sdat['deltapay'] = {
+          'intercept':row[step+'_deltapay_intercept'], 
+          'slope_stay':row[step+'_deltapay_stay'], 
+          'slope':row[step+'_deltapay_slope']
+        }
       if row[step+'_globalrtg_aic']: # is not NA
-        sdat['globalrtg'] = {'intercept':row[step+'_globalrtg_intercept'], 'slope_stay':row[step+'_deltapay_stay'], 'slope':row[step+'_globalrtg_slope'], 'slope_pay':row[step+'_globalrtg_slope_pay']}
+        sdat['globalrtg'] = {
+          'intercept':row[step+'_globalrtg_intercept'], 
+          'slope_stay':row[step+'_deltapay_stay'], 
+          'slope':row[step+'_globalrtg_slope'], 
+          'slope_pay':row[step+'_globalrtg_slope_pay']
+        }
       sdat['time_q1'] = row[step+'_time_q1']
       sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
@@ -103,16 +131,31 @@ class HumanData(object):
       sdat['avgcontrib'] = row[step+'_avgcontrib']
       sdat['sdcontrib'] = row[step+'_sdcontrib']
       if abs(row[step+'_contrib_globalrtg_r2']) > 0.2:
-        sdat['contrib_globalrtg'] = {'intercept':row[step+'_contrib_globalrtg_intercept'], 'slope':row[step+'_contrib_globalrtg_slope'], 'stderr':row[step+'_contrib_globalrtg_stderr'], 'r2':row[step+'_contrib_globalrtg_r2']}
+        sdat['contrib_globalrtg'] = {
+          'intercept':row[step+'_contrib_globalrtg_intercept'], 
+          'slope':row[step+'_contrib_globalrtg_slope'], 
+          'stderr':row[step+'_contrib_globalrtg_stderr'], 
+          'r2':row[step+'_contrib_globalrtg_r2']
+        }
       if abs(row[step+'_contrib_pastcontrib_r2']) > 0.2:
-        sdat['contrib_pastcontrib'] = {'intercept':row[step+'_contrib_pastcontrib_intercept'], 'slope':row[step+'_contrib_pastcontrib_slope'], 'stderr':row[step+'_contrib_pastcontrib_stderr'], 'r2':row[step+'_contrib_pastcontrib_r2']}
+        sdat['contrib_pastcontrib'] = {
+          'intercept':row[step+'_contrib_pastcontrib_intercept'], 
+          'slope':row[step+'_contrib_pastcontrib_slope'], 
+          'stderr':row[step+'_contrib_pastcontrib_stderr'], 
+          'r2':row[step+'_contrib_pastcontrib_r2']
+        }
       if abs(row[step+'_rating_contrib_r2']) > 0.2:
-        sdat['rating_contrib'] = {'intercept':row[step+'_rating_contrib_intercept'], 'slope':row[step+'_rating_contrib_slope'], 'stderr':row[step+'_rating_contrib_stderr']}
+        sdat['rating_contrib'] = {
+          'intercept':row[step+'_rating_contrib_intercept'], 
+          'slope':row[step+'_rating_contrib_slope'], 
+          'stderr':row[step+'_rating_contrib_stderr']
+        }
       sdat['ratings_per_round'] = row[step+'_ratings_per_round']
       sdat['ratings_per_round_sd'] = row[step+'_ratings_per_round_sd']
       sdat['prop_rounds_nrats_0'] = row[step+'_prop_rounds_nrats_0']
       sdat['rating_props'] = [row[step+'_pct'+str(i)] for i in range(1,6)]
-      sdat['cum_rating_props'] = [sum(sdat['rating_props'][0:i]) for i in range(1,6)]
+      sdat['cum_rating_props'] = [sum(sdat['rating_props'][0:i]) 
+                                  for i in range(1,6)]
       sdat['time_q1'] = row[step+'_time_q1']
       sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
@@ -193,17 +236,20 @@ class SimHumanAgent(Agent):
     for g in nbrgroups:
       newskills = g.withskills(self)
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
-      pastcontribs = [self.contrib_avg[a.id] for a in g.agents if a.id in self.contrib_avg]
+      pastcontribs = [self.contrib_avg[a.id] for a in g.agents 
+                      if a.id in self.contrib_avg]
       
       if contriblm and len(pastcontribs):
         # If there's contrib history, use the more detailed glm
         pastavg = sum(pastcontribs)/len(pastcontribs)
-        papply = logoddstoprob(contriblm['intercept']+pastavg*contriblm['slope']+deltapay*contriblm['slope_pay'])
+        papply = logoddstoprob(contriblm['intercept'] + \
+          pastavg*contriblm['slope'] + deltapay*contriblm['slope_pay'])
       elif paylm:
         # Otherwise, just figure on the difference in pay
-        papply = logoddstoprob(paylm['intercept']+deltapay*paylm['slope'])
+        papply = logoddstoprob(paylm['intercept'] + deltapay*paylm['slope'])
       else:
-        papply = self.probdata['apply']['apply_nohist']     # Should never be used
+        # Should never be used
+        papply = self.probdata['apply']['apply_nohist']
     
       if random.random() < papply:
         g.takeapplication(self)
@@ -211,7 +257,7 @@ class SimHumanAgent(Agent):
   def acceptvote(self, applicants):
     # Generate a probability for all of them
     # Generate a random choice for all of them
-    # if there is more than one chosen tiebreak based on... probability? Something?
+    # if there is more than one chosen tiebreak based on... probability?
     # if there is none chosen, that's ok
     
     if not len(applicants): # may not be necessary
@@ -236,10 +282,12 @@ class SimHumanAgent(Agent):
       maxdeltapay = max(maxdeltapay, deltapay)
       if contriblm and a.id in self.contrib_avg:
         pastcontrib = self.contrib_avg[a.id]
-        paccept = logoddstoprob(contriblm['intercept']+pastcontrib*contriblm['slope']+deltapay*contriblm['slope_pay'])
+        paccept = logoddstoprob(contriblm['intercept'] + \
+          pastcontrib*contriblm['slope'] + deltapay*contriblm['slope_pay'])
       elif ratelm and a.id in self.global_ratings:
         globalrtg = self.global_ratings[a.id]
-        paccept = logoddstoprob(ratelm['intercept']+globalrtg*ratelm['slope']+deltapay*ratelm['slope_pay'])
+        paccept = logoddstoprob(ratelm['intercept'] + \
+          globalrtg*ratelm['slope'] + deltapay*ratelm['slope_pay'])
       elif paylm:
         paccept = logoddstoprob(paylm['intercept']+deltapay*paylm['slope'])
       else:
@@ -282,18 +330,22 @@ class SimHumanAgent(Agent):
     for g in self.acceptances:
       newskills = g.withskills(self)
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
-      globalrtgs = [self.global_ratings[a.id] for a in g.agents if a.id in self.global_ratings]
+      globalrtgs = [self.global_ratings[a.id] for a in g.agents 
+                    if a.id in self.global_ratings]
       
       # because staygroup is always zero, I don't think we need to include that term?
       # Unless we're doing some sort of softmax?
       if ratelm and len(globalrtgs):
         globalrtg = sum(globalrtgs)/len(globalrtgs)
-        pjoin = logoddstoprob(ratelm['intercept']+ globalrtg*ratelm['slope']+ deltapay*ratelm['slope_pay']+ (g==self.group)*ratelm['slope_stay'])
+        pjoin = logoddstoprob(ratelm['intercept'] + globalrtg*ratelm['slope'] + \
+          deltapay*ratelm['slope_pay'] + (g==self.group)*ratelm['slope_stay'])
       elif paylm:
-        pjoin = logoddstoprob(paylm['intercept']+ deltapay*paylm['slope']+ (g==self.group)*ratelm['slope_stay'])
+        pjoin = logoddstoprob(paylm['intercept'] + deltapay*paylm['slope'] + \
+          (g==self.group)*ratelm['slope_stay'])
       else:
         # Should not be used - should always be using paylm as the fallback
-        pjoin = self.probdata['join']['join_nohist']    ## DOES NOT account for switch/stay!
+        ## DOES NOT account for switch/stay!
+        pjoin = self.probdata['join']['join_nohist']
     
       joins[g] = pjoin
     
@@ -323,8 +375,10 @@ class SimHumanAgent(Agent):
     nowpayint = int(self.nowpay)
     
     teammates = [a for a in self.group.agents if a != self]
-    pastcontribs = [self.contrib_avg[a.id] for a in teammates if a.id in self.contrib_avg]
-    glorats = [self.global_ratings[a.id] for a in teammates if a.id in self.global_ratings]
+    pastcontribs = [self.contrib_avg[a.id] for a in teammates 
+                    if a.id in self.contrib_avg]
+    glorats = [self.global_ratings[a.id] for a in teammates 
+               if a.id in self.global_ratings]
     contriblm = self.probdata['pubgood'].get('contrib_pastcontrib', None)
     ratelm = self.probdata['pubgood'].get('contrib_globalrtg', None)
     contribr2 = abs(contriblm['r2']) if contriblm else 0
@@ -335,19 +389,22 @@ class SimHumanAgent(Agent):
       rateavg = sum(glorats)/len(glorats)
       pctcontrib = ratelm['intercept'] + rateavg*ratelm['slope']
       pctcontrib += random.normalvariate(0, ratelm['stderr'])
-    elif len(pastcontribs) and contriblm and (not len(glorats) or contribr2 > rater2):
+    elif (len(pastcontribs) and contriblm and 
+          (not len(glorats) or contribr2 > rater2) ):
       pastavg = sum(pastcontribs)/len(pastcontribs)
       pctcontrib = contriblm['intercept'] + pastavg*contriblm['slope']
       pctcontrib += random.normalvariate(0, contriblm['stderr'])
     else:
-      pctcontrib = self.probdata['pubgood']['avgcontrib']+random.normalvariate(0, self.probdata['pubgood']['sdcontrib'])
+      pctcontrib = self.probdata['pubgood']['avgcontrib'] + \
+        random.normalvariate(0, self.probdata['pubgood']['sdcontrib'])
     pctcontrib = min(max(pctcontrib, 0.0), 1.0)
     
     contrib = int(round(nowpayint * pctcontrib))
     
     pgdict[self] = (contrib, nowpayint-contrib)
   
-  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, potpay, teampays):
+  def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, 
+                              potpay, teampays):
     self.pgpay = privatepay+potpay
     
     teammateids = [n.id for n in self.group.agents]
@@ -383,10 +440,13 @@ class SimHumanAgent(Agent):
       nratsd = pgdata['ratings_per_round']
       if nratsd:
         # Decide how many ratings to actually give, based on mean and sd
-        # This is a very handwavy approximation of the very right-skewed ratings-per-round distribution
+        # This is a very handwavy approximation of the very right-skewed 
+        #   ratings-per-round distribution
         nowrats = int(round(abs(random.normalvariate(nrats,nratsd))))
       else:
-        nowrats = int(nrats)    # if there is no sd, all nrats must be the same, and therefore, must be an integer
+        # if there is no sd, all nrats must be the same, and therefore, 
+        # must be an integer
+        nowrats = int(nrats)
       return nowrats
     else:
       return 0
@@ -417,14 +477,16 @@ class SimHumanAgent(Agent):
       rdict[nid] = rating
     return rdict  
   
-  def gen_rating(self, cumprobs):   # This could be replaced by np.random.choice(vals, p=probs)
+  def gen_rating(self, cumprobs):
+    # This could be replaced by np.random.choice(vals, p=probs)
     rpick = random.random()   
     for i,prop in enumerate(cumprobs):
       if rpick < prop: return i + 1
       
   def rate_random(self, teamids, teamcontribs):
     pgdata = self.probdata['pubgood']
-    return {random.choice(teamids):self.gen_rating(pgdata['cum_rating_props']) for i in range(self.gen_num_ratings())}
+    return {random.choice(teamids):self.gen_rating(pgdata['cum_rating_props']) 
+            for i in range(self.gen_num_ratings())}
     
   def updateratings(self, ratings):
     self.global_ratings = ratings
