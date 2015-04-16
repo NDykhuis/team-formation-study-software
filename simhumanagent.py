@@ -49,7 +49,7 @@ class HumanData(object):
   def read_data(self, filename):
     self.datadict = dat = {}
     
-    filedata = np.genfromtxt('userdatatable.csv', delimiter=',', 
+    filedata = np.genfromtxt(filename, delimiter=',', 
                              names=True, dtype=None, missing_values='NA')
     
     for row in filedata:
