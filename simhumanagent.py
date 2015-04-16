@@ -43,7 +43,7 @@ from utils import *
 #    time_q1, time_q3:  upper and lower quartiles for decision delay
 
 
-class humandata(object):
+class HumanData(object):
   def __init__(self, datafile):
     self.read_data(datafile)
   
@@ -160,8 +160,9 @@ class SimHumanAgent(Agent):
     
     if self.cfg.delay_sim_agents:
       self.slow = True
+      self.tf_delay = self.tf_delay_real
     else:
-      self.tf_delay=self.tf_delay_null
+      self.tf_delay = self.tf_delay_null
       
     # if pubgoods rating r2 is bad, assign to 'rate_random' or 'rate_contrib'
     if 'rating_contrib' in probdata['pubgood']:
@@ -434,7 +435,7 @@ class SimHumanAgent(Agent):
   def tf_delay_null(self, stage):
     pass
 
-  def tf_delay(self, stage):
+  def tf_delay_real(self, stage):
     q1 = self.probdata[stage]['time_q1']
     med = self.probdata[stage]['time_med']
     q3 = self.probdata[stage]['time_q3']
@@ -448,6 +449,6 @@ class SimHumanAgent(Agent):
 if __name__=='__main__':
   import sys
   datafile = sys.argv[1]
-  h = humandata(datafile)
+  h = HumanData(datafile)
   c = Configuration()
   a = h.gen_agent(c)
