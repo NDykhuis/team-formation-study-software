@@ -3,9 +3,6 @@
 #  Uses data from human subjects experiments to emulate human agents
 #
 
-import datetime
-import operator
-import json
 import math
 import random
 import time
@@ -14,7 +11,6 @@ import numpy as np  # for genfromtxt and random.choice
 
 from configuration import Configuration
 from agentgroup import Agent
-from utils import *
 
 ## Data format after import:
 # uuid:
@@ -153,17 +149,17 @@ class HumanData(object):
       sdat['ratings_per_round'] = row[step+'_ratings_per_round']
       sdat['ratings_per_round_sd'] = row[step+'_ratings_per_round_sd']
       sdat['prop_rounds_nrats_0'] = row[step+'_prop_rounds_nrats_0']
-      sdat['rating_props'] = [row[step+'_pct'+str(i)] for i in range(1,6)]
+      sdat['rating_props'] = [row[step+'_pct'+str(i)] for i in range(1, 6)]
       sdat['cum_rating_props'] = [sum(sdat['rating_props'][0:i]) 
-                                  for i in range(1,6)]
+                                  for i in range(1, 6)]
       sdat['time_q1'] = row[step+'_time_q1']
       sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
       
     #print dat
     
-    self.datapublic = [dat[u] for u in dat if dat[u]['condition']=='public']
-    self.dataprivate = [dat[u] for u in dat if dat[u]['condition']=='private']
+    self.datapublic = [dat[u] for u in dat if dat[u]['condition'] == 'public']
+    self.dataprivate = [dat[u] for u in dat if dat[u]['condition'] == 'private']
       
   def gen_agent(self, cfg, adat=None, uuid=None):
     # Create a SimHumanAgent from one of the rows of the data file
@@ -293,7 +289,7 @@ class SimHumanAgent(Agent):
       else:
         paccept = self.probdata['acceptvote']['acceptvote_nohist']
       
-      accepts[a]= paccept
+      accepts[a] = paccept
     
     if maxdeltapay:
       accepts[None] = self.probdata['acceptvote']['noaccept']
@@ -313,7 +309,7 @@ class SimHumanAgent(Agent):
       return None
     
   def consider(self):
-    task=self.cfg.task
+    task = self.cfg.task
     
     # Find highest-value group to join
     if not len(self.acceptances):
@@ -411,7 +407,7 @@ class SimHumanAgent(Agent):
     pctcontribs = [teampays[n][0]/sum(teampays[n]) for n in teammateids]
     
     # Record history
-    for nid,pctcontrib in zip(teammateids, pctcontribs):
+    for nid, pctcontrib in zip(teammateids, pctcontribs):
       try:
         hist = self.contrib_history[nid]
         hist.append(pctcontrib)
@@ -442,7 +438,7 @@ class SimHumanAgent(Agent):
         # Decide how many ratings to actually give, based on mean and sd
         # This is a very handwavy approximation of the very right-skewed 
         #   ratings-per-round distribution
-        nowrats = int(round(abs(random.normalvariate(nrats,nratsd))))
+        nowrats = int(round(abs(random.normalvariate(nrats, nratsd))))
       else:
         # if there is no sd, all nrats must be the same, and therefore, 
         # must be an integer
@@ -461,7 +457,7 @@ class SimHumanAgent(Agent):
     try:
       rids = random.sample(teamids, nrats)
     except ValueError:
-      rids = [random.choice(teamids) for i in range(nrats)]
+      rids = [random.choice(teamids) for _ in range(nrats)]
     
     rdict = {}
     slope = pgdata['rating_contrib']['slope']
@@ -480,7 +476,7 @@ class SimHumanAgent(Agent):
   def gen_rating(self, cumprobs):
     # This could be replaced by np.random.choice(vals, p=probs)
     rpick = random.random()   
-    for i,prop in enumerate(cumprobs):
+    for i, prop in enumerate(cumprobs):
       if rpick < prop: return i + 1
       
   def rate_random(self, teamids, teamcontribs):
@@ -507,10 +503,13 @@ class SimHumanAgent(Agent):
     waittime = random.triangular(q1, q3, med)
     time.sleep(waittime)
     
-  
-if __name__=='__main__':
+
+def _test_readfile():
   import sys
   datafile = sys.argv[1]
   h = HumanData(datafile)
   c = Configuration()
   a = h.gen_agent(c)
+
+if __name__ == '__main__':
+  _test_readfile()
