@@ -60,6 +60,9 @@ if __name__ == '__main__':
     
     cw = ClientWaiter()
     conns = cw.getclients()
+    
+    if Configuration.alt_pubgoods:
+      Configuration.pubgoods_mult = -1
 
     ## Log this session's configuration
     u_rounds = 0 if not Configuration._do_ultimatum else Configuration.ultimatum_niter
