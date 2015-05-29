@@ -24,7 +24,7 @@ import networkx as nx
 import copy
 import math
 
-PROTOCOL = 3
+PROTOCOL = 101
 ##   Setting this PROTOCOL flag will set several configuration options at once, for ease of experimentation
 ##   If it is not set, the default options in the configuration class will be used
 ##   PROTOCOL 0:  (non-social)
@@ -47,6 +47,8 @@ PROTOCOL = 3
 ##     1 minute; 3 minutes margin
 ##   PROTOCOL 100:  (automated)
 ##     10 minutes of sim agents only simulation; 10 rounds each.
+##   PROTOCOL 101:  (sim human agents)
+##     10 minutes of sim agents only simulation with humans; 10 rounds each.
 
 class Configuration(object):
   """Stores configuration parameters for the simulation.
@@ -86,7 +88,7 @@ class Configuration(object):
   conditional_variance = 0.1
   
   # Alternative pubgoods parameters
-  alt_pubgoods = True   # Use alternative version of pubgoods
+  alt_pubgoods = False   # Use alternative version of pubgoods
   ap_min_multiplier = 1.10
   ap_max_multiplier = 2.00
   ap_rating_intercept = 0.25
@@ -752,10 +754,24 @@ elif PROTOCOL == 100:
   Configuration._threaded_sim = False
   Configuration.reset_graph_iters = 20
   Configuration._log_teamstatus = False
-  Configuration.percent_conditional = 0.5
-  Configuration.nsteps = 30
-  Configuration.n = 19
-
+  #Configuration.percent_conditional = 0.5
+  Configuration.nsteps = 10
+  Configuration.n = 16
+elif PROTOCOL == 101:
+  Configuration._do_video = False
+  Configuration._do_intro_sim = False
+  Configuration._do_ultimatum = False
+  Configuration.do_publicgoods = True
+  Configuration.hide_publicgoods = False
+  Configuration.do_ratings = True
+  Configuration._time_limit = 10
+  Configuration._margin_time = 0
+  Configuration.delay_sim_agents = False
+  Configuration._threaded_sim = False
+  Configuration.reset_graph_iters = 20
+  Configuration._log_teamstatus = False
+  Configuration.simhumans = True # Use experimental data to simulate human subjects
+  
 class MultiConfig(Configuration):
   reps = 1  # Number of reps for each configuration
   groups_can_merge = [False]
