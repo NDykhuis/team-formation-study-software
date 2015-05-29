@@ -76,10 +76,6 @@ if __name__ == '__main__':
     if Configuration.simhumans:
       Configuration.hdata = HumanData(Configuration.simhuman_file)
 
-    # Load in sim human data, if requested
-    if configuration.simhumans:
-      configuration.hdata = humandata(configuration.simhuman_file)
-
     # Start the heartbeat
     if Configuration._verbose > 4:
       hthread = threading.Thread(target=heartbeat_thread)
