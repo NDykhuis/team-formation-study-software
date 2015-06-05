@@ -24,6 +24,8 @@ import networkx as nx
 import copy
 import math
 
+import sqlite3
+    
 PROTOCOL = 101
 ##   Setting this PROTOCOL flag will set several configuration options at once, for ease of experimentation
 ##   If it is not set, the default options in the configuration class will be used
@@ -768,7 +770,7 @@ elif PROTOCOL == 101:
   Configuration._margin_time = 0
   Configuration.delay_sim_agents = False
   Configuration._threaded_sim = False
-  Configuration.reset_graph_iters = 20
+  Configuration.reset_graph_iters = 10
   Configuration._log_teamstatus = False
   Configuration.simhumans = True # Use experimental data to simulate human subjects
   
@@ -837,3 +839,131 @@ class MultiConfig(Configuration):
                           for r in range(self.reps):
                             curr.simnumber += 1
                             yield copy.copy(curr)
+
+class RepliConfig(Configuration):
+  reps = 10   # Number of replications of each setup
+  
+  def __init__(self, dbfile, humandata):
+    super(RepliConfig, self).__init__()
+    
+    self.dbfile = dbfile
+    self.humandata = humandata
+    
+    conn = sqlite3.connect(self.dbfile)
+    
+    ## READ IN DATA HERE
+    ses_data = {}
+    
+    # Get a list of which sessions completed successfully
+    sessions = conn.execute("SELECT * FROM sessions")
+    for sessionid, start, end in sessions:
+      if end != -1:
+        ses_data[sessionid] = True
+    
+    # Get data on session configurations
+    sesdat = conn.execute("SELECT * FROM session_config")
+    for row in sesdat:
+      if row[0] not in ses_data:
+        continue    # Bad session, don't try to import it
+      c = Configuration()
+      (c.sessionid, _, c._do_intro_sim, c.do_publicgoods, c.hide_publicgoods,
+       c.pubgoods_mult, c.do_ratings, c._time_limit, _nhumans, 
+       c.show_other_team_members, c.keep_teams, _DYNAMIC, _KEEP_GRAPH,
+       c.show_global_ratings, c.show_nhistory) = row
+      c._humandata = humandata
+      ses_data[c.sessionid] = c
+    
+    # Get data on network
+    ## BUG: We do not have complete data on the network in neighbors.
+    netdat = conn.execute("SELECT * FROM neighbors WHERE simnum = 0")
+    for row in netdat:
+      sessionid = row[2]
+      if sessionid not in ses_data:
+        continue
+      
+      ses_cfg = ses_data[sessionid]
+      try:
+        G = ses_cfg._Gptr
+        if G is None:
+          raise AttributeError()
+      except AttributeError:
+        G = ses_cfg._Gptr = nx.Graph()
+      
+      G.add_edge(row[4], row[5], weight=1.0, bias=0.0)
+
+    ## TEMPORARY: use the order of teams in the teamstatus table to 
+    ##            reconstruct the network
+    netdat2 = conn.execute("SELECT * FROM teamstatus WHERE simnum = 0 AND " +
+                           "internum = 0 AND eventtype = 'acceptvote'")
+    for row in netdat2:
+      sessionid = row[2]
+      if sessionid not in ses_data:
+        continue
+      ses_cfg = ses_data[sessionid]
+      G = ses_cfg._Gptr
+      G.add_edge(row[7], row[8], weight=1.0, bias=0.0)
+                            
+
+    # Get data on agent dispositions
+    aconfdat = conn.execute("SELECT * from agent_config")
+    for row in aconfdat:
+      sessionid = row[1]
+      agentid = row[2]
+      if sessionid not in ses_data:
+        continue
+      
+      G = ses_data[sessionid]._Gptr
+      dat = G.node[agentid]
+      
+      # Initialize agent data
+      dat['id'] = agentid
+      dat['group'] = agentid     # Agent is its own group
+      dat['switches'] = 0
+      dat['nowpay'] = 0
+      dat['acceptances'] = []
+      dat['worth'] = 5
+    
+      # Set skills
+      #lev = random.randint(1, min(cfg.nskills, cfg.maxskills))
+      #skills = [1]*lev + [0]*(cfg.nskills-lev)
+      #random.shuffle(skills)
+      skills = [1] + [0]*(Configuration.nskills-1)
+      dat['skills'] = skills
+      
+      try:
+        dispos = ses_data[sessionid].dispositions
+      except AttributeError:
+        dispos = ses_data[sessionid].dispositions = {}
+      
+      if row[3] == 'human':
+        #dispos[agentid] = 'human.'+str(sessionid)+'.'+str(agentid)
+        dispos[agentid] = 'human.{:02d}.{:d}'.format(sessionid, agentid)
+      else:
+        dispos[agentid] = row[3]
+        
+    #conn.commit()
+    conn.close()
+    
+    self.ses_data = ses_data
+    
+  
+  def __iter__(self):
+    return self
+  
+  def next(self):
+    pass
+  
+  def itersims(self):
+    from simulation import simulation
+    for sessionid, currcfg in self.ses_data.iteritems():
+      sim = simulation()
+      #Debug
+      G = currcfg._Gptr
+      sim.replicate(currcfg._Gptr, currcfg)
+      for _ in range(self.reps):
+        yield sim, currcfg
+        ## Will need something more subtle than copy; need to actually reset 
+        ## the sim and config after a run
+        
+  
+  

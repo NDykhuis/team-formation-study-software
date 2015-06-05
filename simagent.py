@@ -508,6 +508,7 @@ class SimAgent(Agent, UltAgent):
     ## Add payoff to my wealth
     newpay = privatepay + potpay
     #self.addpay(newpay)             ## Only useful in PPG
+    self.finalpay += newpay
     
     # Keep a running mean of percent contribution for each neighbor
     alpha = self.cfg.social_learning_rate

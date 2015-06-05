@@ -32,9 +32,8 @@ from agentgroup import Agent
 from clientwaiter import ClientWaiter
 from db_logger import DBLogger
 from simulation import simulation
-from configuration import Configuration, MultiConfig
-from SimHumanAgent import SimHumanAgent, HumanData
-from simhumanagent import *
+from configuration import Configuration, MultiConfig, RepliConfig
+from simhumanagent import SimHumanAgent, HumanData
 
 
 def heartbeat_thread():
@@ -44,7 +43,7 @@ def heartbeat_thread():
 
   
 if __name__ == '__main__':
-  alt_options = ['single', 'auto']
+  alt_options = ['single', 'auto', 'replicate']
   
   dblog = DBLogger('simlog.db')
   Configuration._dblog = dblog
@@ -429,3 +428,108 @@ if __name__ == '__main__':
       if conf._pause_after_sim:
         k=raw_input()
       Agent.agentid = 0 
+  
+  elif sys.argv[1] == 'replicate':
+    dbfile = 'simlog_EXPR1_latest.db'
+    humandata = HumanData(Configuration.simhuman_file)
+    allconfs = RepliConfig(dbfile, humandata)
+    outfile = None
+    
+    starttime = time.time()
+    lastflush = time.time()
+    doneses = {}    # HACK: Just to keep unique session_config
+    for sim, conf in allconfs.itersims():
+      conf.printself()
+      
+      dblog.sessionid = conf.sessionid  # Dangerous, but should be ok for these sims.
+      # MAY BE AN ISSUE WHEN WE RUN MULTIPLE REPLICATIONS OF SAME SESSION
+      #Agent.agentid=0
+      
+      if dblog.sessionid not in doneses:
+        u_rounds = 0 if not conf._do_ultimatum else conf.ultimatum_niter
+        dblog.log_config(u_rounds, conf._do_intro_sim, conf.do_publicgoods,
+                     conf.hide_publicgoods, conf.pubgoods_mult, conf.do_ratings,
+                     conf._time_limit-conf._margin_time, 0,
+                     conf.show_other_team_members, conf.keep_teams,
+                     DYNAMIC, KEEP_GRAPH,
+                     conf.show_global_ratings, conf.show_nhistory)
+        doneses[dblog.sessionid] = True
+      
+      # Reset this for each new configuration
+      pglog = {a.id:[] for a in sim.agents}
+      
+      for i in range(conf.reset_graph_iters):
+        sim.run(endtime = starttime+conf._time_limit*60)
+        Gdone = sim.export()
+        
+        ann = Analyzer()
+        ann.load(Gdone, conf)
+        if conf._verbose > 3:
+          ann.groupsummary()
+          ann.summary()
+        ann.dumpsummarydb(dblog)
+        if outfile: 
+          ann.dumpsummary(outfile)
+        if conf._draw_graph_after_sim or conf._draw_graph:
+          ann.drawgraph()
+          print "Close plot to end program"
+          plt.show()
+        
+        # update public goods history
+        for aid, (contrib, total) in sim.pgsummary.iteritems():
+          #contribpct = float(contrib)/total
+          pglog[aid].append( (contrib, total) )
+        #pghistory = {aid:(sum(p)/len(p)) for aid,p in pglog.iteritems()}   # for average contrib
+        for a in sim.agents:
+          a.updatehistory(pglog)
+        
+        tnow = time.time()
+        elapsed = (tnow - starttime)/60
+        #if cfg._verbose > 3:
+        #  print "Elapsed time:", round(elapsed,2)
+        
+        if tnow - lastflush > 2.0:
+          print "Database flush!"
+          dblog.flush_inserts()
+          lastflush = tnow
+        
+        sim.reset()
+        conf.simnumber += 1
+        
+      ## Collect final pay from the human agents
+      paydata = []
+      for a in sim.agents:
+        paydata.append( (a.id, a.finalpay) )
+      dblog.log_finalpay(paydata)
+      
+      ## Reset agents, graph, everything.
+      ## Only for automated simulations
+      conf.simnumber = 0
+      ##for a in sim.agents: # Done by sim.reset
+      ##  a.reset()
+      #gm.setup()
+      #sim.setup(gm.G, cfg)  # This re-inits agent dispositions...
+      ##sim.reset(gm.G)
+      for a in sim.agents:  # Not done by any other reset
+        a.finalpay = 0
+        a.pgmem = {}
+      ## ** NEED TO RESET FINALPAY IN HERE SOMEWHERE
+      atypes = sorted([(a.id,'human.{:02d}.{}'.format(conf.sessionid, a.id) if a.type == 'human' else a.disposition) for a in sim.agents])
+      dblog.log_agentconfig(atypes)
+      
+      
+      tnow = time.time()
+      elapsed = (tnow - starttime)/60
+      print "Elapsed time:", round(elapsed,2)
+      
+      if conf._pause_after_sim:
+        k=raw_input()
+      
+      # if near time limit - quit
+      if time.time() > starttime + (conf._time_limit-conf._margin_time)*60:
+        print "OUT OF TIME!"
+        break
+    
+    
+    k=raw_input('END OF EXPERIMENT. Press Enter to terminate server.')
+    

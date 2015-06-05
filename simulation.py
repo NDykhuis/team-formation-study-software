@@ -53,6 +53,47 @@ class simulation:
     #self.cfg._dblog = dblog
     return True
   
+  def replicate(self, graph, config):
+    self.cfg = config
+    self.G = graph.copy()
+    self.cfg._Gptr = self.G
+            
+    # Set up agents and groups from the graph
+    self.groupdict = {}
+    self.agents = []
+    self.humans = []
+    for aid,dat in graph.nodes_iter(data=True):
+      dispo = self.cfg.dispositions[aid]
+      if dispo.startswith('human.'):
+        uuid = dispo[6:]
+        a = self.cfg._humandata.gen_agent(self.cfg, adat=dat, uuid=uuid)
+        #self.humans.append(a)   # TESTING
+        # These are NOT human agents
+      else:
+        a = SimAgent(self.cfg,adat=dat)
+      a.disposition = dispo
+      self.agents.append(a)
+      
+      gid = dat['group']
+      if gid not in self.groupdict:
+        self.groupdict[gid] = Group(gid, self.cfg)
+      g = self.groupdict[gid]
+      g.addfirst(a)
+      a.group = g
+    self.agentdict = dict([(a.id, a) for a in self.agents])
+    self.groups = self.groupdict.values()
+      
+    ## TEMPORARY: IGNORE BIAS for now 
+      
+    self.cfg._agentdict = self.agentdict
+    self.cfg._groupdict = self.groupdict
+    
+    for a in self.agents:
+      a.neighbors()
+      a.nbrweight()
+      
+    
+  
   def init_ultimatum(self):
     sims = [a for a in self.agents if not a.type == 'human' and not a.type == 'simhuman']
     
@@ -253,7 +294,8 @@ class simulation:
     if cfg._verbose > 7:
       cfg.printself()
     
-    for a in self.humans:
+    #for a in self.humans:
+    for a in self.agents:   # Log topology information for ALL agents
       cfg._dblog.log_topo(cfg.simnumber, a.id, [nbr.id for nbr in a.nbrs])
     
     log("Beginning run!")
@@ -634,7 +676,8 @@ class simulation:
     if not self.cfg.keep_teams:
       self.initgroups()
     self.cfg.reset()
-    
+
+
   def initgraph(self):
     pass
     

@@ -50,7 +50,7 @@ logoddstoprob <- function(logodds) { exp(logodds)/(1+exp(logodds)) }
 
 
 # DATA FILE HERE
-dbfile = 'simlog_EXPR1_03-31-15.db' 
+dbfile = 'simlog_EXPR1_latest.db' 
 expr_condition = 'compare'          ## private or public
 
 dbfileprefix = substr(dbfile, 1, nchar(dbfile)-3)

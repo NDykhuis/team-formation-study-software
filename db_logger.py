@@ -702,4 +702,6 @@ class DBLogger(object):
 
   def flush_inserts(self):
     """Ensure that insert queue is empty"""
+    print self.insqueue.qsize()
+    print self.insqueue
     self.insqueue.join()

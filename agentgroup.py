@@ -217,6 +217,8 @@ class Agent(Actor):
     self.dumb = False
     self.type = 'sim'
     
+    self.finalpay = 0
+    
     self.global_ratings = {}
     
   def randskills(self):

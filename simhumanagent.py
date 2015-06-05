@@ -165,13 +165,21 @@ class HumanData(object):
     # Create a SimHumanAgent from one of the rows of the data file
     # If uuid is None, pick a row randomly
     if uuid:
-      return SimHumanAgent(cfg, self.datadict[uuid], adat)
+      try:
+        return SimHumanAgent(cfg, self.datadict[uuid], adat)
+      except KeyError as e:
+        print "Fail to create agent: agent",uuid,"not in data!"
+        time.sleep(10)  # Wait for database to flush
+        raise e
+        
+        # Actually, just return a random agent so we don't crash?
+        #pass
+    
+    #return SimHumanAgent(cfg, self.datadict[random.choice(self.datadict.keys())], adat)
+    if cfg.show_global_ratings:
+      return SimHumanAgent(cfg, random.choice(self.datapublic), adat)
     else:
-      #return SimHumanAgent(cfg, self.datadict[random.choice(self.datadict.keys())], adat)
-      if cfg.show_global_ratings:
-        return SimHumanAgent(cfg, random.choice(self.datapublic), adat)
-      else:
-        return SimHumanAgent(cfg, random.choice(self.dataprivate), adat)
+      return SimHumanAgent(cfg, random.choice(self.dataprivate), adat)
 
 
 
@@ -229,6 +237,7 @@ class SimHumanAgent(Agent):
     
     ## There's really no reason to use the nohist probability
     
+    applies = []
     for g in nbrgroups:
       newskills = g.withskills(self)
       deltapay = task(newskills)/(g.gsize+1) - self.nowpay
@@ -248,7 +257,10 @@ class SimHumanAgent(Agent):
         papply = self.probdata['apply']['apply_nohist']
     
       if random.random() < papply:
+        applies.append(g.id)
         g.takeapplication(self)
+      
+    self.logp( ('Agent', self.id, self.disposition, 'applies to', applies) )
     
   def acceptvote(self, applicants):
     # Generate a probability for all of them
@@ -302,11 +314,15 @@ class SimHumanAgent(Agent):
     probs = np.array(accepts.values())
     if probs.sum():
       probs /= probs.sum()
-      return np.random.choice(agents, p=probs)
+      choice = np.random.choice(agents, p=probs)
     else:
       print "ZERO PROBS IN ACCEPT"
       print self.id, self.disposition, "accepts", accepts
-      return None
+      choice = None
+      
+    self.logp( ('Agent', self.id, self.disposition, 'accepts', 
+                choice.id if choice is not None else choice) )
+    return choice
     
   def consider(self):
     task = self.cfg.task
@@ -353,10 +369,13 @@ class SimHumanAgent(Agent):
       probs /= probs.sum()
       bestgroup = np.random.choice(agents, p=probs)
       if bestgroup != self.group:
+        self.logp( ('Agent', self.id, self.disposition, 'joins', bestgroup.id) )
         self.switchgroup(bestgroup)
+      else:
+        self.logp( ('Agent', self.id, self.disposition, 'stays') )
     else:
       print "ZERO PROBS IN JOIN"
-      print self.id, self.disposition, "joins", joins
+      self.logp( (self.id, self.disposition, "joins", joins) )
     
     self.acceptances = []
   
@@ -398,10 +417,12 @@ class SimHumanAgent(Agent):
     contrib = int(round(nowpayint * pctcontrib))
     
     pgdict[self] = (contrib, nowpayint-contrib)
+    self.logp( ('Agent', self.id, self.disposition, 'contribs', contrib) )
   
   def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, 
                               potpay, teampays):
     self.pgpay = privatepay+potpay
+    self.finalpay += self.pgpay
     
     teammateids = [n.id for n in self.group.agents]
     pctcontribs = [teampays[n][0]/sum(teampays[n]) for n in teammateids]
