@@ -253,7 +253,7 @@ class simulation:
     if cfg._verbose > 7:
       cfg.printself()
     
-    for a in self.humans:
+    for a in self.agents:   # Log topology info for every agent!!!
       cfg._dblog.log_topo(cfg.simnumber, a.id, [nbr.id for nbr in a.nbrs])
     
     log("Beginning run!")
