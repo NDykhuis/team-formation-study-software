@@ -644,7 +644,7 @@ class HumanAgent(Agent):
     send_and_receive(self.client, ('postprocess', '\n'.join(self.messages)) )
     self.logratings(step='pg_postprocess')
     
-    self.logratingstatus('simend', teamids)
+    self.logratingstatus('simend', range(self.cfg.n))
     
     self.messages = []
     
