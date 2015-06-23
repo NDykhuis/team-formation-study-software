@@ -66,6 +66,7 @@ class DBLogger(object):
   def setup(self):
     """Setup database schema and get new sessionid"""
     # Types: NULL, INTEGER, REAL, TEXT, BLOB
+    print "Setting up database..."
     conn = sqlite3.connect(self.dbfile)
     conn.execute('''CREATE TABLE IF NOT EXISTS sessions 
         (sessionid integer primary key asc, 
@@ -262,6 +263,7 @@ class DBLogger(object):
     conn.close()
     
     self.log_newsession()
+    print "Done!"
     
     
   def log_newsession(self):
@@ -293,7 +295,12 @@ class DBLogger(object):
     conn.execute('UPDATE sessions SET endtime=? WHERE sessionid=?', (endtime, self.sessionid))
     conn.commit()
     conn.close()
-        
+
+  def log_newsession_fast(self):
+    timestamp = time.time()
+    self.queue_insert('sessions', (None, timestamp, -1))
+    self.sessionid += 1
+
   def log_gen(self, message):
     """Log generic message to 'log' table"""
     if self.NO_LOGGING: return
@@ -776,6 +783,9 @@ class DBLogger(object):
     if self.insthread:
       self.autoins = False
       self.insthread.join()
+
+  def force_commit(self):
+    self.forcecommit = True
 
   def flush_inserts(self):
     """Ensure that insert queue is empty"""

@@ -156,7 +156,6 @@ if __name__ == '__main__':
         paydata.append( (a.id, a.finalpay) )
       dblog.log_finalpay(paydata)
       
-      
       ## Reset agents, graph, everything.
       ## Only for automated simulations
       conf.simnumber = 0
@@ -174,8 +173,12 @@ if __name__ == '__main__':
       
       lastagents = sim.agents
       
-      dblog.log_sessionend()
-      dblog.log_newsession()
+      # Flush database before starting new session to avoid concurrency issues
+      dblog.force_commit()
+      dblog.flush_inserts()
+      #dblog.log_sessionend()
+      #dblog.log_newsession()
+      dblog.log_newsession_fast()
       #dblog.sessionid += 1
       
       tnow = time.time()
@@ -189,6 +192,8 @@ if __name__ == '__main__':
   
   except KeyboardInterrupt: # Catch CTRL-C
     print "Caught CTRL-C; cleaning up"
+    dblog.flush_inserts()
+    print "Done flushing db inserts"
   
   # save tuple data on best agents to a file
   
