@@ -39,12 +39,23 @@ class simulation:
     if level <= Configuration._verbose:
       print str(message)
 
-  def setup(self, graph, config):
+  def setup(self, graph, config, agents=None):
     self.cfg = config
     self.G = graph.copy()
     self.cfg._Gptr = self.G
     self.initgraph()
-    self.initagents()
+    if not agents:
+      self.initagents()
+    else:
+      self.agents = agents
+      agentdict = dict([(a.id, a) for a in agents])
+      config._agentdict = agentdict
+      for a in agents:
+        a.neighbors()
+        a.nbrweight()
+      self.agents = agents
+      self.agentdict = agentdict
+      self.humans = [a for a in agents if a.type=='human']
     self.initgroups()
     self.initbias()
     self.init_ultimatum()
@@ -761,6 +772,10 @@ class simulation:
       adat['group'] = a.group.id
       adat['nowpay'] = a.nowpay
       adat['type'] = ('human' if a.type=='human' else ('dumb' if a.dumb else 'greedy'))
+    
+    #print "Agent ids:", [a.id for a in self.agents]
+    #print "Node ids:", G.nodes()
+    #print G.nodes(data=True)
     
     return G
   
