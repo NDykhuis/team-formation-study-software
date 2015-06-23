@@ -171,6 +171,10 @@ if __name__ == '__main__':
       atypes = sorted([(a.id,'human.{:02d}.{}'.format(conf.sessionid, a.id) if a.type == 'human' else a.disposition) for a in sim.agents])
       dblog.log_agentconfig(atypes)
       
+      # Record agent parameters here
+      for agent in sim.agents:
+        dblog.log_simhumanagent(agent)
+      
       lastagents = sim.agents
       
       # Flush database before starting new session to avoid concurrency issues

@@ -412,7 +412,6 @@ class SimHumanAgent(Agent):
       # because staygroup is always zero, I don't think we need to include that term?
       # Unless we're doing some sort of softmax?
       if len(globalrtgs) and ratelm['aic'] < paylm['aic']:  # second cond always true
-        print self.probdata['join']
         globalrtg = sum(globalrtgs)/len(globalrtgs)
         pjoin = logoddstoprob(ratelm['intercept'] + globalrtg*ratelm['slope'] + \
           deltapay*ratelm['slope_pay'] + (g==self.group)*ratelm['slope_stay'])
@@ -688,13 +687,22 @@ class SimHumanAgent(Agent):
     # Do we need to initialize the subdictionaries before we do this assignment?
     SimHumanAgent.tuple_to_dict(probtuple, self.probdata)
     
-  def to_tuple(self):
-    return SimHumanAgent.dict_to_tuple(self.probdata)
+  def to_tuple(self, dbcompat=False):
+    return SimHumanAgent.dict_to_tuple(self.probdata, dbcompat)
   
   @staticmethod
-  def dict_to_tuple(probdata):
+  def dict_to_tuple(probdata, dbcompat=False):
     # Returns a tuple in database-friendly format
     pd = probdata
+    pg_contrib_globalrtg = (
+      pd['pubgood']['contrib_globalrtg']['r2'] > R2_CUTOFF if not dbcompat else
+      int(pd['pubgood']['contrib_globalrtg']['r2'] > R2_CUTOFF) )
+    pg_contrib_pastcontrib = (
+      pd['pubgood']['contrib_pastcontrib']['r2'] > R2_CUTOFF if not dbcompat else
+      int(pd['pubgood']['contrib_pastcontrib']['r2'] > R2_CUTOFF) )
+    pg_rating_contrib = (
+      pd['pubgood']['rating_contrib']['r2'] > R2_CUTOFF if not dbcompat else
+      int(pd['pubgood']['rating_contrib']['r2'] > R2_CUTOFF) )
     return (
         pd['uuid'],   # Should be checked to see if we have a new agent or not
         pd['apply']['nohist'],
@@ -731,17 +739,17 @@ class SimHumanAgent(Agent):
         pd['join']['globalrtg']['slope_pay'],
         pd['pubgood']['avgcontrib'],
         pd['pubgood']['sdcontrib'],
-        pd['pubgood']['contrib_globalrtg']['r2'] > R2_CUTOFF,
+        pg_contrib_globalrtg,
         pd['pubgood']['contrib_globalrtg']['intercept'],
         pd['pubgood']['contrib_globalrtg']['slope'],
         pd['pubgood']['contrib_globalrtg']['stderr'],
         pd['pubgood']['contrib_globalrtg']['r2'],
-        pd['pubgood']['contrib_pastcontrib']['r2'] > R2_CUTOFF,
+        pg_contrib_pastcontrib,
         pd['pubgood']['contrib_pastcontrib']['intercept'],
         pd['pubgood']['contrib_pastcontrib']['slope'],
         pd['pubgood']['contrib_pastcontrib']['stderr'],
         pd['pubgood']['contrib_pastcontrib']['r2'],
-        pd['pubgood']['rating_contrib']['r2'] > R2_CUTOFF,
+        pg_rating_contrib,
         pd['pubgood']['rating_contrib']['intercept'],
         pd['pubgood']['rating_contrib']['slope'],
         pd['pubgood']['rating_contrib']['stderr'],

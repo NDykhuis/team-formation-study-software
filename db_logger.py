@@ -685,7 +685,7 @@ class DBLogger(object):
 
   def log_simhumanagent(self, agent):
     # Try to ensure that we don't log duplicate agent configurations here
-    atuple = agent.to_tuple()
+    atuple = agent.to_tuple(dbcompat=True)
     if atuple[0] not in self.idparams:
       self.queue_insert('agentparams', (None,) + atuple)
       self.idparams[atuple[0]] = atuple
