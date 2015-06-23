@@ -198,17 +198,81 @@ class DBLogger(object):
         (rowid integer primary key asc,
          timestamp real, sessionid integer,
          simnum integer, iternum real, stime real, etime real, ttime real)''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS agentparams
+        (rowid integer primary key asc,
+        uuid text,
+        apply_nohist real, 
+        apply_deltapay_aic real,
+        apply_deltapay_intercept real, apply_deltapay_slope real,
+        apply_pastcontrib integer, 
+        apply_pastcontrib_intercept real,  apply_pastcontrib_slope real,
+        apply_pastcontrib_slope_pay real,
+        acceptvote_nohist real, acceptvote_noaccept real,
+        acceptvote_stayaccept real, 
+        acceptvote_deltapay_aic real,
+        acceptvote_deltapay_intercept real, acceptvote_deltapay_slope real,
+        acceptvote_globalrtg_aic real,
+        acceptvote_globalrtg_intercept real, acceptvote_globalrtg_slope real,
+        acceptvote_globalrtg_slope_pay real,
+        acceptvote_pastcontrib_aic real,
+        acceptvote_pastcontrib_intercept real, acceptvote_pastcontrib_slope real,
+        acceptvote_pastcontrib_slope_pay real,
+        join_nohist real,
+        join_deltapay_aic real,
+        join_deltapay_intercept real, join_deltapay_slope_stay real,
+        join_deltapay_slope real,
+        join_globalrtg_aic real,
+        join_globalrtg_intercept real, join_globalrtg_slope_stay real,
+        join_globalrtg_slope real, join_globalrtg_slope_pay real,
+        pubgood_avgcontrib real, pubgood_sdcontrib real,
+        pubgood_contrib_globalrtg integer,
+        pubgood_contrib_globalrtg_intercept real,
+        pubgood_contrib_globalrtg_slope real,
+        pubgood_contrib_globalrtg_stderr real,
+        pubgood_contrib_globalrtg_r2 real,
+        pubgood_contrib_pastcontrib integer,
+        pubgood_contrib_pastcontrib_intercept real,
+        pubgood_contrib_pastcontrib_slope real,
+        pubgood_contrib_pastcontrib_stderr real,
+        pubgood_contrib_pastcontrib_r2 real,
+        pubgood_rating_contrib integer,
+        pubgood_rating_contrib_intercept real,
+        pubgood_rating_contrib_slope real,
+        pubgood_rating_contrib_stderr real,
+        pubgood_rating_contrib_r2 real,
+        pubgood_ratings_per_round real,
+        pubgood_ratings_per_round_sd real,
+        pubgood_prop_rounds_nrats_0 real,
+        pubgood_rating_props_1 real,
+        pubgood_rating_props_2 real,
+        pubgood_rating_props_3 real,
+        pubgood_rating_props_4 real,
+        pubgood_rating_props_5 real,
+        pubgood_cum_rating_props_1 real,
+        pubgood_cum_rating_props_2 real,
+        pubgood_cum_rating_props_3 real,
+        pubgood_cum_rating_props_4 real,
+        pubgood_cum_rating_props_5 real,
+        condition text
+        )''')
+    self.idparams = {}
+    self.paramsid = {}
     conn.commit()
     
+    conn.close()
+    
+    self.log_newsession()
+    
+    
+  def log_newsession(self):
     timestamp = time.time()
+    conn = sqlite3.connect(self.dbfile)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO sessions(starttime) VALUES (?)', (timestamp,))
     self.sessionid = cursor.lastrowid
     # Could also use the SQLite function last_insert_rowid()
     conn.commit()
-    
     conn.close()
-    
     
   def log_config(self, u_rounds, intro_sim, pubgoods, hide_pubgoods, 
                  pubgoods_mult, ratings, timelimit, nhumans, showteam, 
@@ -611,7 +675,20 @@ class DBLogger(object):
     timestamp = time.time()
     
     self.queue_insert('simtime', (None, timestamp, self.sessionid, simnum, iternum, stime, etime, etime-stime))
-        
+
+  def log_simhumanagent(self, agent):
+    # Try to ensure that we don't log duplicate agent configurations here
+    atuple = agent.to_tuple()
+    if atuple[0] not in self.idparams:
+      self.queue_insert('agentparams', (None,) + atuple)
+      self.idparams[atuple[0]] = atuple
+    
+    #if atuple[1:] not in self.paramsid:
+      #self.queue_insert('agentparams', atuple)
+      #rowid = cursor.lastrowid
+      #self.paramsid[atuple[1:]] = rowid
+      #self.idparams[rowid] = atuple
+     
   def queue_insert(self, instable, instuple, many=False):
     """Queue an insert for the database
     
@@ -702,6 +779,8 @@ class DBLogger(object):
 
   def flush_inserts(self):
     """Ensure that insert queue is empty"""
-    print self.insqueue.qsize()
-    print self.insqueue
+    
+    if not self.insthread.isAlive():
+      raise RuntimeError("Database insert thread is dead!")
+
     self.insqueue.join()
