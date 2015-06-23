@@ -515,7 +515,7 @@ class SimHumanAgent(Agent):
         ratings = self.rate_random(teammateids, pctcontribs)
       
       if len(ratings):
-        print self.id, self.disposition, 'rates', ratings
+        self.logp( (self.id, self.disposition, 'rates', ratings) )
     
     self.my_ratings.update(ratings)
     
@@ -559,8 +559,6 @@ class SimHumanAgent(Agent):
     slope = pgdata['rating_contrib']['slope']
     intercept = pgdata['rating_contrib']['intercept']
     stderr = pgdata['rating_contrib']['stderr']
-    print self.probdata['uuid'], pgdata['rating_contrib']['r2']
-    print teamids, teamcontribs, slope, intercept, stderr
     for nid in rids:
       # Generate a rating for this person
       contrib = tcdict[nid]
