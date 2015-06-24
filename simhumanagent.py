@@ -294,6 +294,9 @@ class SimHumanAgent(Agent):
     #  self.rate_pubgood = self.rate_random
       
     self.my_ratings = {}
+    
+    # DEBUG:
+    self.statdata = {'apply':0, 'acceptvotes':0, 'acceptances':0, 'join':0, 'pctcontribs':[]}
   
   def propose(self):
     self.update()
@@ -333,6 +336,7 @@ class SimHumanAgent(Agent):
         papply = self.probdata['apply']['apply_nohist']
     
       if random.random() < papply:
+        self.statdata['apply'] += 1
         applies.append(g.id)
         g.takeapplication(self)
       
@@ -385,12 +389,15 @@ class SimHumanAgent(Agent):
       accepts[None] = self.probdata['acceptvote']['stayaccept']
       
     #print self.id, self.disposition, "accepts", accepts
+    #print self.id, self.disposition, 'accepts', [(k.probdata['uuid'] if k is not None else k, v) for k,v in accepts.iteritems()]
       
     agents = accepts.keys()
     probs = np.array(accepts.values())
     if probs.sum():
       probs /= probs.sum()
       choice = np.random.choice(agents, p=probs)
+      if choice != None:
+        self.statdata['acceptvotes'] += 1
     else:
       print "ZERO PROBS IN ACCEPT"
       print self.id, self.disposition, "accepts", accepts
@@ -406,6 +413,7 @@ class SimHumanAgent(Agent):
     # Find highest-value group to join
     if not len(self.acceptances):
       return
+    self.statdata['acceptances'] += 1
     self.update()
     
     self.tf_delay('join')
@@ -449,6 +457,7 @@ class SimHumanAgent(Agent):
       if bestgroup != self.group:
         self.logp( ('Agent', self.id, self.disposition, 'joins', bestgroup.id) )
         self.switchgroup(bestgroup)
+        self.statdata['join'] += 1
       else:
         self.logp( ('Agent', self.id, self.disposition, 'stays') )
     else:
@@ -498,6 +507,7 @@ class SimHumanAgent(Agent):
     
     pgdict[self] = (contrib, nowpayint-contrib)
     self.logp( ('Agent', self.id, self.disposition, 'contribs', contrib) )
+    self.statdata['pctcontribs'].append(round(pctcontrib,2))
   
   def publicgoods_postprocess(self, startpay, keep, contrib, privatepay, 
                               potpay, teampays):
@@ -612,7 +622,15 @@ class SimHumanAgent(Agent):
     # We don't want outliers here, especially on the high end
     waittime = random.triangular(q1, q3, med)
     time.sleep(waittime)
-    
+  
+  def reset2(self):
+    self.current_ratings = {}
+    self.contrib_history = {}
+    self.contrib_avg = {}
+    self.my_ratings = {}
+        
+    self.statdata = {'apply':0, 'acceptvotes':0, 'acceptances':0, 'join':0, 'pctcontribs':[]}
+
     
   # TODO: also need a tuple that tells the range on each of the values, and 
   #       maybe the data type
