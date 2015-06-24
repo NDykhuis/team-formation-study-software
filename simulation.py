@@ -47,7 +47,6 @@ class simulation:
     if not agents:
       self.initagents()
     else:
-      self.agents = agents
       agentdict = dict([(a.id, a) for a in agents])
       config._agentdict = agentdict
       for a in agents:

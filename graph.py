@@ -122,6 +122,7 @@ class GraphManager:
         G.add_edge(nodes[-1], nodes[0])
         G.add_edge(nodes[-2], nodes[0])
         G.add_edge(nodes[-1], nodes[1])
+        G.add_edge(nodes[-2], nodes[-1])
       elif cfg.graph_type == 'small world':
         try:
           G = nx.generators.random_graphs.watts_strogatz_graph(

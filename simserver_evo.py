@@ -107,7 +107,6 @@ if __name__ == '__main__':
       sim = simulation()
       sim.setup(gm.G, conf, newagents)
       
-      
       # Reset this for each new configuration
       pglog = {a.id:[] for a in sim.agents}
         
