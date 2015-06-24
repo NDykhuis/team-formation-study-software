@@ -48,6 +48,10 @@ class HumanData(object):
   def qstrip(self, text):
     return text.strip('"')
   
+  tuple_max = {}
+  tuple_min = {}    # Dictionaries mapping condition -> tuple
+  tuple_sd = {}
+  
   def read_data(self, filename):
     self.datadict = dat = {}
     
@@ -174,6 +178,16 @@ class HumanData(object):
       sdat['time_q1'] = row[step+'_time_q1']
       sdat['time_med'] = row[step+'_time_med']
       sdat['time_q3'] = row[step+'_time_q3']
+      
+      if uuid == 'MAX':
+        HumanData.tuple_max[udat['condition']] = dict_to_tuple(udat)
+        del dat[uuid]
+      elif uuid == 'MIN':
+        HumanData.tuple_min[udat['condition']] = dict_to_tuple(udat)
+        del dat[uuid]
+      elif uuid == 'SD':
+        HumanData.tuple_sd[udat['condition']] = dict_to_tuple(udat)
+        del dat[uuid]
       
     #print dat
     
@@ -767,6 +781,9 @@ class SimHumanAgent(Agent):
         pd['pubgood']['cum_rating_props'][4],
         ('private' if not Configuration.show_global_ratings else 'public' if not Configuration.alt_pubgoods else 'varmult')
     )
+  
+  
+  
 
 def _test_readfile():
   import sys

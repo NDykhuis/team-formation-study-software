@@ -8,6 +8,8 @@ class Evolver(object):
   switch_prob = 0.25  # probability that next gene will be from other parent
   keep_top_n = 2
   kill_bottom_n = 4
+  mutation_magnitude = 1 
+  # These options will need to go in Configuration soon
   
   dispo_id_counter = 100000
   
@@ -90,4 +92,17 @@ class Evolver(object):
   
   def perturb_tuple(self, atuple, newid=True):
     # Ensure that we set the first element of the tuple to a new id value
-    raise NotImplementedError
+    newlist = list(atuple)
+    condition = atuple[-1]
+    tuple_min = HumanData.tuple_min[condition]
+    tuple_max = HumanData.tuple_max[condition]
+    tuple_sd = HumanData.tuple_sd[condition]
+    for i in range(1,len(atuple)-1):
+      newval = atuple[i] + random.gauss(0, tuple_sd[i]*self.mutation_magnitude)
+      newval = min(tuple_max[i], max(tuple_min[i], newval))
+      newlist[i] = newval
+    
+    if newid:
+      newlist[0] = Evolver.get_new_dispo_id()
+    
+    return tuple(newlist)
