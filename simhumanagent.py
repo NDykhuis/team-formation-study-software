@@ -103,6 +103,7 @@ class HumanData(object):
           'aic':row[step+'_globalrtg_aic']
         }
       #if row[step+'_pastcontrib_aic'] < AIC_CUTOFF:
+      print row
       sdat['pastcontrib'] = {
           'intercept':row[step+'_pastcontrib_intercept'],
           'slope':row[step+'_pastcontrib_slope'],
@@ -180,13 +181,13 @@ class HumanData(object):
       sdat['time_q3'] = row[step+'_time_q3']
       
       if uuid == 'MAX':
-        HumanData.tuple_max[udat['condition']] = dict_to_tuple(udat)
+        HumanData.tuple_max[udat['condition']] = SimHumanAgent.dict_to_tuple(udat)
         del dat[uuid]
       elif uuid == 'MIN':
-        HumanData.tuple_min[udat['condition']] = dict_to_tuple(udat)
+        HumanData.tuple_min[udat['condition']] = SimHumanAgent.dict_to_tuple(udat)
         del dat[uuid]
       elif uuid == 'SD':
-        HumanData.tuple_sd[udat['condition']] = dict_to_tuple(udat)
+        HumanData.tuple_sd[udat['condition']] = SimHumanAgent.dict_to_tuple(udat)
         del dat[uuid]
       
     #print dat

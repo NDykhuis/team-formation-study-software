@@ -352,10 +352,10 @@ uacceptglo <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote', is.na
 
 uacceptcontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply') %>% 
   do(acceptcontcoeff=uaclmcoeff(.), acceptcontlm=tryna(glm(chosen~pastmeancontribknown+deltapay, data=., na.action=na.omit, family=binomial)))
-uacceptcontrib$accept_pastcontrib_intercept <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[1]})
-uacceptcontrib$accept_pastcontrib_slope <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[2]})
-uacceptcontrib$accept_pastcontrib_slope_pay <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[3]})
-uacceptcontrib$accept_pastcontrib_aic <- sapply(uacceptcontrib$acceptcontlm, FUN=function(x){tryna(summary(x)$aic)})
+uacceptcontrib$acceptvote_pastcontrib_intercept <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[1]})
+uacceptcontrib$acceptvote_pastcontrib_slope <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[2]})
+uacceptcontrib$acceptvote_pastcontrib_slope_pay <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[3]})
+uacceptcontrib$acceptvote_pastcontrib_aic <- sapply(uacceptcontrib$acceptcontlm, FUN=function(x){tryna(summary(x)$aic)})
 uacceptcontrib <- select(uacceptcontrib, -acceptcontlm, -acceptcontcoeff)
 
   
