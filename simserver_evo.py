@@ -46,8 +46,21 @@ if __name__ == '__main__':
   #conns = cw.getclients()
   
   
-  n_generations = 100
+  n_generations = 200
   pause_after_generation = True
+  
+  
+  if len(sys.argv) > 1:
+    condition = sys.argv[1]
+    if condition == 'private':
+      Configuration.show_global_ratings = False
+      Configuration.alt_pubgoods = False
+    elif condition == 'public':
+      Configuration.show_global_ratings = True
+      Configuration.alt_pubgoods = False
+    elif condition == 'varmult':
+      Configuration.show_global_ratings = True
+      Configuration.alt_pubgoods = True
   
 
   #u_rounds = 0 
