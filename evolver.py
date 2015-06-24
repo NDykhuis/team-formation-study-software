@@ -85,8 +85,8 @@ class Evolver(object):
       if random.random() < Evolver.switch_prob:
         curparent = not curparent
     
-    # Optionally, perturb the tuple now
-    newtup = self.perturb_tuple(newtup, newid=False)
+    # Optionally, mutate the tuple now
+    newtup = self.mutate_tuple(newtup, newid=False)
     
     # Create new simhumanagent
     # from_tuple
@@ -95,14 +95,14 @@ class Evolver(object):
     newagent.from_tuple(tuple(newtup))
     return newagent
   
-  def perturb_agent(self, agent):
+  def mutate_agent(self, agent):
     atuple = agent.to_tuple()
-    newtuple = self.perturb_tuple(atuple)
+    newtuple = self.mutate_tuple(atuple)
     agent.from_tuple(newtuple)
     # Change agent's aid here also?
     return agent
   
-  def perturb_tuple(self, atuple, newid=True):
+  def mutate_tuple(self, atuple, newid=True):
     # Ensure that we set the first element of the tuple to a new id value
     newlist = list(atuple)
     condition = atuple[-1]
