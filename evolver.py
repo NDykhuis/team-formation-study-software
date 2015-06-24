@@ -8,8 +8,10 @@ class Evolver(object):
   switch_prob = 0.25  # probability that next gene will be from other parent
   keep_top_n = 2
   kill_bottom_n = 4
-  mutation_magnitude = 1    # multiplier on std dev of random noise 
-  range_expansion = 0.25    # move max/min this many pct away from each other          
+  reintroduce_n = 1     # Reintroduce n agents from the original data
+  mutation_magnitude = 0.25    # multiplier on std dev of random noise 
+  prob_mutate = 0.25        # Probability that a given trait will mutate
+  range_expansion = 0.0    # move max/min this many pct away from each other          
   # These options will need to go in Configuration soon
   
   dispo_id_counter = 100000
@@ -32,6 +34,7 @@ class Evolver(object):
       # Sort agents
       fitness = [agent.finalpay for agent in prevagents]
       sortpays, sortagents = zip(*sorted(zip(fitness, prevagents), reverse=True))
+      #print [round(p) for p in sortpays]
       
       # Keep top n
       newagents.extend(sortagents[:Evolver.keep_top_n])
@@ -41,12 +44,16 @@ class Evolver(object):
         sortagents = sortagents[:-Evolver.kill_bottom_n]
         sortpays = sortpays[:-Evolver.kill_bottom_n]
       
+      # Reintroduce n agents from the data
+      newagents.extend([self.humandata.gen_agent(configuration) for i in range(Evolver.reintroduce_n)])
+      
       # For the remaining 16-top_n agents, breed the 16-bottom_n agents,
       # weighted by fitness
+      nleft = configuration.n-Evolver.keep_top_n-Evolver.reintroduce_n
       paytotal = float(sum(sortpays))
       payweights = np.array(sortpays)/paytotal
-      choiceidx1 = np.random.choice(range(len(sortagents)), size=(16-Evolver.keep_top_n), p=payweights)
-      choiceidx2 = np.random.choice(range(len(sortagents)), size=(16-Evolver.keep_top_n), p=payweights)
+      choiceidx1 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
+      choiceidx2 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
       
       #newagents.extend([sortagents[i] for i in choiceidx])
       newagents.extend([self.breed(sortagents[i], sortagents[j]) 
@@ -60,6 +67,10 @@ class Evolver(object):
       # need a config!
       newagents = [self.humandata.gen_agent(configuration) for i in range(n)]
     
+    for a in newagents:  # Not done by any other reset
+        a.finalpay = 0
+        a.pgmem = {}
+      
     return newagents
   
   def breed(self, agent1, agent2):

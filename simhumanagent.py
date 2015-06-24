@@ -103,7 +103,6 @@ class HumanData(object):
           'aic':row[step+'_globalrtg_aic']
         }
       #if row[step+'_pastcontrib_aic'] < AIC_CUTOFF:
-      print row
       sdat['pastcontrib'] = {
           'intercept':row[step+'_pastcontrib_intercept'],
           'slope':row[step+'_pastcontrib_slope'],

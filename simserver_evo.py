@@ -98,6 +98,7 @@ if __name__ == '__main__':
       
       # Create agents here
       newagents = evolver.genagents(conf, prevagents=lastagents)
+      # This resets final pay
       
       # Print data about the agents
       print "Agents:"
@@ -164,10 +165,6 @@ if __name__ == '__main__':
       #gm.setup()
       #sim.setup(gm.G, cfg)  # This re-inits agent dispositions...
       ##sim.reset(gm.G)
-      #for a in sim.agents:  # Not done by any other reset
-      #  a.finalpay = 0
-      #  a.pgmem = {}
-      ## ** NEED TO RESET FINALPAY IN HERE SOMEWHERE
       atypes = sorted([(a.id,'human.{:02d}.{}'.format(conf.sessionid, a.id) if a.type == 'human' else a.disposition) for a in sim.agents])
       dblog.log_agentconfig(atypes)
       
