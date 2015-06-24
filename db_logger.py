@@ -205,7 +205,7 @@ class DBLogger(object):
         apply_nohist real, 
         apply_deltapay_aic real,
         apply_deltapay_intercept real, apply_deltapay_slope real,
-        apply_pastcontrib integer, 
+        apply_pastcontrib_aic integer, 
         apply_pastcontrib_intercept real,  apply_pastcontrib_slope real,
         apply_pastcontrib_slope_pay real,
         acceptvote_nohist real, acceptvote_noaccept real,
