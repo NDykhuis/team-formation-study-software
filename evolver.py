@@ -9,9 +9,9 @@ class Evolver(object):
   switch_prob = 0.25  # probability that next gene will be from other parent
   keep_top_n = 2
   kill_bottom_n = 4
-  reintroduce_n = 2     # Reintroduce n agents from the original data
+  reintroduce_n = 1     # Reintroduce n agents from the original data
   do_mutate = True
-  mutation_magnitude = 1    # multiplier on std dev of random noise 
+  mutation_magnitude = 0.5    # multiplier on std dev of random noise 
   prob_mutate = 0.25        # Probability that a given trait will mutate
   range_expansion = 0.0    # move max/min this many pct away from each other          
   # These options will need to go in Configuration soon
