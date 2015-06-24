@@ -1,6 +1,7 @@
 import random
 from simhumanagent import SimHumanAgent, HumanData
 import numpy as np
+import pprint
 
 class Evolver(object):
   # Need a mutation size amount for each item, as well as valid range/values
@@ -8,8 +9,9 @@ class Evolver(object):
   switch_prob = 0.25  # probability that next gene will be from other parent
   keep_top_n = 2
   kill_bottom_n = 4
-  reintroduce_n = 1     # Reintroduce n agents from the original data
-  mutation_magnitude = 0.25    # multiplier on std dev of random noise 
+  reintroduce_n = 2     # Reintroduce n agents from the original data
+  do_mutate = True
+  mutation_magnitude = 1    # multiplier on std dev of random noise 
   prob_mutate = 0.25        # Probability that a given trait will mutate
   range_expansion = 0.0    # move max/min this many pct away from each other          
   # These options will need to go in Configuration soon
@@ -34,7 +36,11 @@ class Evolver(object):
       # Sort agents
       fitness = [agent.finalpay for agent in prevagents]
       sortpays, sortagents = zip(*sorted(zip(fitness, prevagents), reverse=True))
-      #print [round(p) for p in sortpays]
+      print [agent.probdata['uuid'] for agent in sortagents]
+      print [round(p) for p in sortpays]
+      
+      for agent in sortagents:
+        agent.reset2()
       
       # Keep top n
       newagents.extend(sortagents[:Evolver.keep_top_n])
@@ -50,14 +56,15 @@ class Evolver(object):
       # For the remaining 16-top_n agents, breed the 16-bottom_n agents,
       # weighted by fitness
       nleft = configuration.n-Evolver.keep_top_n-Evolver.reintroduce_n
-      paytotal = float(sum(sortpays))
-      payweights = np.array(sortpays)/paytotal
-      choiceidx1 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
-      choiceidx2 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
-      
-      #newagents.extend([sortagents[i] for i in choiceidx])
-      newagents.extend([self.breed(sortagents[i], sortagents[j]) 
-                        for i,j in zip(choiceidx1, choiceidx2)])
+      if nleft > 0:
+        paytotal = float(sum(sortpays))
+        payweights = np.array(sortpays)/paytotal
+        choiceidx1 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
+        choiceidx2 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
+        
+        #newagents.extend([sortagents[i] for i in choiceidx])
+        newagents.extend([self.breed(sortagents[i], sortagents[j], configuration) 
+                          for i,j in zip(choiceidx1, choiceidx2)])
       
       for i,agent in enumerate(newagents):
         agent.id = i
@@ -73,7 +80,7 @@ class Evolver(object):
       
     return newagents
   
-  def breed(self, agent1, agent2):
+  def breed(self, agent1, agent2, configuration):
     a1tup = agent1.to_tuple()
     a2tup = agent2.to_tuple()
     ngenes = len(a1tup)
@@ -86,13 +93,19 @@ class Evolver(object):
         curparent = not curparent
     
     # Optionally, mutate the tuple now
-    newtup = self.mutate_tuple(newtup, newid=False)
+    if Evolver.do_mutate:
+      newtup = self.mutate_tuple(newtup, newid=False)
     
     # Create new simhumanagent
     # from_tuple
     newid = Evolver.get_new_dispo_id()
-    newagent = SimHumanAgent(agent1.cfg, {'uuid':newid})
+    newagent = SimHumanAgent(configuration, {'uuid':newid})
     newagent.from_tuple(tuple(newtup))
+    
+    #print "Cross", a1tup[0], a2tup[0]
+    #pprint.pprint(zip(a1tup, newagent.to_tuple()))
+    #pprint.pprint(zip(a2tup, newagent.to_tuple()))
+    
     return newagent
   
   def mutate_agent(self, agent):
@@ -110,6 +123,8 @@ class Evolver(object):
     tuple_max = HumanData.tuple_max[condition]
     tuple_sd = HumanData.tuple_sd[condition]
     for i in range(1,len(atuple)-1):
+      if random.random() > Evolver.prob_mutate:
+        continue
       # Add some random noise to the value
       newval = atuple[i] + random.gauss(0, tuple_sd[i]*self.mutation_magnitude)
       # Clip the value to range, plus expansion
