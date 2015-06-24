@@ -65,14 +65,15 @@ con <- dbConnect(drv, dbfile)
 badses <- c(3,6,7,8,12)
 
 sc <- dbGetQuery(con, "SELECT * FROM session_config")
-ses_cond_tab <- c('private', 'public')[sc$show_global_ratings+1]
+ses_types <- ifelse(sc$pubgoods_mult != -1, sc$show_global_ratings, 2)
+ses_cond_tab <- c('private', 'public', 'varmult')[ses_types+1]
 names(ses_cond_tab) <- sc$sessionid
 
 gettable <- function(tablename) {
   temp <- dbGetQuery(con, paste("SELECT * FROM", tablename))
   if ('sessionid' %in% names(temp)) {
     temp <- subset(temp, !(sessionid %in% badses))
-    temp$condition <- ses_cond_tab[temp$sessionid]
+    temp$condition <- ses_cond_tab[as.character(temp$sessionid)]
   }
   temp
 }
@@ -257,14 +258,42 @@ uapplyglo <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply', is.na(pastm
   select(-applyglolm)
 # This really doesn't look all that useful...
 
-uapplycontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply') %>% 
-  do(applycontlm=tryna(glm(chosen~pastmeancontribknown+deltapay, data=., na.action=na.omit, family=binomial))) %>%
-  mutate(apply_pastcontrib_intercept=tryna(summary(applycontlm)$coeff[1]), 
-         apply_pastcontrib_slope=tryna(summary(applycontlm)$coeff[2]), 
-         apply_pastcontrib_slope_pay=tryna(summary(applycontlm)$coeff[3]), 
-         apply_pastcontrib_aic=tryna(summary(applycontlm)$aic)) %>%
-  select(-applycontlm)
+# trycoeff <- function(col, expr, coeff) {
+#   tryna(ifelse(is.na(col), NA, sapply(col, FUN=lmcoeff, coeff=coeff)))
+# }
+# tryna3 <- function(expr) {
+#   tryna(tryna(expr))
+# }
+# lmcoeff <- function(mylm, coeff) {
+#   tryna(summary(mylm)$coeff[coeff])
+# }
+# uapplycontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply') %>% 
+#   do(applycontlm=tryna(glm(chosen~pastmeancontribknown+deltapay, data=., na.action=na.omit, family=binomial))) %>%
+#   #group_by(uuid) %>% 
+#   #do(lmsum=summary(.$applycontlm)$coeff) %>%
+#   #group_by(uuid) %>%
+#   #do(stuff=(.$lmsum)$coeff[1])
+#   mutate(#apply_pastcontrib_intercept=tryna(summary(applycontlm)$coeff[1]), 
+#          #apply_pastcontrib_slope=tryna(summary(applycontlm)$coeff[2]), 
+#          #apply_pastcontrib_slope_pay=tryna(summary(applycontlm)$coeff[3]), 
+#          apply_pastcontrib_aic=tryna(summary(applycontlm)$aic)) %>%
+#   select(-applycontlm)
+## This is choking on the newest data (uuid 17.0)
 
+# Might be worth just sapplying this... Sad face.
+
+uaclmcoeff <- function(data) {
+  tryna(summary(glm(chosen~pastmeancontribknown+deltapay, data=data, na.action=na.omit, family=binomial))$coefficients)
+}
+uapplycontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply') %>% 
+  do(applycontcoeff=uaclmcoeff(.), applycontlm=tryna(glm(chosen~pastmeancontribknown+deltapay, data=., na.action=na.omit, family=binomial)))
+uapplycontrib$apply_pastcontrib_intercept <- sapply(uapplycontrib$applycontcoeff, FUN=function(x){x[1]})
+uapplycontrib$apply_pastcontrib_slope <- sapply(uapplycontrib$applycontcoeff, FUN=function(x){x[2]})
+uapplycontrib$apply_pastcontrib_slope_pay <- sapply(uapplycontrib$applycontcoeff, FUN=function(x){x[3]})
+uapplycontrib$apply_pastcontrib_aic <- sapply(uapplycontrib$applycontlm, FUN=function(x){tryna(summary(x)$aic)})
+uapplycontrib <- select(uapplycontrib, -applycontlm, -applycontcoeff)
+
+  #do(c1=sapply(.$applycontcoeff, FUN=function(x){x[[1]][1]}))
 
 # applyX <- subset(tflrc, eventtype=='apply') %>% mutate(deltapay=newpay-currentpay, ismax=newpay==maxpay)
 # summary(glm(chosen~globalrtg+(deltapay), data=subset(applyX, is.na(pastmeancontribknown) & uuid=='01.0')))
@@ -312,14 +341,25 @@ uacceptglo <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote', is.na
          acceptvote_globalrtg_aic=tryna(summary(acceptglolm)$aic)) %>%
   select(-acceptglolm)
 
-uacceptcontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote') %>% 
-  do(acceptcontlm=tryna(glm(chosen~pastmeancontribknown+deltapay, data=., na.action=na.omit, family=binomial))) %>%
-  mutate(acceptvote_pastcontrib_intercept=tryna(summary(acceptcontlm)$coeff[1]), 
-         acceptvote_pastcontrib_slope=tryna(summary(acceptcontlm)$coeff[2]), 
-         acceptvote_pastcontrib_slope_pay=tryna(summary(acceptcontlm)$coeff[3]), 
-         acceptvote_pastcontrib_aic=tryna(summary(acceptcontlm)$aic)) %>%
-  select(-acceptcontlm)
+## New data requires this to be sapplied also
+# uacceptcontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote') %>% 
+#   do(acceptcontlm=tryna(glm(chosen~pastmeancontribknown+deltapay, data=., na.action=na.omit, family=binomial))) %>%
+#   mutate(acceptvote_pastcontrib_intercept=tryna(summary(acceptcontlm)$coeff[1]), 
+#          acceptvote_pastcontrib_slope=tryna(summary(acceptcontlm)$coeff[2]), 
+#          acceptvote_pastcontrib_slope_pay=tryna(summary(acceptcontlm)$coeff[3]), 
+#          acceptvote_pastcontrib_aic=tryna(summary(acceptcontlm)$aic)) %>%
+#   select(-acceptcontlm)
 
+uacceptcontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='apply') %>% 
+  do(acceptcontcoeff=uaclmcoeff(.), acceptcontlm=tryna(glm(chosen~pastmeancontribknown+deltapay, data=., na.action=na.omit, family=binomial)))
+uacceptcontrib$accept_pastcontrib_intercept <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[1]})
+uacceptcontrib$accept_pastcontrib_slope <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[2]})
+uacceptcontrib$accept_pastcontrib_slope_pay <- sapply(uacceptcontrib$acceptcontcoeff, FUN=function(x){x[3]})
+uacceptcontrib$accept_pastcontrib_aic <- sapply(uacceptcontrib$acceptcontlm, FUN=function(x){tryna(summary(x)$aic)})
+uacceptcontrib <- select(uacceptcontrib, -acceptcontlm, -acceptcontcoeff)
+
+  
+  
 # uacceptglocontrib <- tflrc %>% group_by(uuid) %>% filter(eventtype=='acceptvote') %>% 
 #   do(acceptgcontlm=tryna(glm(chosen~pastmeancontribknown+globalrtg+deltapay, data=., na.action=na.omit, family=binomial))) %>%
 #   mutate(acceptgcontrib_intercept=tryna(summary(acceptgcontlm)$coeff[1]), 
@@ -456,14 +496,27 @@ ucontribavgs <- pgl %>% group_by(uuid) %>% summarize(pubgood_avgcontrib=namean(p
 
 ggplot(adduuid(tflrpge), aes(globalmean, pctcontrib, group=uuid)) + geom_point() + geom_smooth(method='lm', se=F)
 ggplot(adduuid(tflrpge), aes(meanmeancontrib, pctcontrib, group=uuid)) + geom_point() + geom_smooth(method='lm', se=F)
-ummccontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
-  do(mmccontriblm=tryna(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit))) %>%
-  mutate(pubgood_contrib_pastcontrib_intercept=tryna(summary(mmccontriblm)$coeff[1]), 
-         pubgood_contrib_pastcontrib_slope=tryna(summary(mmccontriblm)$coeff[2]), 
-         pubgood_contrib_pastcontrib_stderr=tryna(summary(mmccontriblm)$sigma), 
-         pubgood_contrib_pastcontrib_r2=tryna(summary(mmccontriblm)$adj.r.squared)) %>%
-  select(-mmccontriblm) # -mmccontriblm
 
+## Will need to sapply all of these. 
+
+# ummccontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
+#   do(mmccontriblm=tryna(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit))) %>%
+#   mutate(pubgood_contrib_pastcontrib_intercept=tryna(summary(mmccontriblm)$coeff[1]), 
+#          pubgood_contrib_pastcontrib_slope=tryna(summary(mmccontriblm)$coeff[2]), 
+#          pubgood_contrib_pastcontrib_stderr=tryna(summary(mmccontriblm)$sigma), 
+#          pubgood_contrib_pastcontrib_r2=tryna(summary(mmccontriblm)$adj.r.squared)) %>%
+#   select(-mmccontriblm) # -mmccontriblm
+
+ummccontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
+  do(mmccontcoeff=tryna(summary(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit))$coefficients), 
+     mmccontlm=tryna(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit)))
+ummccontrib$pubgood_contrib_pastcontrib_intercept <- sapply(ummccontrib$mmccontcoeff, FUN=function(x){x[1]})
+ummccontrib$pubgood_contrib_pastcontrib_slope <- sapply(ummccontrib$mmccontcoeff, FUN=function(x){x[2]})
+ummccontrib$pubgood_contrib_pastcontrib_stderr <- sapply(ummccontrib$mmccontlm, FUN=function(x){tryna(summary(x)$sigma)})
+ummccontrib$pubgood_contrib_pastcontrib_r2 <- sapply(ummccontrib$mmccontlm, FUN=function(x){tryna(summary(x)$adj.r.squared)})
+ummccontrib <- select(ummccontrib, -mmccontlm, -mmccontcoeff)
+
+  
 ## Something is wrong with this
 # ugratcontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
 #   do(ratcontriblm=tryna(lm(pctcontrib~globalmean, data=., na.action=na.omit))) %>%
@@ -475,6 +528,16 @@ ummccontrib <- adduuid(tflrpge) %>% group_by(uuid) %>%
 #   select(-ratcontriblm, -lmlen)
 ## All of the models come out NA; I do not know why
 ## This is exactly the same code as the above, but for some reason, we get "$ operator is invalid for atomic vectors"
+
+# ugratcontrib <- adduuid(tflrpge) %>% group_by(uuid) %>% 
+#   do(gratcontcoeff=tryna(summary(lm(pctcontrib~globalmean, data=., na.action=na.omit))$coefficients), 
+#      gratcontlm=tryna(lm(pctcontrib~globalmean, data=., na.action=na.omit)))
+# ugratcontrib$pubgood_contrib_globalrtg_intercept <- sapply(ugratcontrib$gratcontcoeff, FUN=function(x){x[1]})
+# ugratcontrib$pubgood_contrib_globalrtg_slope <- sapply(ugratcontrib$gratcontcoeff, FUN=function(x){x[2]})
+# ugratcontrib$pubgood_contrib_globalrtg_stderr <- sapply(ugratcontrib$gratcontlm, FUN=function(x){tryna(summary(x)$sigma)})
+# ugratcontrib$pubgood_contrib_globalrtg_r2 <- sapply(ugratcontrib$gratcontlm, FUN=function(x){tryna(summary(x)$adj.r.squared)})
+# ugratcontrib <- select(ugratcontrib, -gratcontlm, -gratcontcoeff)
+## never mind, got it working below
 
 # adduuid(tflrpge) %>% group_by(uuid) %>% 
 #   do(ratcontriblm=tryna(lm(pctcontrib~meanmeancontrib, data=., na.action=na.omit))) %>%
@@ -593,34 +656,53 @@ utime_q3
 )
 
 userdatatable <- Reduce(function(x, y) merge(x, y, all=TRUE), alltables)
+
+namin <- function(vec) {
+  ifelse(class(vec) != 'numeric', NA, min(vec, na.rm=TRUE))
+}
+namax <- function(vec) {
+  ifelse(class(vec) != 'numeric', NA, max(vec, na.rm=TRUE))
+}
+nasd <- function(vec) {
+  ifelse(class(vec) != 'numeric', NA, sd(vec, na.rm=TRUE))
+}
+mins <- userdatatable %>% group_by(condition) %>% summarise_each(funs(namin))
+mins$uuid <- 'MIN'
+maxs <- userdatatable %>% group_by(condition) %>% summarise_each(funs(namax))
+maxs$uuid <- 'MAX'
+sds <- userdatatable %>% group_by(condition) %>% summarise_each(funs(nasd))
+sds$uuid <- 'SD'
+
+userdatatable <- rbind(userdatatable, mins, maxs, sds)
+
 write.csv(userdatatable, 'userdatatable.csv', row.names=F)
 names(userdatatable)
 
 
 # Tests:
-userdatatable %>% mutate(pnh=round(apply_nohist,2),
-                         pn5=round(logoddstoprob(apply_deltapay_intercept-5*apply_deltapay_slope),2),
-                         p0=round(logoddstoprob(apply_deltapay_intercept),2), 
-                         pp5=round(logoddstoprob(apply_deltapay_intercept+5*apply_deltapay_slope),2)) %>%
-                  select(uuid, pnh, pn5, p0, pp5)
-
-userdatatable %>% mutate(pnh=round(acceptvote_nohist,2),
-                         pn5=round(logoddstoprob(acceptvote_deltapay_intercept-5*acceptvote_deltapay_slope),2),
-                         p0=round(logoddstoprob(acceptvote_deltapay_intercept),2), 
-                         pp5=round(logoddstoprob(acceptvote_deltapay_intercept+5*acceptvote_deltapay_slope),2)) %>%
-                  select(uuid, pnh, pn5, p0, pp5)
-
-userdatatable %>% mutate(pnh=round(join_nohist,2),
-                         pn5=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope),2),
-                         p0=round(logoddstoprob(join_deltapay_intercept),2), 
-                         pp5=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope),2)) %>%
-                  select(uuid, pnh, pn5, p0, pp5)
-
-userdatatable %>% mutate(pnh=round(join_nohist,2),
-                         pn5=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope),2),
-                         p0=round(logoddstoprob(join_deltapay_intercept),2), 
-                         pp5=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope),2),
-                         pn5s=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope+join_deltapay_stay),2),
-                         p0s=round(logoddstoprob(join_deltapay_intercept+join_deltapay_stay),2), 
-                         pp5s=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope+join_deltapay_stay),2)) %>%
-                  select(uuid, pnh, pn5, pn5s, p0, p0s, pp5, pp5s)
+# userdatatable %>% mutate(pnh=round(apply_nohist,2),
+#                          pn5=round(logoddstoprob(apply_deltapay_intercept-5*apply_deltapay_slope),2),
+#                          p0=round(logoddstoprob(apply_deltapay_intercept),2), 
+#                          pp5=round(logoddstoprob(apply_deltapay_intercept+5*apply_deltapay_slope),2)) %>%
+#                   select(uuid, pnh, pn5, p0, pp5)
+# 
+# userdatatable %>% mutate(pnh=round(acceptvote_nohist,2),
+#                          pn5=round(logoddstoprob(acceptvote_deltapay_intercept-5*acceptvote_deltapay_slope),2),
+#                          p0=round(logoddstoprob(acceptvote_deltapay_intercept),2), 
+#                          pp5=round(logoddstoprob(acceptvote_deltapay_intercept+5*acceptvote_deltapay_slope),2)) %>%
+#                   select(uuid, pnh, pn5, p0, pp5)
+# 
+# userdatatable %>% mutate(pnh=round(join_nohist,2),
+#                          pn5=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope),2),
+#                          p0=round(logoddstoprob(join_deltapay_intercept),2), 
+#                          pp5=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope),2)) %>%
+#                   select(uuid, pnh, pn5, p0, pp5)
+# 
+# userdatatable %>% mutate(pnh=round(join_nohist,2),
+#                          pn5=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope),2),
+#                          p0=round(logoddstoprob(join_deltapay_intercept),2), 
+#                          pp5=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope),2),
+#                          pn5s=round(logoddstoprob(join_deltapay_intercept-5*join_deltapay_slope+join_deltapay_stay),2),
+#                          p0s=round(logoddstoprob(join_deltapay_intercept+join_deltapay_stay),2), 
+#                          pp5s=round(logoddstoprob(join_deltapay_intercept+5*join_deltapay_slope+join_deltapay_stay),2)) %>%
+#                   select(uuid, pnh, pn5, pn5s, p0, p0s, pp5, pp5s)
