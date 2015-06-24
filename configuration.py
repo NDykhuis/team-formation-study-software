@@ -71,7 +71,7 @@ class Configuration(object):
   _do_video = False
   _capture_screenshots = False
 
-  _do_intro_sim = True
+  _do_intro_sim = False
     
   _do_ultimatum = False
   ultimatum_niter = 2
@@ -80,7 +80,7 @@ class Configuration(object):
   do_publicgoods = True
   #pubgoods_mult = 1.2
   pubgoods_mult = 25     # Percent the pot is increased
-  hide_publicgoods = True
+  hide_publicgoods = False
   pg_contribrange = {   # Percent to contribute in pubgoods, low to high
     'nice':(0.7, 1.0),
     'mean':(0.0, 0.25),
@@ -166,7 +166,7 @@ class Configuration(object):
   _draw_graph = False            # Controls graphical output
   _pause_graph = False
   _draw_graph_after_sim = False
-  _verbose = 5                   # Controls print output (integer 0-n)
+  _verbose = 1                   # Controls print output (integer 0-n)
   #_output_by = "none"
   #_output_by = "simulation"  
   #_output_by = "agent"
@@ -194,7 +194,7 @@ class Configuration(object):
   connections = 5
   max_connections = 8
   prob_rewire = 0.25
-  graph_type = 'connected_watts_strogatz_graph'
+  graph_type = 'random_cycle4_zip'
   # see: http://networkx.github.com/documentation/latest/reference/generators.html
   
   graph_class = 'graph'
