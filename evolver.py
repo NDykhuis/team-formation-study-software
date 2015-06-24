@@ -8,7 +8,8 @@ class Evolver(object):
   switch_prob = 0.25  # probability that next gene will be from other parent
   keep_top_n = 2
   kill_bottom_n = 4
-  mutation_magnitude = 1 
+  mutation_magnitude = 1    # multiplier on std dev of random noise 
+  range_expansion = 0.25    # move max/min this many pct away from each other          
   # These options will need to go in Configuration soon
   
   dispo_id_counter = 100000
@@ -74,7 +75,7 @@ class Evolver(object):
         curparent = not curparent
     
     # Optionally, perturb the tuple now
-    #newtup = self.perturb_tuple(newtup, newid=False)
+    newtup = self.perturb_tuple(newtup, newid=False)
     
     # Create new simhumanagent
     # from_tuple
@@ -98,8 +99,13 @@ class Evolver(object):
     tuple_max = HumanData.tuple_max[condition]
     tuple_sd = HumanData.tuple_sd[condition]
     for i in range(1,len(atuple)-1):
+      # Add some random noise to the value
       newval = atuple[i] + random.gauss(0, tuple_sd[i]*self.mutation_magnitude)
-      newval = min(tuple_max[i], max(tuple_min[i], newval))
+      # Clip the value to range, plus expansion
+      halfrange = float(tuple_max[i] - tuple_min[i])/2
+      newval = min(tuple_max[i] + halfrange*self.range_expansion, 
+                   max(tuple_min[i] - halfrange*self.range_expansion, 
+                       newval))
       newlist[i] = newval
     
     if newid:
