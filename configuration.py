@@ -205,7 +205,7 @@ class Configuration(object):
   
   groups_can_merge = False
   expel_agents = False
-  fully_connect_groups = False
+  fully_connect_groups = True
   
   allow_leaving = True
   

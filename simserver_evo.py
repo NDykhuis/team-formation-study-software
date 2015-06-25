@@ -61,6 +61,7 @@ if __name__ == '__main__':
     elif condition == 'varmult':
       Configuration.show_global_ratings = True
       Configuration.alt_pubgoods = True
+      Configuration.pubgoods_mult = -1
   
 
   #u_rounds = 0 
@@ -95,6 +96,7 @@ if __name__ == '__main__':
       
       # Create the configuration here
       conf = Configuration()    # TEST:  not sure if default is what we want.
+      conf.lastratings = {}
       
       # log config?
       u_rounds = 0 
