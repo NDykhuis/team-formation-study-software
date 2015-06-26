@@ -6,14 +6,17 @@ import pprint
 class Evolver(object):
   # Need a mutation size amount for each item, as well as valid range/values
   # Need a mutation amount parameter
-  switch_prob = 0.25  # probability that next gene will be from other parent
-  keep_top_n = 2
-  kill_bottom_n = 4
+  switch_prob = 0.2  # probability that next gene will be from other parent
+                   # (set to zero to disable crossover)
+  keep_top_n = 4
+  kill_bottom_n = 0
   reintroduce_n = 1     # Reintroduce n agents from the original data
   do_mutate = True
   mutation_magnitude = 0.5    # multiplier on std dev of random noise 
   prob_mutate = 0.25        # Probability that a given trait will mutate
-  range_expansion = 0.0    # move max/min this many pct away from each other          
+  range_expansion = 0.0    # move max/min this many pct away from each other
+  use_all_history = True    # Select agents from ALL historical data, not just current round
+  fitness_history_alpha = 0.33
   # These options will need to go in Configuration soon
   
   dispo_id_counter = 100000
@@ -21,6 +24,7 @@ class Evolver(object):
   def __init__(self, humandata):
     # Requires the simhumanagent generator
     self.humandata = humandata
+    self.fitnesshistory = {}
   
   @classmethod
   def get_new_dispo_id(cls):
@@ -33,15 +37,34 @@ class Evolver(object):
     newagents = []
     
     if prevagents:
-      # Sort agents
-      fitness = [agent.finalpay for agent in prevagents]
-      sortpays, sortagents = zip(*sorted(zip(fitness, prevagents), reverse=True))
-      print [agent.probdata['uuid'] for agent in sortagents]
-      print [round(p) for p in sortpays]
-      
-      for agent in sortagents:
-        agent.reset2()
-      
+      if Evolver.use_all_history:
+        # Update fitness history using alpha decay averaging
+        for agent in prevagents:
+          # Fitness history contains (average_pay, agent_object) tuples
+          self.fitnesshistory[agent.disposition] = (
+            agent.finalpay if agent not in self.fitnesshistory else
+            (1.0-self.fitness_history_alpha)*self.fitnesshistory[agent.disposition] +
+            self.fitness_history_alpha*agent.finalpay, agent
+          )
+        sortpays, sortagents = zip(*sorted(self.fitnesshistory.values(), reverse=True))
+        print '\n'.join([str((agent.disposition, round(pay))) for (agent, pay) in zip(sortagents, sortpays)][:20])
+        
+        # Kill 1/8 of the agents in the history
+        medpay = sortpays[7*len(sortpays)/8]
+        self.fitnesshistory = {dispo:(pay, agent) 
+                               for dispo, (pay, agent) 
+                               in self.fitnesshistory.items()
+                               if pay > medpay}
+        
+        print "Number of agents in history:", len(sortagents)
+        
+      else:
+        # Sort agents by final pay
+        fitness = [agent.finalpay for agent in prevagents]
+        sortpays, sortagents = zip(*sorted(zip(fitness, prevagents), reverse=True))
+        print [agent.probdata['uuid'] for agent in sortagents]
+        print [round(p) for p in sortpays]
+        
       # Keep top n
       newagents.extend(sortagents[:Evolver.keep_top_n])
       
@@ -68,11 +91,13 @@ class Evolver(object):
       
       for i,agent in enumerate(newagents):
         agent.id = i
+        agent.reset2()
       
     else:
       # Generate n agents from our HumanData
       # need a config!
       newagents = [self.humandata.gen_agent(configuration) for i in range(n)]
+      #newagents = [self.humandata.gen_agent(configuration, uuid='vanillapublic') for i in range(n)] #TEMP
     
     for a in newagents:  # Not done by any other reset
         a.finalpay = 0
