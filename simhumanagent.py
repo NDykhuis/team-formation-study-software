@@ -339,6 +339,7 @@ class SimHumanAgent(Agent):
         self.statdata['apply'] += 1
         applies.append(g.id)
         g.takeapplication(self)
+        #self.finalpay -= 0.50   ## TEMP DEBUG TEST - costly applications
       
     self.logp( ('Agent', self.id, self.disposition, 'applies to', applies) )
     
@@ -399,8 +400,8 @@ class SimHumanAgent(Agent):
       if choice != None:
         self.statdata['acceptvotes'] += 1
     else:
-      print "ZERO PROBS IN ACCEPT"
-      print self.id, self.disposition, "accepts", accepts
+      self.log("ZERO PROBS IN ACCEPT")
+      self.logp( ( self.id, self.disposition, "accepts", accepts ) )
       choice = None
       
     self.logp( ('Agent', self.id, self.disposition, 'accepts', 
@@ -461,7 +462,7 @@ class SimHumanAgent(Agent):
       else:
         self.logp( ('Agent', self.id, self.disposition, 'stays') )
     else:
-      print "ZERO PROBS IN JOIN"
+      self.log("ZERO PROBS IN JOIN")
       self.logp( (self.id, self.disposition, "joins", joins) )
     
     self.acceptances = []
