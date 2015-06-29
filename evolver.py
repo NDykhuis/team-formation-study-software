@@ -37,22 +37,27 @@ class Evolver(object):
     newagents = []
     
     if prevagents:
+      #for agent in prevagents:
+      #  agent.finalpay = max(agent.finalpay, 0)     ## TEMP DEBUG TEST
       if Evolver.use_all_history:
         # Update fitness history using alpha decay averaging
         for agent in prevagents:
-          # Fitness history contains (average_pay, agent_object) tuples
+          # Fitness history contains (average_pay, agent_object, n) tuples
+          fithist = self.fitnesshistory.get(agent.disposition, None)
           self.fitnesshistory[agent.disposition] = (
-            agent.finalpay if agent not in self.fitnesshistory else
-            (1.0-self.fitness_history_alpha)*self.fitnesshistory[agent.disposition] +
-            self.fitness_history_alpha*agent.finalpay, agent
+            int(agent.finalpay if not fithist else
+            (1.0-self.fitness_history_alpha)*fithist[0] +
+            self.fitness_history_alpha*agent.finalpay), 
+            agent, 
+            1 if not fithist else fithist[2] + 1
           )
-        sortpays, sortagents = zip(*sorted(self.fitnesshistory.values(), reverse=True))
-        print '\n'.join([str((agent.disposition, round(pay))) for (agent, pay) in zip(sortagents, sortpays)][:20])
+        sortpays, sortagents, sortn = zip(*sorted(self.fitnesshistory.values(), reverse=True))
+        print '\n'.join([str((agent.disposition, int(pay), n)) for (agent, pay, n) in zip(sortagents, sortpays, sortn)][:20])
         
         # Kill 1/8 of the agents in the history
         medpay = sortpays[7*len(sortpays)/8]
-        self.fitnesshistory = {dispo:(pay, agent) 
-                               for dispo, (pay, agent) 
+        self.fitnesshistory = {dispo:(int(pay), agent, n) 
+                               for dispo, (pay, agent, n) 
                                in self.fitnesshistory.items()
                                if pay > medpay}
         
@@ -88,6 +93,9 @@ class Evolver(object):
         #newagents.extend([sortagents[i] for i in choiceidx])
         newagents.extend([self.breed(sortagents[i], sortagents[j], configuration) 
                           for i,j in zip(choiceidx1, choiceidx2)])
+      
+      # shuffle new agents
+      random.shuffle(newagents)
       
       for i,agent in enumerate(newagents):
         agent.id = i
