@@ -92,7 +92,10 @@ defaultdict = {
 
 # Then, for column name in columnorder, create a line of csv file
 
-rows = [ ','.join(columnorder) ]
+rows = []
+
+# Add header
+#rows = [ ','.join(columnorder) ]
 
 def make3conds(agentdict, agentname):
   rows = []
@@ -101,7 +104,6 @@ def make3conds(agentdict, agentname):
     agentdict['uuid'] = agentname+cond
     row = ','.join([str(agentdict[colname]) for colname in columnorder])
     rows.append(row)
-    print row
   return rows
     
 
@@ -110,7 +112,7 @@ def make3conds(agentdict, agentname):
 # to stdout, where we can copy it into the file.
 vanilla = defaultdict.copy()
 vanilla['uuid'] = 'vanilla'
-rows.append(make3conds(vanilla, 'vanilla'))
+rows.extend(make3conds(vanilla, 'vanilla'))
 
 mean = defaultdict.copy()
 mean['uuid'] = 'mean'
@@ -124,7 +126,7 @@ mean['pubgood_contrib_globalrtg_intercept'] = 0.0
 mean['pubgood_contrib_globalrtg_slope'] = 0.0
 mean['pubgood_contrib_globalrtg_r2'] = 0
 mean['pubgood_contrib_globalrtg_stderr'] = 0.0
-rows.append(make3conds(mean, 'mean'))
+rows.extend(make3conds(mean, 'mean'))
 
 nice = defaultdict.copy()
 nice['uuid'] = 'nice'
@@ -138,12 +140,12 @@ nice['pubgood_contrib_globalrtg_intercept'] = 1.0
 nice['pubgood_contrib_globalrtg_slope'] = 0.0
 nice['pubgood_contrib_globalrtg_r2'] = 0
 nice['pubgood_contrib_globalrtg_stderr'] = 0.0
-rows.append(make3conds(nice, 'nice'))
+rows.extend(make3conds(nice, 'nice'))
 
 random = defaultdict.copy()
 random['uuid'] = 'random'
 random.update( {
-  'pubgood_avgcontrib']: 0.5,
+  'pubgood_avgcontrib': 0.5,
   'pubgood_sdcontrib': 0.4,
   'pubgood_contrib_pastcontrib_intercept': 0.5,
   'pubgood_contrib_pastcontrib_slope': 0.0,
@@ -154,19 +156,22 @@ random.update( {
   'pubgood_contrib_globalrtg_r2': 0,
   'pubgood_contrib_globalrtg_stderr': 0.4
   } )
-rows.append(make3conds(random, 'random'))
+rows.extend(make3conds(random, 'random'))
 
-grim = defaultdict.copy()
-grim['uuid'] = 'grim'
-## TODO: Adjust these for LOG ODDS
-grim.update( {
-  'apply_pastcontrib_intercept': 0,
-  'apply_pastcontrib_slope': 1,
-  'apply_pastcontrib_slope_pay': 0,
-  'apply_pastcontrib_aic': 1,
-  'acceptvote_pastcontrib_intercept': 0,
-  'acceptvote_pastcontrib_slope': 1,
-  'acceptvote_pastcontrib_slope_pay': 0,
-  'acceptvote_pastcontrib_aic': 1,
-  } )
-rows.append(make3conds(grim, 'grim'))
+#grim = defaultdict.copy()
+#grim['uuid'] = 'grim'
+### TODO: Adjust these for LOG ODDS
+#grim.update( {
+  #'apply_pastcontrib_intercept': 0,
+  #'apply_pastcontrib_slope': 1,
+  #'apply_pastcontrib_slope_pay': 0,
+  #'apply_pastcontrib_aic': 1,
+  #'acceptvote_pastcontrib_intercept': 0,
+  #'acceptvote_pastcontrib_slope': 1,
+  #'acceptvote_pastcontrib_slope_pay': 0,
+  #'acceptvote_pastcontrib_aic': 1,
+  #} )
+#rows.append(make3conds(grim, 'grim'))
+
+for row in rows:
+  print row
