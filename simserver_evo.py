@@ -37,7 +37,7 @@ from simhumanagent import SimHumanAgent, HumanData
 from evolver import Evolver
 
 if __name__ == '__main__':
-  dblog = DBLogger('simlog.db')
+  dblog = DBLogger('/home/nathand/Desktop/simruns/simlog.db')
   Configuration._dblog = dblog
   dblog.start_batch_insert_thread()
   
@@ -48,6 +48,7 @@ if __name__ == '__main__':
   
   n_generations = 200
   pause_after_generation = True
+  nregsims = 0      # Number of old-style sim agents (nice, mean, fair, random)
   
   
   if len(sys.argv) > 1:
@@ -62,6 +63,16 @@ if __name__ == '__main__':
       Configuration.show_global_ratings = True
       Configuration.alt_pubgoods = True
       Configuration.pubgoods_mult = -1
+    elif condition == 'cycle4_static':
+      Configuration.graph_type = 'random_cycle4_zip'
+      Configuration.fully_connect_groups = False
+    elif condition == 'cycle4_dynamic':
+      Configuration.graph_type = 'random_cycle4_zip'
+      Configuration.fully_connect_groups = True
+    elif condition == 'cycle4_static':
+      Configuration.graph_type = 'complete_graph'
+      Configuration.fully_connect_groups = False
+  
   
 
   #u_rounds = 0 
@@ -112,8 +123,18 @@ if __name__ == '__main__':
       gm.setup()
       
       # Create agents here
-      newagents = evolver.genagents(conf, prevagents=lastagents)
-      # This resets final pay
+      if not nregsims:
+        newagents = evolver.genagents(conf, prevagents=lastagents)
+        # This resets final pay
+      else:
+        newagents = evolver.genagents(conf, nagents=conf.n-nregsims, prevagents=lastagents)
+        simagents = [SimAgent(conf, adat=None, aid=i, skills=[1]+[0]*(conf.nskills-1)) 
+                     for i in range(conf.n-nregsims, conf.n)]
+        dispositions = ['nice', 'mean', 'fair', 'random']
+        dstart = random.randint(0,3)
+        for i,simagent in enumerate(simagents):
+          simagent.disposition = dispositions[(i+dstart) % len(dispositions)]
+        newagents.extend(simagents)
       
       # Print data about the agents
       print "Agents:"

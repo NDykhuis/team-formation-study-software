@@ -8,7 +8,7 @@ class Evolver(object):
   # Need a mutation amount parameter
   switch_prob = 0.2  # probability that next gene will be from other parent
                    # (set to zero to disable crossover)
-  keep_top_n = 4
+  keep_top_n = 2
   kill_bottom_n = 0
   reintroduce_n = 1     # Reintroduce n agents from the original data
   do_mutate = True
@@ -17,6 +17,9 @@ class Evolver(object):
   range_expansion = 0.0    # move max/min this many pct away from each other
   use_all_history = True    # Select agents from ALL historical data, not just current round
   fitness_history_alpha = 0.33
+  #remove_bottom_fraction = 1.0/8
+  remove_bottom_fraction = 0.125
+  breed_self_prob = 0.1
   # These options will need to go in Configuration soon
   
   dispo_id_counter = 100000
@@ -31,8 +34,10 @@ class Evolver(object):
     cls.dispo_id_counter += 1
     return cls.dispo_id_counter
   
-  def genagents(self, configuration, n=16, prevagents=None):
+  def genagents(self, configuration, nagents=None, prevagents=None):
     # Generates a society of agents, possibly based on a previous group of agents
+    if nagents==None:
+      nagents=configuration.n
     
     newagents = []
     
@@ -55,11 +60,12 @@ class Evolver(object):
         print '\n'.join([str((agent.disposition, int(pay), n)) for (agent, pay, n) in zip(sortagents, sortpays, sortn)][:20])
         
         # Kill 1/8 of the agents in the history
-        medpay = sortpays[7*len(sortpays)/8]
-        self.fitnesshistory = {dispo:(int(pay), agent, n) 
-                               for dispo, (pay, agent, n) 
-                               in self.fitnesshistory.items()
-                               if pay > medpay}
+        if Evolver.remove_bottom_fraction:
+          medpay = sortpays[int((1-Evolver.remove_bottom_fraction)*len(sortpays))]
+          self.fitnesshistory = {dispo:(int(pay), agent, n) 
+                                for dispo, (pay, agent, n) 
+                                in self.fitnesshistory.items()
+                                if pay > medpay}
         
         print "Number of agents in history:", len(sortagents)
         
@@ -83,7 +89,8 @@ class Evolver(object):
       
       # For the remaining 16-top_n agents, breed the 16-bottom_n agents,
       # weighted by fitness
-      nleft = configuration.n-Evolver.keep_top_n-Evolver.reintroduce_n
+      #nleft = configuration.n-Evolver.keep_top_n-Evolver.reintroduce_n
+      nleft = nagents - len(newagents)
       if nleft > 0:
         paytotal = float(sum(sortpays))
         payweights = np.array(sortpays)/paytotal
@@ -100,12 +107,12 @@ class Evolver(object):
       for i,agent in enumerate(newagents):
         agent.id = i
         agent.reset2()
-      
+        
     else:
       # Generate n agents from our HumanData
       # need a config!
-      newagents = [self.humandata.gen_agent(configuration) for i in range(n)]
-      #newagents = [self.humandata.gen_agent(configuration, uuid='vanillapublic') for i in range(n)] #TEMP
+      #newagents = [self.humandata.gen_agent(configuration) for i in range(n)]
+      newagents = [self.humandata.gen_agent(configuration, uuid='nicepublic') for i in range(nagents)] #TEMP
     
     for a in newagents:  # Not done by any other reset
         a.finalpay = 0
@@ -114,6 +121,11 @@ class Evolver(object):
     return newagents
   
   def breed(self, agent1, agent2, configuration):
+    if random.random() < Evolver.breed_self_prob or agent1==agent2:
+      newagent = SimHumanAgent(configuration, {'uuid':agent1.probdata['uuid']})
+      newagent.from_tuple(agent1.to_tuple())
+      return newagent
+    
     a1tup = agent1.to_tuple()
     a2tup = agent2.to_tuple()
     ngenes = len(a1tup)
