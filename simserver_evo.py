@@ -32,6 +32,7 @@ from agentgroup import Agent
 from clientwaiter import ClientWaiter
 from db_logger import DBLogger
 from simulation import simulation
+from simagent import SimAgent
 from configuration import Configuration, MultiConfig, RepliConfig
 from simhumanagent import SimHumanAgent, HumanData
 from evolver import Evolver
@@ -46,9 +47,9 @@ if __name__ == '__main__':
   #conns = cw.getclients()
   
   
-  n_generations = 200
+  n_generations = 500
   pause_after_generation = True
-  nregsims = 0      # Number of old-style sim agents (nice, mean, fair, random)
+  nregsims = 8      # Number of old-style sim agents (nice, mean, fair, random)
   
   
   if len(sys.argv) > 1:
@@ -103,7 +104,7 @@ if __name__ == '__main__':
   
   try:
     for i in range(n_generations):
-      print "STARTING NEW GENERATION"
+      print "STARTING NEW GENERATION", i
       
       # Create the configuration here
       conf = Configuration()    # TEST:  not sure if default is what we want.
@@ -127,13 +128,15 @@ if __name__ == '__main__':
         newagents = evolver.genagents(conf, prevagents=lastagents)
         # This resets final pay
       else:
-        newagents = evolver.genagents(conf, nagents=conf.n-nregsims, prevagents=lastagents)
+        lastsims = [agent for agent in lastagents if agent.type == 'simhuman'] if lastagents else lastagents
+        newagents = evolver.genagents(conf, nagents=conf.n-nregsims, prevagents=lastsims)
         simagents = [SimAgent(conf, adat=None, aid=i, skills=[1]+[0]*(conf.nskills-1)) 
                      for i in range(conf.n-nregsims, conf.n)]
         dispositions = ['nice', 'mean', 'fair', 'random']
         dstart = random.randint(0,3)
         for i,simagent in enumerate(simagents):
           simagent.disposition = dispositions[(i+dstart) % len(dispositions)]
+          simagent.probdata = {'uuid':simagent.disposition}
         newagents.extend(simagents)
       
       # Print data about the agents
@@ -205,7 +208,8 @@ if __name__ == '__main__':
       
       # Record agent parameters here
       for agent in sim.agents:
-        dblog.log_simhumanagent(agent)
+        if agent.type=='simhuman':
+          dblog.log_simhumanagent(agent)
       
       lastagents = sim.agents
       
