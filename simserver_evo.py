@@ -47,9 +47,9 @@ if __name__ == '__main__':
   #conns = cw.getclients()
   
   
-  n_generations = 500
+  n_generations = 800
   pause_after_generation = True
-  nregsims = 8      # Number of old-style sim agents (nice, mean, fair, random)
+  nregsims = 0      # Number of old-style sim agents (nice, mean, fair, random)
   
   
   if len(sys.argv) > 1:

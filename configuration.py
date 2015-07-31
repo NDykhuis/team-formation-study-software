@@ -90,7 +90,7 @@ class Configuration(object):
   conditional_variance = 0.1
   
   # Alternative pubgoods parameters
-  alt_pubgoods = False   # Use alternative version of pubgoods
+  alt_pubgoods = True   # Use alternative version of pubgoods
   ap_min_multiplier = 1.10
   ap_max_multiplier = 2.00
   ap_rating_intercept = 0.25
@@ -195,6 +195,7 @@ class Configuration(object):
   max_connections = 8
   prob_rewire = 0.25
   graph_type = 'random_cycle4_zip'
+  #graph_type = 'complete_graph'
   # see: http://networkx.github.com/documentation/latest/reference/generators.html
   
   graph_class = 'graph'

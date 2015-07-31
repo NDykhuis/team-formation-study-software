@@ -15,11 +15,11 @@ class Evolver(object):
   mutation_magnitude = 0.5    # multiplier on std dev of random noise 
   prob_mutate = 0.25        # Probability that a given trait will mutate
   range_expansion = 0.0    # move max/min this many pct away from each other
-  use_all_history = True    # Select agents from ALL historical data, not just current round
+  use_all_history = False    # Select agents from ALL historical data, not just current round
   fitness_history_alpha = 0.33
-  #remove_bottom_fraction = 1.0/8
-  remove_bottom_fraction = 0.125
+  remove_bottom_fraction = 0.1
   breed_self_prob = 0.1
+  relative_pay = True
   # These options will need to go in Configuration soon
   
   dispo_id_counter = 100000
@@ -92,8 +92,13 @@ class Evolver(object):
       #nleft = configuration.n-Evolver.keep_top_n-Evolver.reintroduce_n
       nleft = nagents - len(newagents)
       if nleft > 0:
-        paytotal = float(sum(sortpays))
-        payweights = np.array(sortpays)/paytotal
+        if Evolver.relative_pay:
+          payrels = np.array(sortpays) - min(sortpays)
+          paytotal = float(payrels.sum())
+          payweights = payrels/paytotal
+        else:
+          paytotal = float(sum(sortpays))
+          payweights = np.array(sortpays)/paytotal
         choiceidx1 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
         choiceidx2 = np.random.choice(range(len(sortagents)), size=(nleft), p=payweights)
         
